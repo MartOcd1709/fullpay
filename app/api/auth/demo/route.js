@@ -22,7 +22,8 @@ export async function POST(request) {
   });
   const asked_next = String(form?.get("next") ?? url.searchParams.get("next") ?? "");
   const next = /^\/(?![/\\])[\w\-/]*$/.test(asked_next) ? asked_next : role === "accountant" ? "/payments" : "/dashboard";
-  const response = NextResponse.redirect(new URL(next, request.url), 303);
+  // Relative Location: behind Render's proxy request.url is the internal host (localhost:10000), never the public one.
+  const response = new NextResponse(null, { status: 303, headers: { Location: next } });
   response.cookies.set(SESSION_COOKIE, signSession(process.env.SESSION_SECRET, SESSION_TTL_SECONDS, { uid: Number(member?.id ?? 0), role }), sessionCookieOptions(request));
   return response;
 }
