@@ -18,7 +18,7 @@ export const POST = route(
     after(async () => {
       try {
         const facts = await reseed();
-        console.log(`[reseed] ok, letter hash ${facts.letter_hash}`);
+        console.info(`[reseed] ok, letter hash ${facts.letter_hash}`);
       } catch (err) {
         console.error("[reseed] failed:", err?.message);
       }
