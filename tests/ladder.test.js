@@ -115,7 +115,7 @@ test("opt_out blocks auto and owner_tap rungs but still surfaces demand_letter a
 test("broken promise lifts the pause and advances one rung even when the date guard says none", () => {
   const today = addDays(DUE, 3);
   const inv = invoice({ rung: "due_date", paused_by: "promise" });
-  assert.equal(evaluate(inv, ctx(today)).reason, "paused");
+  assert.equal(evaluate(inv, ctx(today, { open_promise: { promised_date: addDays(today, 2) } })).reason, "paused");
   const r = evaluate(inv, ctx(today, { broken_promise: true }));
   assert.equal(r.eligible, true);
   assert.equal(r.target_rung, "overdue_gentle");
@@ -221,4 +221,21 @@ test("validateOffsets requires six whole-day offsets in strictly increasing orde
   const { odr_guidance, ...missing } = DEFAULT_OFFSETS;
   assert.equal(validateOffsets(missing).error.code, "offsets");
   assert.equal(validateOffsets(null).ok, false);
+});
+
+test("review fixes: promise pause without an open promise counts as broken; bypass needs a promise pause", () => {
+  const today = addDays(DUE, 3);
+  const lifted = evaluate(invoice({ rung: "due_date", paused_by: "promise" }), ctx(today));
+  assert.equal(lifted.lift_pause, true);
+  assert.equal(lifted.action, "unpause_and_advance");
+  const noPause = evaluate(invoice({ rung: "due_date" }), ctx(today, { broken_promise: true }));
+  assert.equal(noPause.lift_pause, false);
+  assert.equal(noPause.reason, "nothing_due");
+});
+
+test("review fixes: nothing owed is ineligible; no new promise after a broken one", () => {
+  assert.equal(evaluate(invoice({ outstanding_paise: 0 }), ctx(addDays(DUE, 10))).reason, "status");
+  const r = onPromise(invoice({ had_broken_promise: true }), addDays(DUE, 5), DUE);
+  assert.equal(r.ok, false);
+  assert.equal(r.error.code, "promise_broken_before");
 });

@@ -67,12 +67,12 @@ test("rupeesToPaise rejects amounts beyond safe integer paise", () => {
 });
 
 test("paiseToRupees splits into rupee and paise parts", () => {
-  assert.deepEqual(paiseToRupees(11800050), { rupees: 118000, paise: 50 });
-  assert.deepEqual(paiseToRupees(0), { rupees: 0, paise: 0 });
-  assert.deepEqual(paiseToRupees(99), { rupees: 0, paise: 99 });
-  assert.deepEqual(paiseToRupees(100), { rupees: 1, paise: 0 });
-  assert.deepEqual(paiseToRupees(-11800050), { rupees: -118000, paise: 50 });
-  assert.deepEqual(paiseToRupees(-100), { rupees: -1, paise: 0 });
+  assert.deepEqual(paiseToRupees(11800050), { negative: false, rupees: 118000, paise: 50 });
+  assert.deepEqual(paiseToRupees(0), { negative: false, rupees: 0, paise: 0 });
+  assert.deepEqual(paiseToRupees(99), { negative: false, rupees: 0, paise: 99 });
+  assert.deepEqual(paiseToRupees(100), { negative: false, rupees: 1, paise: 0 });
+  assert.deepEqual(paiseToRupees(-11800050), { negative: true, rupees: 118000, paise: 50 });
+  assert.deepEqual(paiseToRupees(-50), { negative: true, rupees: 0, paise: 50 });
   invalidAmount(() => paiseToRupees(1.5));
 });
 
@@ -182,4 +182,13 @@ test("round-off, formatted total and words agree (pack: ₹10,000 @ 18% = ₹11,
   assert.equal(fmtINR(rounded_paise, { paise: false }), "₹11,800");
   assert.equal(amountInWords(rounded_paise), "Rupees Eleven Thousand Eight Hundred Only");
   assert.equal(rupeesToPaise(fmtINR(rounded_paise)), rounded_paise);
+});
+
+test("review fixes: exact formatting near 2^53, prototype-key lang, long input rejected fast", () => {
+  assert.equal(fmtINR(Number.MAX_SAFE_INTEGER), "₹9,00,71,99,25,47,409.91");
+  assert.equal(fmtINR(-49), "-₹0.49");
+  assert.equal(amountInWords(11800000, "constructor"), "Rupees One Lakh Eighteen Thousand Only");
+  const t0 = performance.now();
+  invalidAmount(() => rupeesToPaise("1" + " ".repeat(100000) + "x"));
+  assert.ok(performance.now() - t0 < 50);
 });

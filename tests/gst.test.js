@@ -344,3 +344,10 @@ test("einvoiceJson same-state splits CGST/SGST, reverse charge flag, unregistere
   assert.equal(j.ItemList[0].TotItemVal, 11_800);
   assert.throws(() => einvoiceJson({ invoice: { ...invoice, issue_date: new Date() }, items: [], business, customer }), RangeError);
 });
+
+test("review fixes: prototype keys are not registrations; overflow throws; lines carry effective rate", () => {
+  assert.throws(() => docTypeFor("constructor"));
+  assert.throws(() => lineTax({ qty_milli: Number.MAX_SAFE_INTEGER, rate_paise: Number.MAX_SAFE_INTEGER, gst_bps: 1800, interstate: false }));
+  const t = invoiceTotals([{ qty_milli: 1000, rate_paise: 100000, gst_bps: 1800 }], { interstate: false, registration: "composition" });
+  assert.equal(t.lines[0].gst_bps, 0);
+});

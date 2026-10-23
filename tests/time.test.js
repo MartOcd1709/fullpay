@@ -214,3 +214,10 @@ test("nowISOTimestamp is the real UTC instant, unaffected by the demo clock", ()
     initTime();
   }
 });
+
+test("review fixes: initTime accepts the config shape; formatDate ignores prototype keys", () => {
+  initTime({ demo: { clock_date: "2026-11-09" } });
+  assert.equal(today(), "2026-11-09");
+  initTime();
+  assert.equal(formatDate("2026-10-12", "__proto__"), formatDate("2026-10-12", "en"));
+});
