@@ -1,5 +1,8 @@
 import { route, v } from "@/lib/http";
-import * as fu from "@/lib/services/followups";
+import { guard } from "@/lib/services/approvals";
 
 // K7: record a confirmed payment's exact TDS shortfall as tax deducted (not cash).
-export const POST = route(({ client, ctx, params }) => fu.recordTds(client, ctx, v.id(params)));
+export const POST = route(({ client, ctx, params }) => {
+  const id = v.id(params);
+  return guard(client, ctx, { kind: "tds_record", target_id: id, summary: `Record the TDS shortfall on payment #${id} as tax deducted` });
+});

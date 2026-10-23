@@ -7,7 +7,7 @@ export const metadata = { title: "Sign in" };
 export default async function LoginPage() {
   const lang = await getLang();
   const t = tr(lang);
-  const keys = ["auth.title", "auth.password", "auth.wrong", "auth.too_many", "btn.login", "error.generic", "error.network", "public.login.intro", "public.login.busy", "public.login.or", "public.landing.open_demo", "public.login.demo_hint"];
+  const keys = ["auth.title", "auth.password", "auth.wrong", "auth.too_many", "btn.login", "error.generic", "error.network", "public.login.intro", "public.login.busy", "public.login.or", "public.landing.open_demo", "public.login.demo_hint", "public.login.email", "public.login.email_hint", "public.login.as", "pages.role.owner", "pages.role.accountant", "pages.role.viewer", "public.login.as_owner", "public.login.as_accountant", "public.login.as_viewer"];
   const s = Object.fromEntries(keys.map((k) => [k, t(k)]));
   return (
     <Shell lang={lang}>

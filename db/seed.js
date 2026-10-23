@@ -11,6 +11,7 @@ import * as invoices from "../lib/services/invoices.js";
 import * as payments from "../lib/services/payments.js";
 import * as pub from "../lib/services/public.js";
 import { evaluateAll, applyAdvance } from "../lib/services/rungs.js";
+import { ensureDemoTeam } from "../lib/services/users.js";
 
 export const SEED_ANCHOR = "2026-10-24";
 // entry_hash of INV/26-27/0042's letter_generated event. Any change to seeded data or to an engine that feeds a payload moves it.
@@ -167,7 +168,7 @@ function itemsFor(seg, rs, k) {
 export async function seed(client, { anchor = SEED_ANCHOR } = {}) {
   if (anchor !== SEED_ANCHOR) throw new RangeError(`the seed plan is pinned to ${SEED_ANCHOR}`);
   await client.query("ALTER TABLE escalation_events DISABLE TRIGGER USER");
-  await client.query(`TRUNCATE ${TABLES.join(", ")} RESTART IDENTITY CASCADE`);
+  await client.query(`TRUNCATE ${TABLES.join(", ")}, approvals, activity RESTART IDENTITY CASCADE`);
   await client.query("ALTER TABLE escalation_events ENABLE TRIGGER USER");
 
   // The seeded world is pinned to the anchor, but the app clock then moves with the real calendar from the reseed day,
@@ -281,6 +282,7 @@ async function assertSeed(client, cfg, anchor, ids) {
   }
   const { rows: due29 } = await client.query("SELECT number, due_date, rung FROM invoices WHERE id = $1", [ids.W24]);
   if (daysBetween(due29[0].due_date, anchor) !== 29) fail("the due+29 invoice moved");
+  await ensureDemoTeam(client);
   return { anchor, letter_hash, chain_head: chain.head, events: chain.count, first_tick_sends: sends, ids };
 }
 

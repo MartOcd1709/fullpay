@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { sessionCookieOptions, signSession, SESSION_COOKIE, SESSION_TTL_SECONDS } from "@/lib/auth";
+import { sessionCookieOptions, signSession, SESSION_COOKIE, SESSION_TTL_SECONDS, ROLES } from "@/lib/auth";
+import { withTxn } from "@/lib/db";
+import * as users from "@/lib/services/users";
 
-// K1: one-click demo entry. Only when DEMO_MODE=1; sets the same signed session cookie as /api/auth/login.
+// K1: one-click demo entry, only when DEMO_MODE=1. ?as=owner|accountant|viewer (default owner) signs in as that demo team member.
 // A plain <form method="post"> works without JavaScript: 303 to /dashboard.
 export async function POST(request) {
   if (process.env.DEMO_MODE !== "1") {
@@ -10,7 +12,16 @@ export async function POST(request) {
   if (!process.env.SESSION_SECRET) {
     return Response.json({ error: { code: "not_configured", message: "Set SESSION_SECRET in the environment." } }, { status: 500 });
   }
-  const response = NextResponse.redirect(new URL("/dashboard", request.url), 303);
-  response.cookies.set(SESSION_COOKIE, signSession(process.env.SESSION_SECRET, SESSION_TTL_SECONDS), sessionCookieOptions(request));
+  const url = new URL(request.url);
+  const form = request.headers.get("content-type")?.includes("form") ? await request.formData().catch(() => null) : null;
+  const asked = form?.get("as") ?? url.searchParams.get("as") ?? "owner";
+  const role = ROLES.includes(asked) ? asked : "owner";
+  const member = await withTxn(async (c) => {
+    await users.ensureDemoTeam(c);
+    return users.byRole(c, role);
+  });
+  const next = role === "owner" ? "/dashboard" : role === "accountant" ? "/payments" : "/dashboard";
+  const response = NextResponse.redirect(new URL(next, request.url), 303);
+  response.cookies.set(SESSION_COOKIE, signSession(process.env.SESSION_SECRET, SESSION_TTL_SECONDS, { uid: Number(member?.id ?? 0), role }), sessionCookieOptions(request));
   return response;
 }

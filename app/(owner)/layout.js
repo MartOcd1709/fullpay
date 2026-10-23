@@ -21,10 +21,14 @@ const NAV = [
   ["/forecast", "forecast", "nav.forecast"],
   ["/chase-first", "chaseFirst", "nav.chase_first"],
   ["/documents", "documents", "nav.documents"],
+  ["/approvals", "check", "nav.approvals"],
+  ["/analytics", "trend", "nav.analytics"],
+  ["/team", "user", "nav.team"],
+  ["/activity", "hash", "nav.activity"],
   ["/settings", "settings", "nav.settings"],
 ];
 
-async function shell() {
+async function shell(session) {
   const demo = process.env.DEMO_MODE === "1";
   try {
     return await run(async (c, ctx) => {
@@ -33,19 +37,24 @@ async function shell() {
         const { rows } = await c.query("SELECT floor(extract(epoch FROM now() - (data->'demo'->>'reset_at')::timestamptz) / 60)::int AS m FROM config WHERE id = 1");
         minutes = rows[0]?.m ?? null;
       }
-      return { demo, business: ctx.cfg.business?.name, asOf: ctx.asOf, minutes };
+      const who = session?.uid ? (await c.query("SELECT name FROM users WHERE id = $1", [session.uid])).rows[0]?.name : null;
+      const pending = (await c.query("SELECT count(*)::int AS n FROM approvals WHERE status = 'pending'")).rows[0].n;
+      return { demo, business: ctx.cfg.business?.name, asOf: ctx.asOf, minutes, who, pending };
     });
   } catch {
-    return { demo, business: null, asOf: null, minutes: null }; // the page itself shows the error state
+    return { demo, business: null, asOf: null, minutes: null, who: null, pending: 0 }; // the page itself shows the error state
   }
 }
 
 export default async function OwnerLayout({ children }) {
-  if (!getSessionFromCookies(await cookies())) redirect("/login");
+  const session = getSessionFromCookies(await cookies());
+  if (!session) redirect("/login");
   const lang = await getLang();
   const T = makeT(lang);
-  const { demo, business, asOf, minutes } = await shell();
-  const items = NAV.map(([href, icon, label, short, mobile]) => ({ href, icon, label: T(label), short: short ? T(short) : undefined, mobile: !!mobile }));
+  const { demo, business, asOf, minutes, who, pending } = await shell(session);
+  const items = NAV.map(([href, icon, label, short, mobile]) => ({
+    href, icon, label: href === "/approvals" && pending > 0 ? `${T(label)} (${pending})` : T(label), short: short ? T(short) : undefined, mobile: !!mobile,
+  }));
 
   return (
     <>
@@ -60,6 +69,22 @@ export default async function OwnerLayout({ children }) {
               <span className="text-accent lg:hidden">FullPay · </span>
               <span>{business ?? ""}</span>
             </p>
+            <span className="hidden items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-sm sm:inline-flex" title={T("pages.role.signed_in")}>
+              <Icon name="user" className="h-4 w-4" />
+              {who ? `${who} · ` : ""}
+              <strong>{T(`pages.role.${session.role}`)}</strong>
+            </span>
+            {demo && (
+              <form method="post" action="/api/auth/demo" className="hidden items-center gap-1 md:flex" aria-label={T("pages.role.view_as")}>
+                <span className="text-sm text-ink-muted">{T("pages.role.view_as")}</span>
+                {["owner", "accountant", "viewer"].map((r) => (
+                  <button key={r} name="as" value={r} type="submit" aria-pressed={session.role === r}
+                    className={`min-h-10 rounded-full px-3 text-sm font-semibold ${session.role === r ? "bg-accent text-on-accent" : "border border-line hover:bg-surface-2"}`}>
+                    {T(`pages.role.${r}`)}
+                  </button>
+                ))}
+              </form>
+            )}
             {demo && (
               <>
                 <button

@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { pool, withTxn } from "../lib/db.js";
 import { seed, buildBankStatement } from "../db/seed.js";
+import { ensureDemoTeam } from "../lib/services/users.js";
 
 // Runs before `next start` on hosts without a pre-deploy step: apply the idempotent schema,
 // then load the demo data only when the database has never been seeded.
@@ -18,6 +19,7 @@ try {
     });
     console.log(`bootstrap: seeded demo data (${facts.events} events)`);
   } else {
+    await ensureDemoTeam(pool);
     console.log(`bootstrap: schema up to date, ${rows[0].n} invoices present`);
   }
 } catch (err) {

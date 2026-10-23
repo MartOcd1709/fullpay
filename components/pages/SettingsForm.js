@@ -56,8 +56,8 @@ export default function SettingsForm({ lang, cfg, states }) {
     }
     setBusy(true);
     try {
-      await api("/api/settings", { method: "PATCH", body: patch });
-      toast(T("settings.saved"));
+      const res = await api("/api/settings", { method: "PATCH", body: patch });
+      toast(res?.approval_pending ? T("pages.appr.sent") : T("settings.saved"));
       router.refresh();
     } catch (err) {
       setError(err.message);

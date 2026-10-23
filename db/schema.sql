@@ -227,3 +227,53 @@ LEFT JOIN (SELECT pa.invoice_id, SUM(pa.amount_paise) AS paid, MAX(pa.allocated_
            GROUP BY pa.invoice_id) a ON a.invoice_id = i.id
 LEFT JOIN (SELECT invoice_id, SUM(amount_paise) AS credited, MAX(issue_date) AS last_credit_on
            FROM credit_notes GROUP BY invoice_id) cn ON cn.invoice_id = i.id;
+
+-- Team and maker-checker approvals ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS users (
+  id             BIGSERIAL PRIMARY KEY,
+  name           TEXT NOT NULL,
+  email          TEXT NOT NULL UNIQUE,
+  role           TEXT NOT NULL CHECK (role IN ('owner','accountant','viewer')),
+  pw_hash        TEXT,                              -- scrypt; NULL = demo-only account
+  active         BOOLEAN NOT NULL DEFAULT true,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_login_at  TIMESTAMPTZ
+);
+
+-- Money-moving actions prepared by an accountant wait here for the owner (maker-checker).
+CREATE TABLE IF NOT EXISTS approvals (
+  id             BIGSERIAL PRIMARY KEY,
+  kind           TEXT NOT NULL CHECK (kind IN ('payment_confirm','payment_reject','inbox_resolve','settings_save','tds_record')),
+  target_id      BIGINT,
+  payload        JSONB NOT NULL DEFAULT '{}'::jsonb,
+  summary        TEXT NOT NULL,
+  amount_paise   BIGINT,
+  status         TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected','failed')),
+  requested_by   BIGINT REFERENCES users(id),
+  decided_by     BIGINT REFERENCES users(id),
+  decision_note  TEXT,
+  error          TEXT,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  decided_at     TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS approvals_status_idx ON approvals (status, created_at);
+-- One open request per action and target, so a double click cannot queue the same thing twice.
+CREATE UNIQUE INDEX IF NOT EXISTS approvals_one_pending ON approvals (kind, target_id) WHERE status = 'pending' AND target_id IS NOT NULL;
+
+-- Who did what, for every change made through the app.
+CREATE TABLE IF NOT EXISTS activity (
+  id         BIGSERIAL PRIMARY KEY,
+  user_id    BIGINT REFERENCES users(id),
+  role       TEXT,
+  action     TEXT NOT NULL,
+  target     TEXT,
+  status     INT,
+  at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS activity_at_idx ON activity (at DESC);
+
+-- Indexes for scale: list, filter and match over tens of thousands of rows.
+CREATE INDEX IF NOT EXISTS invoices_due_idx ON invoices (due_date) WHERE status IN ('sent','part_paid','disputed');
+CREATE INDEX IF NOT EXISTS allocations_invoice_idx ON payment_allocations (invoice_id);
+CREATE INDEX IF NOT EXISTS payments_status_idx ON payments (status, paid_on);
+CREATE INDEX IF NOT EXISTS outbox_customer_idx ON outbox (customer_id, created_at);

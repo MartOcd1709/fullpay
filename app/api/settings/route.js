@@ -1,5 +1,6 @@
 import { route } from "@/lib/http";
 import * as settings from "@/lib/services/settings";
+import { guard } from "@/lib/services/approvals";
 import { badRequest } from "@/lib/services/errors";
 
 // Owner-editable sections only; the RBI series, GST rates and legal text stay in code-reviewed config.
@@ -10,5 +11,5 @@ export const PATCH = route(({ client, ctx, body }) => {
   const keys = Object.keys(body ?? {});
   const bad = keys.filter((k) => !EDITABLE.includes(k));
   if (!keys.length || bad.length) throw badRequest("invalid_settings", `Editable sections: ${EDITABLE.join(", ")}`);
-  return settings.save(client, ctx, body);
+  return guard(client, ctx, { kind: "settings_save", target_id: null, payload: body, summary: `Change settings: ${keys.join(", ")}` });
 });

@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import {
   clientIp,
+  parseSession,
   signSession,
   verifySession,
   checkPassword,
@@ -16,16 +18,27 @@ const SECRET = "test-secret-0123456789abcdef";
 
 test("signSession/verifySession round trip", () => {
   const token = signSession(SECRET, 60);
-  assert.match(token, /^\d+\.[0-9a-f]{64}$/);
+  assert.match(token, /^0\.owner\.\d+\.[0-9a-f]{64}$/);
   assert.equal(verifySession(SECRET, token), true);
+});
+
+test("sessions carry the user and role; a changed role or a legacy token is handled", () => {
+  const token = signSession(SECRET, 60, { uid: 7, role: "accountant" });
+  assert.deepEqual({ ...parseSession(SECRET, token), exp: 0 }, { uid: 7, role: "accountant", exp: 0 });
+  const [uid, , exp, mac] = token.split(".");
+  assert.equal(parseSession(SECRET, `${uid}.owner.${exp}.${mac}`), null);
+  const legacyBody = String(Math.floor(Date.now() / 1000) + 60);
+  const legacy = `${legacyBody}.${createHmac("sha256", SECRET).update(legacyBody).digest("hex")}`;
+  assert.equal(parseSession(SECRET, legacy).role, "owner");
+  assert.throws(() => signSession(SECRET, 60, { uid: 1, role: "admin" }));
 });
 
 test("tampered token fails", () => {
   const token = signSession(SECRET, 60);
-  const [exp, mac] = token.split(".");
+  const [uid, role, exp, mac] = token.split(".");
   const flipped = (mac[0] === "a" ? "b" : "a") + mac.slice(1);
-  assert.equal(verifySession(SECRET, `${exp}.${flipped}`), false);
-  assert.equal(verifySession(SECRET, `${Number(exp) + 3600}.${mac}`), false);
+  assert.equal(verifySession(SECRET, `${uid}.${role}.${exp}.${flipped}`), false);
+  assert.equal(verifySession(SECRET, `${uid}.${role}.${Number(exp) + 3600}.${mac}`), false);
   assert.equal(verifySession("other-secret", token), false);
   assert.equal(verifySession(SECRET, mac), false);
   assert.equal(verifySession(SECRET, `${exp}.`), false);

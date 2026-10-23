@@ -36,7 +36,8 @@ export function useAction(lang) {
         setMsg({ tone: "error", text });
         return { ok: false, error: data.error ?? { code: "http_" + res.status, message: text } };
       }
-      if (success) setMsg({ tone: "success", text: typeof success === "function" ? success(data) : success });
+      if (data?.approval_pending) setMsg({ tone: "success", text: t("pages.appr.sent", lang) });
+      else if (success) setMsg({ tone: "success", text: typeof success === "function" ? success(data) : success });
       if (refresh) router.refresh();
       return { ok: true, data };
     } catch {
