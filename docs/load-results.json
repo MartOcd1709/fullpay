@@ -1,0 +1,47 @@
+{
+  "concurrency_20": {
+    "base": "http://localhost:3200",
+    "seconds": 15,
+    "concurrency": 20,
+    "customer_pay_pages": {
+      "requests": 1051,
+      "rps": 70,
+      "p50_ms": 279,
+      "p95_ms": 416,
+      "p99_ms": 502,
+      "errors": 0
+    },
+    "owner_screens": {
+      "requests": 58,
+      "rps": 4,
+      "p50_ms": 5889,
+      "p95_ms": 10063,
+      "p99_ms": 13080,
+      "errors": 0
+    },
+    "health": {
+      "requests": 12175,
+      "rps": 812,
+      "p50_ms": 22,
+      "p95_ms": 43,
+      "p99_ms": 67,
+      "errors": 0
+    },
+    "same_payment_race": {
+      "ok": 1,
+      "conflict": 19,
+      "other": 0,
+      "allocation_rows": 1,
+      "proposed_rows": 1
+    },
+    "parallel_confirms": {
+      "payments": 200,
+      "seconds": 3.9,
+      "status_counts": {
+        "200": 200
+      },
+      "invoices_over_allocated": 0
+    }
+  },
+  "concurrency_3": null
+}

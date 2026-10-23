@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Button from "@/components/ui/Button";
 import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import Money from "@/components/ui/Money";
@@ -16,7 +17,8 @@ export async function generateMetadata() {
   return { title: T("customers.title") };
 }
 
-export default async function CustomersPage() {
+export default async function CustomersPage({ searchParams }) {
+  const sp = await searchParams;
   const T = await getT();
   let rows;
   try {
@@ -31,6 +33,10 @@ export default async function CustomersPage() {
     );
   }
   rows.sort((a, b) => (b.total_owed_paise ?? 0) - (a.total_owed_paise ?? 0));
+  const PAGE = 100;
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+  const page = Math.min(pages, Math.max(1, Number.parseInt(String(sp?.page ?? ""), 10) || 1));
+  const visible = rows.slice((page - 1) * PAGE, page * PAGE);
   return (
     <>
       <PageHeader title={T("customers.title")} actions={<AddCustomer lang={T.lang} />} />
@@ -38,7 +44,7 @@ export default async function CustomersPage() {
         <EmptyState title={T("customers.empty")} />
       ) : (
         <ul className="grid gap-3 lg:grid-cols-2" aria-label={T("customers.title")}>
-          {rows.map((c) => (
+          {visible.map((c) => (
             <li key={c.id}>
               <Link
                 href={`/customers/${c.id}`}
@@ -69,6 +75,13 @@ export default async function CustomersPage() {
             </li>
           ))}
         </ul>
+      )}
+      {pages > 1 && (
+        <nav aria-label={T("pages.page.label")} className="mt-4 flex flex-wrap items-center gap-3">
+          {page > 1 && <Button variant="secondary" href={`/customers?page=${page - 1}`}>{T("pages.page.prev")}</Button>}
+          <span className="text-ink-muted">{T("pages.page.of", { n: page, of: pages })}</span>
+          {page < pages && <Button variant="secondary" href={`/customers?page=${page + 1}`}>{T("pages.page.next")}</Button>}
+        </nav>
       )}
       <p className="mt-4 text-sm text-ink-muted">
         <Term {...T.term("customers.grade")} />

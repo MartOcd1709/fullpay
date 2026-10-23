@@ -47,7 +47,16 @@ results.owner_screens = await soak("owner screens (mixed)", (i) => [screens[i % 
 results.health = await soak("health check", () => ["/api/health", {}]);
 
 // Concurrency: 20 simultaneous confirms of ONE payment → exactly one wins, the rest get 409, one allocation set.
-const one = (await db.query("SELECT p.id FROM payments p WHERE p.status = 'pending' AND EXISTS (SELECT 1 FROM payment_proposals pp WHERE pp.payment_id = p.id) ORDER BY p.id LIMIT 1")).rows[0]?.id;
+// Payments that can really be confirmed: one proposal, on a still-open invoice that can take the amount; one per invoice.
+const fitting = (await db.query(
+  `SELECT DISTINCT ON (pp.invoice_id) p.id FROM payments p
+   JOIN payment_proposals pp ON pp.payment_id = p.id JOIN invoices i ON i.id = pp.invoice_id JOIN invoice_balances b ON b.invoice_id = i.id
+   WHERE p.status = 'pending' AND i.status IN ('sent','part_paid','disputed') AND pp.amount_paise <= b.outstanding_paise
+     AND (SELECT count(*) FROM payment_proposals x WHERE x.payment_id = p.id) = 1
+     AND NOT EXISTS (SELECT 1 FROM approvals a WHERE a.target_id = p.id AND a.status = 'pending')
+   ORDER BY pp.invoice_id, p.id LIMIT 201`,
+)).rows.map((r) => r.id);
+const one = fitting[0];
 if (one) {
   const codes = await Promise.all(Array.from({ length: 20 }, () =>
     fetch(`${base}/api/payments/${one}/confirm`, { method: "POST", headers: { cookie: owner, "content-type": "application/json" }, body: "{}" }).then((r) => r.status)));
@@ -58,7 +67,7 @@ if (one) {
 }
 
 // Throughput: 200 distinct pending payments confirmed by 20 parallel clients; then check no invoice is over-allocated.
-const ids = (await db.query("SELECT p.id FROM payments p WHERE p.status = 'pending' AND EXISTS (SELECT 1 FROM payment_proposals pp WHERE pp.payment_id = p.id) ORDER BY p.id LIMIT 200")).rows.map((r) => r.id);
+const ids = fitting.slice(1);
 let k = 0;
 const t0 = performance.now();
 const tally = {};

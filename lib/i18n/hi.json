@@ -1779,5 +1779,21 @@
   "pages.act.a.team": "टीम सदस्य जोड़ा",
   "pages.act.a.settings": "सेटिंग बदली",
   "pages.act.a.inbox.resolve": "ग्राहक का जवाब निपटाया",
-  "pages.act.a.customers": "ग्राहक जोड़ा"
+  "pages.act.a.customers": "ग्राहक जोड़ा",
+  "pages.bulk.ready": "कन्फ़र्म के लिए तैयार हूबहू मिलान: {n}, कुल",
+  "pages.bulk.hint": "बिल जितनी ही रकम, नैरेशन में बिल नंबर या भेजने वाले का नाम, कोई चेतावनी नहीं। बाकी आप एक-एक करके देखेंगे।",
+  "pages.bulk.hint_acct": "आप सबको एक साथ तैयार कर सकती हैं; हर एक फिर भी मालिक की मंज़ूरी का इंतज़ार करेगा।",
+  "pages.bulk.confirm": "सभी {n} कन्फ़र्म करें",
+  "pages.bulk.send": "सभी {n} मंज़ूरी के लिए भेजें",
+  "pages.bulk.yes": "हां, सभी {n}",
+  "pages.bulk.done": "{n} भुगतान कन्फ़र्म हुए ({s} अब फिट नहीं थे, आपके लिए छोड़े)",
+  "pages.bulk.queued": "{n} भुगतान मंज़ूरी के लिए मालिक को भेजे",
+  "pages.bulk.showing": "{of} में से पहले {n} दिखाए गए। हूबहू मिलान ऊपर एक साथ निपटाए जा सकते हैं।",
+  "pages.page.label": "पेज",
+  "pages.page.prev": "पिछले 100",
+  "pages.page.next": "अगले 100",
+  "pages.page.of": "पेज {n} / {of}",
+  "pages.cap.top": "{of} में से ऊपर के {n}, ऊपर की क्रमवार सूची के अनुसार",
+  "pages.cap.first": "{of} में से पहले {n}",
+  "pages.cap.more_inflows": "और {n} छोटे बिल"
 }

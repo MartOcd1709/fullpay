@@ -59,10 +59,14 @@ const ctxAt = async (c, date, user = { uid: 1, role: "owner" }) => ({ ...(await 
 
 // 1. Schema + the normal demo seed (config, demo team, 14 named customers).
 await withTxn((c) => c.query(readFileSync(new URL("../db/schema.sql", import.meta.url), "utf8")));
-await time("seed: demo book (65 invoices, day-by-day)", () => withTxn((c) => seed(c)));
+// An existing book (> 1,000 invoices) is reused: the run then measures a later day on a live book, not the first one.
+const existing = Number((await pool.query("SELECT count(*) AS n FROM invoices")).rows[0].n);
+const BUILD = existing < 1000;
+results.mode = BUILD ? "fresh book" : "existing book (later day)";
+if (BUILD) await time("seed: demo book (65 invoices, day-by-day)", () => withTxn((c) => seed(c)));
 
 // 2. Customers: 60% prompt, 30% slow, 10% chronic.
-const book = await time(`build: ${NC} customers`, () => withTxn(async (c) => {
+const book = !BUILD ? [] : await time(`build: ${NC} customers`, () => withTxn(async (c) => {
   const ctx = await ctxAt(c, "2026-04-01");
   const out = [];
   for (let i = 1; i <= NC; i++) {
@@ -78,7 +82,7 @@ const book = await time(`build: ${NC} customers`, () => withTxn(async (c) => {
 
 // 3. Invoices through createDraft + send, issue dates over the 200 days before the anchor, committed in batches of 500.
 const issued = [];
-await time(`build: ${NI} invoices (draft + send)`, async () => {
+if (BUILD) await time(`build: ${NI} invoices (draft + send)`, async () => {
   for (let b = 0; b < NI; b += 500) {
     await withTxn(async (c) => {
       for (let i = b; i < Math.min(NI, b + 500); i++) {
@@ -99,7 +103,7 @@ await time(`build: ${NI} invoices (draft + send)`, async () => {
 
 // 4. Payments by behaviour, only those dated before the anchor; ~5% part payments.
 let paidCount = 0;
-await time("build: payments (manual + confirm)", async () => {
+if (BUILD) await time("build: payments (manual + confirm)", async () => {
   for (let b = 0; b < issued.length; b += 500) {
     await withTxn(async (c) => {
       for (const inv of issued.slice(b, b + 500)) {
@@ -129,7 +133,7 @@ console.log("book:", results.sizes.after_build);
 
 // 5. The daily run over the whole book (first run = worst case: every overdue invoice is evaluated at once).
 results.tick = await time("tick: daily run over the whole book", () => withTxn(async (c) => {
-  const r = await tick(c, await ctxAt(c, ANCHOR), { source: "manual" });
+  const r = await tick(c, await ctxAt(c, BUILD ? ANCHOR : addDays(ANCHOR, 1)), { source: "manual" });
   return { evaluated: r.evaluated, advanced: r.advanced, queued: r.queued, letters: r.letters, skipped: r.skipped };
 }));
 console.log("tick:", results.tick);
@@ -156,13 +160,14 @@ function statement(n, salt) {
   return lines.join("\n");
 }
 const files = {};
-for (const [n, salt] of [[NB, "A"], [Math.min(15000, NB * 3), "B"]]) {
+const run = BUILD ? "" : String(Date.now() % 1e6);
+for (const [n, salt] of [[NB, `A${run}`], [Math.min(15000, NB * 3), `B${run}`]]) {
   const csv = (files[salt] = statement(n, salt));
   const r = await time(`import: bank CSV ${n} lines (${(csv.length / 1e6).toFixed(1)} MB)`, () => withTxn(async (c) => payments.importCsv(c, await ctxAt(c, ANCHOR), csv)));
   results[`import_${n}`] = { imported: r.imported.length, skipped: r.skipped.length, duplicates: r.duplicates_skipped };
   console.log("  ->", results[`import_${n}`]);
 }
-const dup = await time(`import: same ${NB}-line file again (idempotent)`, () => withTxn(async (c) => payments.importCsv(c, await ctxAt(c, ANCHOR), files.A)));
+const dup = await time(`import: same ${NB}-line file again (idempotent)`, () => withTxn(async (c) => payments.importCsv(c, await ctxAt(c, ANCHOR), files[`A${run}`])));
 results.reimport = { imported: dup.imported.length, duplicates: dup.duplicates_skipped };
 console.log("  ->", results.reimport);
 
@@ -176,6 +181,18 @@ await read("payments screen", (c, x) => followups.paymentsView(c, x));
 await read("chase-first", (c, x) => followups.chaseView(c, x));
 await read("forecast", (c, x) => followups.forecastView(c, x));
 await read("analytics", (c, x) => analytics.overview(c, x));
+const common = await import("../lib/services/common.js");
+await read("dashboard interest total (all overdue)", async (c, x) => {
+  const { rows } = await c.query(`${common.INVOICE_SELECT} WHERE i.status IN ('sent','part_paid','disputed') AND b.outstanding_paise > 0 AND i.due_date < $1`, [x.asOf]);
+  const inputs = await common.interestInputsMany(c, rows.map((r) => r.id));
+  let total = 0;
+  for (const inv of rows) total += common.interestFor(x.cfg, inv, inputs.get(Number(inv.id)), x.asOf)?.total_interest_paise ?? 0;
+  return total;
+});
+await read("invoice detail (one)", (c, x) => invoices.get(c, x, issued[0]?.id ?? 1));
+results.exact_before = (await withTxn((c) => approvals.exactMatches(c, {})));
+results.confirm_exact = await time("payments: owner confirms all exact matches", () => withTxn(async (c) => approvals.confirmExact(c, await ctxAt(c, ANCHOR), {})));
+console.log("exact:", results.exact_before, results.confirm_exact);
 
 // 8. Maker-checker at volume: the accountant queues 500 confirmations, the owner bulk-approves them in one go.
 const team = await withTxn((c) => users.list(c));

@@ -1,0 +1,142 @@
+{
+  "built_at": "2026-10-23T11:35:39.666Z",
+  "node": "v22.22.1",
+  "sizes": {
+    "after_build": {
+      "customers": 1014,
+      "invoices": 20065,
+      "open_invoices": 5835,
+      "payments": 34526,
+      "chain_events": 74212,
+      "outbox": 619,
+      "db_size": "93 MB"
+    },
+    "final": {
+      "customers": 1014,
+      "invoices": 20065,
+      "open_invoices": 3947,
+      "payments": 54526,
+      "chain_events": 98308,
+      "outbox": 1012,
+      "db_size": "121 MB"
+    }
+  },
+  "timings_ms": {
+    "tick: daily run over the whole book": 4218,
+    "import: bank CSV 5000 lines (0.5 MB)": 5509,
+    "import: bank CSV 15000 lines (1.5 MB)": 20567,
+    "import: same 5000-line file again (idempotent)": 4760,
+    "read: dashboard": {
+      "median": 235,
+      "max": 379,
+      "runs": 5
+    },
+    "read: invoices list (all)": {
+      "median": 243,
+      "max": 288,
+      "runs": 5
+    },
+    "read: customers with reliability": {
+      "median": 74,
+      "max": 106,
+      "runs": 5
+    },
+    "read: follow-ups today": {
+      "median": 356,
+      "max": 440,
+      "runs": 5
+    },
+    "read: payments screen": {
+      "median": 118,
+      "max": 127,
+      "runs": 5
+    },
+    "read: chase-first": {
+      "median": 177,
+      "max": 181,
+      "runs": 5
+    },
+    "read: forecast": {
+      "median": 185,
+      "max": 232,
+      "runs": 5
+    },
+    "read: analytics": {
+      "median": 817,
+      "max": 983,
+      "runs": 5
+    },
+    "read: dashboard interest total (all overdue)": {
+      "median": 151,
+      "max": 181,
+      "runs": 5
+    },
+    "read: invoice detail (one)": {
+      "median": 2,
+      "max": 6,
+      "runs": 5
+    },
+    "payments: owner confirms all exact matches": 21117,
+    "approvals: accountant queues 500": 309,
+    "approvals: owner bulk-approves 500": 5398
+  },
+  "mode": "existing book (later day)",
+  "tick": {
+    "evaluated": 5835,
+    "advanced": 543,
+    "queued": 216,
+    "letters": 51,
+    "skipped": 200
+  },
+  "import_5000": {
+    "imported": 5000,
+    "skipped": 0,
+    "duplicates": 0
+  },
+  "import_15000": {
+    "imported": 15000,
+    "skipped": 0,
+    "duplicates": 0
+  },
+  "reimport": {
+    "imported": 0,
+    "duplicates": 5000
+  },
+  "exact_before": {
+    "n": 27692,
+    "paise": 154661031950
+  },
+  "confirm_exact": {
+    "considered": 2000,
+    "confirmed": 1662,
+    "queued": 0,
+    "amount_paise": 9353636150,
+    "skipped": 338,
+    "skipped_sample": [
+      {
+        "id": 15766,
+        "error": "INV/26-27/14965 is not open"
+      },
+      {
+        "id": 16082,
+        "error": "INV/26-27/16007 is not open"
+      },
+      {
+        "id": 16321,
+        "error": "INV/26-27/1683 has only ₹74,330.00 outstanding"
+      },
+      {
+        "id": 16981,
+        "error": "INV/26-27/10258 is not open"
+      },
+      {
+        "id": 17593,
+        "error": "INV/26-27/14881 has only ₹41,429.50 outstanding"
+      }
+    ]
+  },
+  "bulk": {
+    "approved": 254,
+    "failed": 246
+  }
+}

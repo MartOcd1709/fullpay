@@ -60,6 +60,10 @@ export default async function InvoicesPage({ searchParams }) {
   const match = (r, s) => (DERIVED[s] ? DERIVED[s](r, asOf) : r.display_status === s);
   const counts = Object.fromEntries(STATUSES.map((s) => [s, rows.filter((r) => match(r, s)).length]));
   const shown = status ? rows.filter((r) => match(r, status)) : rows;
+  const PAGE = 100;
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE));
+  const page = Math.min(pages, Math.max(1, Number.parseInt(one(sp?.page), 10) || 1));
+  const visible = shown.slice((page - 1) * PAGE, page * PAGE);
   const qs = (patch) => {
     const p = new URLSearchParams(Object.entries({ ...f, ...patch }).filter(([, v]) => v));
     const s = p.toString();
@@ -160,12 +164,12 @@ export default async function InvoicesPage({ searchParams }) {
       </form>
 
       <p className="mb-3 font-medium text-ink-muted" aria-live="polite">
-        {T("core.inv.showing", { n: shown.length, total: rows.length })}
+        {T("core.inv.showing", { n: visible.length, total: shown.length })}
       </p>
       <DataTable
         caption={T("nav.invoices")}
         columns={columns}
-        rows={shown}
+        rows={visible}
         empty={
           <EmptyState
             title={rows.length || anyFilter ? T("core.inv.none_match") : T("invoices.empty")}
@@ -173,6 +177,13 @@ export default async function InvoicesPage({ searchParams }) {
           />
         }
       />
+      {pages > 1 && (
+        <nav aria-label={T("pages.page.label")} className="mt-4 flex flex-wrap items-center gap-3">
+          {page > 1 && <Button variant="secondary" href={qs({ status, page: String(page - 1) })}>{T("pages.page.prev")}</Button>}
+          <span className="text-ink-muted">{T("pages.page.of", { n: page, of: pages })}</span>
+          {page < pages && <Button variant="secondary" href={qs({ status, page: String(page + 1) })}>{T("pages.page.next")}</Button>}
+        </nav>
+      )}
     </>
   );
 }

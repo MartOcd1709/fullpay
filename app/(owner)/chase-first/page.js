@@ -26,6 +26,8 @@ function reason(r, fsw, T) {
   return parts.join(", ");
 }
 
+const CAP = 100; // render cap: totals and sorting use every row, the page sends the first CAP (ponytail: add paging if owners ask)
+
 export default async function ChaseFirstPage({ searchParams }) {
   const lang = await getLang();
   const T = tr(lang);
@@ -61,8 +63,9 @@ export default async function ChaseFirstPage({ searchParams }) {
               </Link>
             ))}
           </nav>
+          {rows.length > CAP && <p className="mb-3 text-ink-muted">{T("pages.cap.top", { n: CAP, of: rows.length })}</p>}
           <ol className="space-y-3">
-            {rows.map((r, i) => {
+            {rows.slice(0, CAP).map((r, i) => {
               const tel = String(r.customer_phone ?? "").replace(/[^\d+]/g, "");
               return (
                 <li key={r.id} className={`rounded-xl border bg-surface p-4 sm:p-5 ${r.in_gap ? "border-2 border-warning" : "border-line"}`}>

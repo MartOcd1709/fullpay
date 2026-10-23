@@ -12,6 +12,8 @@ export async function generateMetadata() {
   return { title: t("collect.fu.title", await getLang()) };
 }
 
+const CAP = 100; // render cap: totals and sorting use every row, the page sends the first CAP (ponytail: add paging if owners ask)
+
 export default async function FollowupsPage() {
   const lang = await getLang();
   const T = tr(lang);
@@ -51,7 +53,8 @@ export default async function FollowupsPage() {
             {T("collect.fu.ready")}
           </SectionTitle>
           <div className="grid gap-4 xl:grid-cols-2">
-            {ready.map((r) => (
+            {ready.length > CAP && <p className="text-ink-muted">{T("pages.cap.first", { n: CAP, of: ready.length })}</p>}
+            {ready.slice(0, CAP).map((r) => (
               <FollowupCard key={r.id} row={r} {...common} />
             ))}
           </div>
@@ -64,7 +67,8 @@ export default async function FollowupsPage() {
             {T("collect.call.section")}
           </SectionTitle>
           <div className="grid gap-4 xl:grid-cols-2">
-            {calls.map((inv) => (
+            {calls.length > CAP && <p className="text-ink-muted">{T("pages.cap.first", { n: CAP, of: calls.length })}</p>}
+            {calls.slice(0, CAP).map((inv) => (
               <CallCard key={inv.id} inv={inv} business={data.business} {...common} />
             ))}
           </div>
@@ -77,7 +81,8 @@ export default async function FollowupsPage() {
             {T("collect.fu.failed")}
           </SectionTitle>
           <div className="grid gap-4 xl:grid-cols-2">
-            {failed.map((r) => (
+            {failed.length > CAP && <p className="text-ink-muted">{T("pages.cap.first", { n: CAP, of: failed.length })}</p>}
+            {failed.slice(0, CAP).map((r) => (
               <FollowupCard key={r.id} row={r} {...common} />
             ))}
           </div>
@@ -90,7 +95,8 @@ export default async function FollowupsPage() {
             {T("collect.fu.held")}
           </SectionTitle>
           <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
-            {held.map((r) => (
+            {held.length > CAP && <p className="text-ink-muted">{T("pages.cap.first", { n: CAP, of: held.length })}</p>}
+            {held.slice(0, CAP).map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                 <span className="min-w-0">
                   <span className="font-semibold">{r.customer_name}</span> · {r.invoices.map((i) => i.number).join(", ")}
@@ -108,7 +114,8 @@ export default async function FollowupsPage() {
             {T("collect.fu.done")}
           </SectionTitle>
           <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
-            {done.map((r) => (
+            {done.length > CAP && <p className="text-ink-muted">{T("pages.cap.first", { n: CAP, of: done.length })}</p>}
+            {done.slice(0, CAP).map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                 <span className="min-w-0">
                   <span className="font-semibold">{r.customer_name}</span> · {r.invoices.map((i) => i.number).join(", ")} · <span className="tnum">{inr(r.amount_paise)}</span>

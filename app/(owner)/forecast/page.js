@@ -243,7 +243,7 @@ function WeekLines({ w, lang }) {
   if (!w.inflows.length && !w.outflows.length) return <p className="text-ink-muted">{T("collect.fc.quiet")}</p>;
   return (
     <ul className="mt-1 space-y-1">
-      {w.inflows.map((r, i) => (
+      {[...w.inflows].sort((a, b) => b.amount_paise - a.amount_paise).slice(0, 25).map((r, i) => (
         <li key={`i${i}`} className="flex justify-between gap-2">
           <span className="min-w-0">
             {r.invoice_id ? `${r.number} · ${r.customer_name}` : T("collect.fc.big_order")}
@@ -252,6 +252,12 @@ function WeekLines({ w, lang }) {
           <span className="tnum shrink-0 text-success">+{inr(r.amount_paise)}</span>
         </li>
       ))}
+      {w.inflows.length > 25 && (
+        <li className="flex justify-between gap-2 text-ink-muted">
+          <span>{T("pages.cap.more_inflows", { n: w.inflows.length - 25 })}</span>
+          <span className="tnum shrink-0">+{inr([...w.inflows].sort((a, b) => b.amount_paise - a.amount_paise).slice(25).reduce((s, r) => s + r.amount_paise, 0))}</span>
+        </li>
+      )}
       {w.outflows.map((r, i) => (
         <li key={`o${i}`} className="flex justify-between gap-2">
           <span className="min-w-0">

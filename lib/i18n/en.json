@@ -1779,5 +1779,21 @@
   "pages.act.a.team": "Added a team member",
   "pages.act.a.settings": "Changed settings",
   "pages.act.a.inbox.resolve": "Handled a customer reply",
-  "pages.act.a.customers": "Added a customer"
+  "pages.act.a.customers": "Added a customer",
+  "pages.bulk.ready": "Exact matches ready to confirm: {n}, totalling",
+  "pages.bulk.hint": "Same amount as the invoice, the invoice number or payer name in the narration, nothing flagged. The rest stay for you to check one by one.",
+  "pages.bulk.hint_acct": "You can prepare all of them at once; each one still waits for the owner's approval.",
+  "pages.bulk.confirm": "Confirm all {n}",
+  "pages.bulk.send": "Send all {n} for approval",
+  "pages.bulk.yes": "Yes, do all {n}",
+  "pages.bulk.done": "{n} payments confirmed ({s} no longer fitted and were left for you)",
+  "pages.bulk.queued": "{n} payments sent to the owner for approval",
+  "pages.bulk.showing": "Showing the first {n} of {of}. Exact matches can be cleared above in one go.",
+  "pages.page.label": "Pages",
+  "pages.page.prev": "Previous 100",
+  "pages.page.next": "Next 100",
+  "pages.page.of": "Page {n} of {of}",
+  "pages.cap.top": "Showing the top {n} of {of}, ranked as above",
+  "pages.cap.first": "Showing the first {n} of {of}",
+  "pages.cap.more_inflows": "and {n} smaller invoices"
 }

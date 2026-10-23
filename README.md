@@ -13,6 +13,7 @@ FullPay helps an Indian micro or small business track unpaid invoices, follow up
 ## For judges: the 2-minute tour
 
 The demo is shared by everyone who opens it. If someone has moved the demo clock, use **Reset demo** in the banner.
+Prefer to be guided? Press **2-minute tour** in the header: ten steps over the real screens.
 
 | Clock | Do | What you see |
 |---|---|---|
@@ -24,6 +25,13 @@ The demo is shared by everyone who opens it. If someone has moved the demo clock
 | 1:30 | **Today's follow-ups** | Each reminder ready in the customer's language, one tap to WhatsApp, email or SMS |
 | 1:45 | Open the customer link `/pay/whoZYlu9YOc2d-scWQ-yx1mX1ukgynkn` → **Something's wrong** | The dispute pauses the reminders and lands in the owner's Inbox |
 | 1:55 | Switch to **हिंदी** in the header | Every screen, message and printed heading switches |
+| +0:20 | **View as → Accountant**, confirm any payment; **View as → Owner** → **Approvals** | Maker-checker: the accountant's confirmation waits; the owner approves; the record names who prepared and who approved |
+| +0:20 | **Invoices → Import from Tally / Vyapar / Excel → Try the Tally sample** | Every line checked before saving: 11 ready, 5 new customers, 1 credit balance left out |
+| +0:15 | **Analytics** | Days to get paid (DSO), collection effectiveness, paid by the due date, money collected after a FullPay reminder |
+
+![Dashboard](docs/screenshots/01-dashboard.png)
+
+More screens: [docs/screenshots](docs/screenshots/index.html) (regenerate with `node scripts/screens.js`).
 
 ---
 
@@ -41,12 +49,16 @@ Indian micro and small suppliers sell on credit and wait months to be paid; an e
 | Screen | What it does |
 |---|---|
 | Dashboard | Money to collect, overdue, expected this week and month, bills due in 30 days, cash in the bank, lowest forecast point, §16 interest owed, ageing bar, top 5 to chase |
-| Invoices | All invoices with the brief's seven statuses, filters (customer, status, due date, days late) and search; each invoice opens on its full record |
+| Invoices | All invoices with the brief's seven statuses, filters (customer, status, due date, days late) and search, 100 per page; each invoice opens on its full record. **Import from Tally / Vyapar / Excel**: the header row is found under Tally's title block, columns are matched by name, every line is checked and previewed before anything is saved, and re-importing adds nothing twice |
 | New invoice | Customer with GSTIN validated and state taken from it; items with HSN/SAC, quantity, unit, rate, discount and GST rate; live CGST + SGST or IGST; round-off; due date from credit days |
 | Customers | Credit days, contacts, total owed, average days late, % paid on time, reliability grade A/B/C with the reason in words; opt-out and remove personal details |
 | Today's follow-ups | Every reminder due today with the message ready; one tap to WhatsApp, email or SMS; mark as sent; snooze; record a promise to pay; a call script at the final-reminder stage |
 | Inbox | Disputes and "already paid" claims from the customer link: issue a credit note, mark paid, reject with a reply, or edit the terms |
-| Payments | Import a bank CSV, load the sample statement or add a payment by hand; matches with confidence and reasons; flags for part payment, several invoices, overpayment, unknown deposit and possible TDS; owner confirms each one |
+| Payments | Import a bank CSV, load the sample statement or add a payment by hand; matches with confidence and reasons; flags for part payment, several invoices, overpayment, unknown deposit and possible TDS; confirm one by one, or **confirm all exact matches** in one action |
+| Approvals | Maker-checker: what the accountant prepared (payment confirmations, rejections, TDS, inbox decisions, settings) waits for the owner; approve one or many; nobody approves their own work |
+| Team | Owner, accountant and view-only (for the CA); add people, change roles, remove access; at least one owner always stays |
+| Activity log | Every change, who made it and when; "waiting" marks what went for approval |
+| Analytics | DSO, collection effectiveness (CEI), paid by the due date, billed vs collected by month, money collected after a FullPay reminder, payment promises kept and broken, customers to watch |
 | Cash forecast | 13 weeks of opening, in, out and closing cash; first week below the buffer; three what-ifs; invoices that would cover the gap |
 | Chase these first | Overdue invoices ranked by amount, days late, the customer's habits and how much they help the cash gap, with the reason in words |
 | Documents | Every sent invoice with its record, print invoice, demand letter and evidence pack |
@@ -101,6 +113,20 @@ For a Udyam-registered micro or small enterprise it adds the MSMED Act line and 
 
 Every event (invoice issued, reminder sent, payment, dispute, letter) is written to an append-only table. Each entry's hash seals its type, time, invoice, actor and content together with the previous entry's hash, so changing anything — even a date — breaks every hash after it. The database itself refuses updates and deletes on that table. The QR on every printed document opens a public check page that shows only the event, the time, the hash and the payee recorded at issue: a buyer can confirm a letter is genuine and that the bank details have not been swapped.
 
+## Built for a team, and for volume
+
+- **Roles and maker-checker.** Owner, accountant, view-only CA. An accountant's money-moving actions queue as approvals; only the
+  owner decides, never the person who prepared it, and each decision is sealed into the record with both names.
+- **Tested at 40× a typical MSME:** 1,014 customers, 20,065 invoices, 54,526 payments, 98,308 record entries.
+  Dashboard 235 ms, today's follow-ups 356 ms, a 5,000-line bank statement in 5.5 s, the daily run over 5,835 open invoices
+  in 4.2 s. 20 simultaneous confirmations of one payment: exactly one wins. 200 parallel confirmations: none over-allocated.
+  The test found eight real bottlenecks (one was 8.5 s → 18 ms); all fixed. Method and numbers: [docs/scale.md](docs/scale.md).
+
+| | |
+|---|---|
+| ![Approvals](docs/screenshots/05-approvals-owner.png) | ![Analytics](docs/screenshots/06-analytics.png) |
+| ![Import from Tally](docs/screenshots/09-import-tally-preview.png) | ![Team](docs/screenshots/07-team.png) |
+
 ## How it improves on chasing by hand
 
 The owner opens one screen that says who to chase today and why, sends each reminder in one tap in the customer's language, sees the cash shortage weeks before salaries are due, and gets the letter and the filing pack — with interest worked out as the law says — without an accountant.
@@ -114,7 +140,7 @@ cp .env.example .env.local        # set DATABASE_URL, OWNER_PASSWORD, SESSION_SE
 npm ci
 npm run db:migrate
 npm run db:seed                   # Arora Auto Components demo data
-npm test                          # 265 tests
+npm test                          # 279 tests
 npm run dev                       # http://localhost:3000
 ```
 

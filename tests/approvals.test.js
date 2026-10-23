@@ -77,3 +77,26 @@ test("team rules: at least one owner stays; emails are unique; passwords are has
   assert.ok(users.checkHash("correct horse battery", h));
   assert.ok(!users.checkHash("wrong password!", h));
 });
+
+test("confirm all exact matches: an accountant only queues approvals; the owner confirms, never over-allocating", { skip }, async () => {
+  await db.withTxn((c) => seedMod.seed(c));
+  const csv = readFileSync(new URL("../db/bank-statement.csv", import.meta.url), "utf8");
+  await as("owner", 1)((c, ctx) => pay.importCsv(c, ctx, csv));
+  const before = await db.withTxn((c) => approvals.exactMatches(c, {}));
+  assert.ok(before.n >= 1, "the sample statement has exact matches");
+
+  const team = await db.withTxn((c) => users.list(c));
+  const acct = Number(team.find((u) => u.role === "accountant").id);
+  const q = await as("accountant", acct)((c, ctx) => approvals.confirmExact(c, ctx, {}));
+  assert.equal(q.confirmed, 0);
+  assert.equal(q.queued, before.n);
+  assert.equal((await db.pool.query("SELECT count(*)::int AS n FROM approvals WHERE status = 'pending'")).rows[0].n, before.n);
+  assert.equal((await db.withTxn((c) => approvals.exactMatches(c, {}))).n, 0, "queued ones are not offered again");
+
+  await db.pool.query("DELETE FROM approvals");
+  const owner = Number(team.find((u) => u.role === "owner").id);
+  const r = await as("owner", owner)((c, ctx) => approvals.confirmExact(c, ctx, {}));
+  assert.equal(r.confirmed + r.skipped, before.n);
+  assert.ok(r.confirmed >= 1);
+  assert.equal((await db.pool.query("SELECT count(*)::int AS n FROM invoice_balances WHERE outstanding_paise < 0")).rows[0].n, 0);
+});
