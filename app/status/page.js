@@ -15,8 +15,8 @@ export async function generateMetadata() {
   return { title: t("ops.status.meta_title", await langOf()), robots: { index: false } };
 }
 
-const SOURCE_KEY = { "render-workflow": "render_workflow", "cron-job": "cron_job", manual: "manual", demo: "demo", test: "test" };
-const isAuto = (r) => r?.source === "render-workflow" || r?.source === "cron-job";
+const SOURCE_KEY = { "render-workflow": "render_workflow", "cron-job": "cron_job", scheduler: "scheduler", manual: "manual", demo: "demo", test: "test" };
+const isAuto = (r) => r?.source === "render-workflow" || r?.source === "cron-job" || r?.source === "scheduler";
 
 // Plain word + ⓘ popover with the meaning (shared Term: opens on tap or Enter, not hover-only).
 function Explained({ k, lang }) {

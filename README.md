@@ -40,6 +40,18 @@ More screens: [docs/screenshots](docs/screenshots/index.html) (regenerate with `
 - **Real:** GST maths, invoice numbering, GSTIN check digits, §16 interest, the reminder ladder, the daily automatic run, bank-statement matching, the 13-week forecast, the hash-chained record and its public check page, the English and Hindi interface.
 - **Simulated:** the business (Arora Auto Components, Ludhiana), its customers, GSTINs, phone numbers and bank details are made up. The UPI payment on the pay page moves no money; it creates a payment that goes through the same matcher as a real bank line. WhatsApp and SMS open the owner's own app with the message filled in; automatic sending is email only.
 
+## Documents for judges
+
+| | |
+|---|---|
+| [`/proof`](https://fullpay-web.onrender.com/proof) | The organiser pack's "before you finish" checks, run live: expected, actual, pass |
+| [docs/pack-conformance.md](docs/pack-conformance.md) | Every pack requirement, its status, and where to check it |
+| [docs/acceptance.md](docs/acceptance.md) | Every screen in English and Hindi at 360 px (normal and largest text) and 1280 px: 162 of 162 pass |
+| [docs/scale.md](docs/scale.md) | 20,065 invoices, 54,526 payments: what we measured, what broke, what we fixed |
+| [docs/demo-script.md](docs/demo-script.md) | The 3-minute demo, and what could go wrong live |
+| [docs/deploy.md](docs/deploy.md) | Putting it online on Render |
+| [docs/screenshots](docs/screenshots/index.html) | Every screen, desktop and phone |
+
 ## The problem in two lines, and who it is for
 
 Indian micro and small suppliers sell on credit and wait months to be paid; an estimated ₹8.1 lakh crore is stuck in delayed payments (Economic Survey, quoted in the MoMSME Annual Report 2025-26). The MSMED Act already caps credit at 45 days and charges the buyer compound interest at three times the RBI Bank Rate, but owners rarely use it: FullPay does the chasing and the paperwork for a business without an accounts team.
@@ -140,13 +152,13 @@ cp .env.example .env.local        # set DATABASE_URL, OWNER_PASSWORD, SESSION_SE
 npm ci
 npm run db:migrate
 npm run db:seed                   # Arora Auto Components demo data
-npm test                          # 279 tests
+npm test                          # 281 tests
 npm run dev                       # http://localhost:3000
 ```
 
 ## Deploying on Render
 
-`render.yaml` deploys the free plan: one web service and one Postgres database. On first start the app creates its tables and loads the demo data. The daily 10:00 IST reminder run is a `POST /api/tick` with the `x-tick-secret` header, called by cron-job.org. `render.paid.yaml` adds a Render cron job and a Render Workflow (`workflows/`) for the same run.
+`render.yaml` deploys the free plan: one web service and one Postgres database. On first start the app creates its tables and loads the demo data. The daily 10:00 IST reminder run is built in (`lib/scheduler.js`, started by `instrumentation.js`): it runs at or after 10:00 IST, catches up if the free server was asleep, and resets the shared demo after 01:00 IST. `POST /api/tick` with the `x-tick-secret` header still works for an outside timer, and `render.paid.yaml` adds a Render cron job and a Render Workflow (`workflows/`). Step by step, including why a page refresh never shows a 404: [docs/deploy.md](docs/deploy.md).
 
 ## Where the organiser pack's files live in this repo
 

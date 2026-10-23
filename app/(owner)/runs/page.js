@@ -21,7 +21,7 @@ export async function generateMetadata() {
   return { title: t("ops.runs.title", await getLang()) };
 }
 
-const SOURCE_KEY = { "render-workflow": "render_workflow", "cron-job": "cron_job", manual: "manual", demo: "demo", test: "test" };
+const SOURCE_KEY = { "render-workflow": "render_workflow", "cron-job": "cron_job", scheduler: "scheduler", manual: "manual", demo: "demo", test: "test" };
 
 async function mustBeOwner() {
   if (!getSessionFromCookies(await cookies())) redirect("/login?next=/runs");
@@ -129,7 +129,7 @@ function RunCard({ r, messages, lang }) {
         <h2 className="text-lg font-semibold">
           {formatDate(r.ist_date, lang)} · <span className="tnum">{r.ist_time}</span> IST
         </h2>
-        <StatusPill status={r.source === "render-workflow" || r.source === "cron-job" ? "success" : "info"} label={t(`ops.source.${SOURCE_KEY[r.source] ?? "manual"}`, lang)} />
+        <StatusPill status={r.source === "render-workflow" || r.source === "cron-job" || r.source === "scheduler" ? "success" : "info"} label={t(`ops.source.${SOURCE_KEY[r.source] ?? "manual"}`, lang)} />
       </header>
       <p className="mt-1 text-ink-muted">
         {t("ops.status.run_id", lang)}: <code className="break-all font-mono text-ink">{r.run_id}</code>

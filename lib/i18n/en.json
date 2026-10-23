@@ -1885,5 +1885,10 @@
   "proof.v.found": "found",
   "proof.v.missing": "missing",
   "proof.v.unaltered": "unaltered",
-  "proof.v.broken": "break at entry {id}"
+  "proof.v.broken": "break at entry {id}",
+  "ops.source.scheduler": "Scheduled (10:00 IST, built in)",
+  "public.nf.title": "This page does not exist",
+  "public.nf.body": "The link may be mistyped, or the page has moved. A customer's payment link that has expired shows its own message.",
+  "public.nf.home": "Go to the start page",
+  "public.nf.app": "Open the owner's app"
 }
