@@ -1,0 +1,80 @@
+# FullPay on Render: web service + Postgres + a cron job that starts the Render Workflow task "daily-tick".
+# The Workflow service itself ("fullpay-workflows", root dir workflows/) is created in the Dashboard if
+# this Blueprint's `type: workflow` entry is rejected (Workflows do not yet replicate via Blueprints).
+services:
+  - type: web
+    name: fullpay-web
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fullpay-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TICK_SECRET
+        sync: false
+      - key: RESEED_SECRET
+        sync: false
+      - key: OWNER_PASSWORD
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: MAIL_REPLY_TO
+        sync: false
+      - key: MAIL_TEST_MODE
+        value: "0"
+      - key: MAIL_TEST_TO
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: DEMO_MODE
+        value: "1"
+      - key: N8N_WEBHOOK_URL
+        sync: false
+
+  - type: cron
+    name: fullpay-daily-tick
+    runtime: node
+    plan: starter
+    region: singapore
+    schedule: "30 4 * * *" # 04:30 UTC = 10:00 IST
+    buildCommand: echo "nothing to build"
+    startCommand: >-
+      curl -fsS -X POST https://api.render.com/v1/task-runs
+      -H "Authorization: Bearer $RENDER_API_KEY"
+      -H "Content-Type: application/json"
+      -d '{"task":"fullpay-workflows/daily-tick","input":[]}'
+    envVars:
+      - key: RENDER_API_KEY
+        sync: false
+
+  - type: workflow
+    name: fullpay-workflows
+    runtime: node
+    region: singapore
+    rootDir: workflows
+    buildCommand: npm ci
+    startCommand: node main.js
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: TICK_SECRET
+        sync: false
+
+databases:
+  - name: fullpay-db
+    plan: free
+    region: singapore
+    databaseName: fullpay
+    user: fullpay

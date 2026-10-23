@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# FullPay — get paid in full, with the interest the law owes you
 
-## Getting Started
+**HackCache '26 · Problem statement 4: The Small Business Invoice Chase · Team FullPay** (two developers + Claude as pair programmer)
 
-First, run the development server:
+FullPay helps an Indian micro or small business track unpaid invoices, follow up on time and politely (English or Hindi), issue GST-compliant tax invoices and Payment Demand Letters, match bank payments, see a cash shortage weeks ahead — and, when a buyer still will not pay, walk into the MSME ODR portal with a filing-ready, tamper-evident bundle and period-correct MSMED §16 interest.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+> Every "-Pay" app helps you pay. FullPay is for getting paid — in full.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Declaration (build-fresh rule)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- Planning and research (problem analysis, competitor and legal research, design documents) were done on 21–23 October 2026, before the event. They are in `docs/planning/`.
+- Application code was started on **Friday 23 October 2026 at about 11:15 AM IST**, before the official 9:30 PM kickoff, by team decision. Every commit is timestamped; nothing predates 23 October 2026.
+- No pre-existing codebase was reused. Third-party snippets and datasets are listed in `NOTICE`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Status
 
-## Learn More
+Under construction. Progress: `docs/planning/14_build_checklist.md`.
 
-To learn more about Next.js, take a look at the following resources:
+## Sections to come
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+What it does (one line per screen) · How GST is worked out and which document is issued when · The escalation ladder, and why the Payment Demand Letter is not a legal or GST notice · How payments are matched, how the forecast and the "chase these first" score work · How it improves on chasing by hand · Run it locally · What is simulated · Where the organiser pack's files live in this repo · The five WhatsApp Business templates we would submit · Judge's 2-minute tour · Path to production

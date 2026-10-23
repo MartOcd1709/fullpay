@@ -1,0 +1,179 @@
+ FullPay HLD 
+/* Layout: one-column engineering doc; each figure = one mechanism; tables for inventories */
+:root{
+ --bg:#f7f6f2; --surface:#ffffff; --fg:#1d2520; --muted:#5b655f;
+ --accent:#0f6e56; --accent-soft:#e1f5ee; --amber:#b96f10; --amber-soft:#fdf3e3;
+ --line:#dde3de; --bad:#a33b2e;
+ --display:"Archivo",system-ui,sans-serif; --body:"Source Sans 3",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#141917; --surface:#1d2420; --fg:#e8ece9; --muted:#9aa69f;
+ --accent:#3fbf99; --accent-soft:#17352c; --amber:#e3a44a; --amber-soft:#332815;
+ --line:#2c3630; --bad:#e07a6a; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#141917; --surface:#1d2420; --fg:#e8ece9; --muted:#9aa69f;
+ --accent:#3fbf99; --accent-soft:#17352c; --amber:#e3a44a; --amber-soft:#332815;
+ --line:#2c3630; --bad:#e07a6a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;
+ padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+ padding-block:0 72px}
+main{max-width:900px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(1.7rem,4.5vw,2.4rem);font-weight:800;margin:.2em 0 .1em}
+h2{font-size:1.3rem;font-weight:800;margin:2em 0 .4em;padding-top:.6em;border-top:2px solid var(--line)}
+h3{font-size:1rem;font-weight:700;margin:1.2em 0 .3em}
+p{margin:.5em 0;max-width:72ch}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:28px}
+.meta{color:var(--muted);font-size:.9rem;max-width:none}
+figure{margin:18px 0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+figure svg{max-width:100%;height:auto;display:block;margin:0 auto}
+figcaption{font-size:.85rem;color:var(--muted);margin-top:10px;max-width:none}
+table{border-collapse:collapse;width:100%;font-size:.87rem;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px;margin:14px 0}
+th{text-align:left;font-family:var(--display);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 10px 6px;border-bottom:2px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+code{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:.85em}
+.warn{border-left:3px solid var(--amber);background:var(--amber-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.warn p{max-width:none;margin:.3em 0}
+ol,ul{padding-left:1.25em;margin:.4em 0}
+li{margin:.3em 0;max-width:74ch}
+a{color:var(--accent)}
+.small{font-size:.85rem;color:var(--muted)}
+.steps{counter-reset:s;list-style:none;padding-left:0}
+.steps li{counter-increment:s;padding-left:2.1em;position:relative}
+.steps li::before{content:counter(s);position:absolute;left:0;top:.1em;width:1.5em;height:1.5em;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-family:var(--display);font-weight:700;font-size:.8em;display:flex;align-items:center;justify-content:center}
+ FullPay · HackCache '26 · High-Level Design · Rev B (post engineering review) 
+ FullPay HLD 
+ The complete picture: how data flows, which parts talk, and what state an invoice moves through. Rev B folds in a 3-lens design review (plan-consistency · engineering · completeness; ~40 findings — the big ones: a hash chain that would have forked itself, and a forecast with no outflows). Pairs with the Build Dossier for scope, schedule and why, and the LLD for code-level contracts (where the two differ, the LLD wins). 
+ 1 · The whole thing in five sentences 
+ The owner (or the seed script) puts invoices into FullPay; each invoice carries its own credit terms (defaulted from the customer), so the system knows its real due date — the anchor for everything. 
+ Once a day a scheduled tick walks every active invoice up the escalation ladder — the first two rungs (heads-up, due-date) email themselves; +7/+15 queue as one-tap sends for the owner; the statutory steps (demand letter, ODR bundle) are always owner-initiated. 
+ The interest engine computes MSMED §16 compound interest from the day after each invoice's due date, segmented by RBI bank-rate periods and net of owner-accepted dispute spans — the number that makes the demand letter worth sending. 
+ Incoming money is matched by the reconciliation engine (exact → fuzzy → residual rules like TDS) and only the owner's confirmation marks anything paid; the 13-week forecast then shows cash in vs out, bending when customers make — or break — payment promises . 
+ Every event appends to a hash-chained audit log ; letters and bundles print a QR that anyone can scan at /verify to see the chain is intact. 
+ 2 · System context 
+ Owner 
+ Customer 
+ Anyone / judge 
+ FullPay — Next.js on Render 
+ owner app (cookie-gated): dashboard · invoices · follow-ups 
+ inbox · payments · forecast · settings · print pages 
+ public: /pay/:token · /verify/:hash 
+ machine (secret header): /api/tick · /api/reseed · /api/health 
+ engines: ladder · interest · recon · forecast · hash chain 
+ Postgres (Render) 
+ hash-chained escalation_events · outbox · 10 tables 
+ Cron ×3 
+ tick 10:00 IST · reseed 01:00 · ping 10 min 
+ Render Workflow: tick 
+ Resend (email) 
+ n8n (webhook out) 
+ manages, approves 
+ views / disputes / “paid” claim 
+ scans QR → verifies chain 
+ reads/writes 
+ triggers 
+ runs dunning tick 
+ queued sends only 
+ event POST (fire-and-forget) 
+ One deployable + one database. Three trust zones: the owner app behind a shared-password signed cookie (Next.js middleware; includes all /print/* ), the tiny public surface ( /pay/:token , /verify/:hash ), and machine routes gated by a secret header compared with timingSafeEqual (reseed additionally requires DEMO_MODE=true ). Scheduling split: Render cron → Workflow runs the 10:00 IST tick (the track qualifier); free cron-job.org runs the keep-alive ping and the 01:00 nightly reseed and doubles as the tick fallback that keeps working even if the dyno sleeps. /api/health is public but returns only {ok:true} . Resend and n8n are outbound only; a failed n8n POST never fails a tick. 
+ 3 · The invoice lifecycle (the product in one diagram) 
+ heads_up due − 3d · auto email 
+ due_date day 0 · auto email 
+ overdue_gentle +7 · owner one-tap 
+ overdue_firm +15 · owner one-tap 
+ demand_letter +30 · §16 interest · manual 
+ odr_guidance +45 · filing bundle 
+ PAID ✓ (confirm gate) 
+ paused: dispute rungs stop (interest stops only if owner accepts) 
+ paused: promise forecast inflow moves to promise date 
+ reconciliation confirm, from any rung 
+ customer disputes (/pay) 
+ resolved → same rung 
+ “will pay Friday” 
+ broken → next rung 
+ kept → payment → confirm 
+ The pack's six rungs as states, beside a separate stored status enum (draft · sent · part_paid · paid · disputed; due_soon and overdue are display states computed from the due date, never stored). The tick only walks status ∈ {sent, part_paid} — drafts are invisible to the ladder; an invoice entering late (or unpausing) starts at the highest rung already due, skipping earlier rungs silently with events only. Days count in whole IST days from each invoice's own due date (= acceptance date + the invoice's credit days; §15 caps agreed credit at 45 days, day 16 if nothing written). Each rung fires once; at most one rung advances per invoice per tick (no catch-up blasts). A customer dispute pauses rungs — the §16 interest clock stops only when the owner accepts the dispute (statutory interest isn't tolled by a buyer's objection; that nuance is our legal-correctness wedge). Dispute outcomes: accept → mark paid or adjust total (+ a hash-chained "credit" event; real credit notes are explicitly descoped), reject with reply → resume same rung, or edit the invoice. A kept promise becomes a payment that still passes the confirm gate (a partial promise follows the part-payment rule); a broken one auto-resumes at the next rung. snoozed_until skips a rung quietly. Every transition appends a hash-chained event. 
+ 4 · The daily tick (what runs while everyone sleeps) 
+ cron / demo clock 
+ Render Workflow 
+ steps retried · single-flight lock 
+ serial loop 
+ active invoices, 
+ grouped by customer 
+ (one message lists 
+ all due invoices) 
+ serial BY DESIGN: 
+ concurrency would 
+ fork the hash chain 
+ evaluate rung due? paused/snoozed? opt-out? 1/day cap? 
+ draft + queue ALL sends → outbox (CAS rung + event, one txn) 
+ log event hash-chain append + run id 
+ flush → Resend auto rungs · Idempotency-Key = outbox.id 
+ awaiting owner one-tap +7/+15 · statutory 
+ n8n POST try/catch, never blocks 
+ inbox ✓ demo proof 
+ triggers 
+ Idempotency is designed, not hoped for: ① single-flight — /api/tick runs in one transaction and takes pg_try_advisory_xact_lock (crash-safe) or returns 409; ② every rung transition is a CAS ( UPDATE … WHERE rung=$prev AND status IN (…) ) committed in the same transaction as its event append, and the outbox row is only created when that rowcount=1; ③ at most one rung per invoice per tick — skipped auto rungs are never backfill-sent; ④ sends flush from the outbox with Idempotency-Key = outbox.id , so a retry after send-but-before-mark can't double-email. One-tap rungs render wa.me / mailto / sms: links from the outbox and "Mark as sent" appends the event. Day-0 rule: the seed writes each invoice's current rung pointer plus backdated chain events, and the tick fires only rungs falling due on or after seed time — no catch-up blast. Advancing the demo clock (Settings → "Demo date", 1 day = 5 s, labeled on screen) synchronously calls /api/tick ; cron exists for judging-week realism. 
+ 5 · The four computation engines 
+ GST (per invoice) 
+ Per line: taxable value = qty × rate − discount, in whole paise (rupees converted exactly once, at entry; never parseFloat on money). 
+ Tax per line rounded to the paisa. Same state code (GSTIN first two digits vs place of supply) → CGST + SGST, each half-rate, rounded separately ; different state → IGST. GSTIN validated at entry: 15-char pattern + mod-36 check digit (all seed GSTINs pass; changing one character fails). 
+ Grand total rounded to the nearest rupee via an explicit "Round off" line; amount-in-words (lakh/crore) must match the rounded total. 
+ Document by registration type: Tax Invoice (regular; includes reverse-charge field and, above ₹5 crore turnover, an on-screen "e-invoicing/IRN applies — not generated here" note) · Bill of Supply (composition) · plain invoice (unregistered). Invoice numbers ≤16 chars, UNIQUE(fy, seq) , allocated at send inside a locked transaction (drafts carry no number, so the GST series has no gaps). 
+ Emit schema-valid e-invoice JSON + QR alongside the print view — no real IRN, per non-goals. 
+ MSMED §16 interest (the correctness wedge) 
+ Due date is per invoice: acceptance date (defaults to issue date) + the invoice's credit days (defaulted from the customer, editable; §15 caps agreed credit at 45 days, day 16 where nothing is written). Interest accrues from the day after that due date — never a hardcoded day 46. 
+ Split the overdue span at every RBI bank-rate change (series in config as basis-point ints with effective dates, pulled pre-event, source shown) and subtract owner-accepted dispute spans , reconstructed from the event log's [dispute_opened, dispute_accepted) pairs — rejected disputes exclude nothing. 
+ Within each segment: 3× bank rate, compound with monthly rests on due-date anniversaries , day-count actual/365 , simple pro-rata for the final partial period, each segment rounded to integer paise (half-up) so the printed table sums exactly to the total. Partial payments reduce principal from their value date using per-invoice allocations ; appropriation default = interest-first (⚠ pending pre-event verification). 
+ Output: the per-period breakdown table printed on the demand letter — each convention above ships as a golden-number unit test, so the rules are executable, not prose. 
+ 13-week cash forecast 
+ Inputs: opening cash (config) · expected inflows = each open invoice at its due date + that customer's average delay, overridden by an open promise's date · outflows from expenses (salaries on the 1st, rent on the 5th, supplier bills, GST payment on the 20th) · safety buffer (config). Outputs: weekly opening / in / out / closing (each week's closing = next week's opening, by construction), the first buffer-breach week highlighted, the invoices whose collection would cover the gap, and the pack's three what-if toggles (a customer pays 30 days later; a big order lands; a supplier payment is delayed). Customer reliability (A/B/C + reason) is computed on read — avg(value_date − due_date) and % on-time from confirmed payments, thresholds in config — and feeds both the forecast delay and the chase-first score (amount × days overdue × reliability × gap impact, reason in words). 
+ Reconciliation 
+ CSV import credits only · comma-safe paise 
+ pass 1 · exact amount + ±3d window + inv. no (any separators) 
+ pass 2 · fuzzy fuse.js name · ignores M/s, Pvt Ltd, case 
+ residual rules (in order) 
+ 1 · short by 0.1/1/2/10% of TAXABLE 
+ value (±₹1) → TDS flag 
+ 2 · < due → part payment 
+ 3 · > due → overpayment 
+ 4 · one credit, many invoices → earliest due first 
+ 5 · no match → unknown deposit 
+ owner confirm gate 
+ match + confidence + reason · writes per-invoice allocations 
+ mark PAID 
+ matched → with reason 
+ classified 
+ TDS checks against the taxable value excluding GST (that's what TDS is deducted on), rates [0.1, 1, 2, 10]% from config, ±₹1 tolerance, and it runs before the generic part-payment rule. Import dedupe key = SHA256(value_date|amount|ref|narration|line_no) — survives blank refs and twin ₹5,000 UPI credits. Confirming writes allocations [{invoice_id, amount_paise}] (the interest engine needs the per-invoice split), stops those ladders, updates part-paid reminder amounts (same rung), and feeds the forecast. One pinned sample CSV format ships in the repo and seeds the demo. 
+ 6 · Data model (10 tables) 
+ Table Key fields Notes 
+ customers name, gstin?, state_code, credit_days (default), contact, preferred_channel, opt_out Reliability grade computed on read, not stored 
+ invoices fy + seq + number ( UNIQUE(fy,seq) , allocated at send), customer_id, issue_date, acceptance_date (=issue by default), credit_days (own copy) , due_date, status, rung, paused_by?, snoozed_until?, pay_token UNIQUE, pay_token_expires_at , totals_paise Due = acceptance + invoice credit_days; the engine reads the invoice's own terms. Revoke token = regenerate 
+ invoice_items invoice_id, hsn/sac, qty, unit, rate, discount, gst_rate, taxable_paise, tax_paise The only home for line items; all money whole paise 
+ escalation_events id BIGSERIAL (chain order), invoice_id, type, actor (system/owner/customer), payload TEXT (canonical), run_id?, ts, prev_hash, entry_hash; UNIQUE(prev_hash) , UNIQUE(entry_hash) Append-only under pg_advisory_xact_lock ; feeds timeline, /verify, ODR bundle, dispute spans 
+ promises invoice_id, promised_date, amount_paise, status(open/kept/broken), created_by Max one open per invoice; /pay promises ≤ today+14d; a broken one blocks further customer promises 
+ payments source(csv/manual/ claim ), amount_paise, value_date, ref, narration, dedupe_hash UNIQUE, classification, confirmed_by_owner "Already-paid" claims land here unconfirmed → inbox. Nothing is PAID unconfirmed; the per-invoice split lives in payment_allocations 
+ outbox invoice_id(s), customer_id, rung, channel(email/wa/sms), recipient, subject, body, status(queued/ awaiting_owner /sent/failed), sent_at ALL sends route here; flush by CAS + Idempotency-Key; failures retry from Follow-ups 
+ expenses name, amount_paise, due_date, recurrence(monthly/once) The forecast's outflows — salaries 1st, rent 5th, supplier bills, GST 20th; seeded from the pack's list 
+ payment_allocations payment_id, invoice_id, amount_paise, value_date The only allocation store, written inside confirm(). Dispute spans are derived from events in code — no table, no second source of truth 
+ config ladder offsets, RBI rate series [{from, bps}], opening_balance_paise , safety buffer, demo_clock, interest conventions, TDS rates, A/B/C thresholds, business profile (incl. Udyam flag) Every “magic number” lives here with its source note 
+ 7 · Routes & screens (all 13 pack screens mapped) 
+ Surface Routes Pack screens 
+ Owner app (shared password → signed cookie) / dashboard · /invoices (+ /[id] timeline — also the entry to its documents) · /invoices/new · /customers · /followups · /inbox · /payments · /forecast · /chase-first · /settings · /print/invoice|letter|bundle/[id] 1–6, 8–13 + evidence pack 
+ Customer (public, token-gated) /pay/[token] — invoice view, UPI QR (simulated), "already paid" claim (→ unconfirmed payment → inbox), dispute, promise (guarded). Expired/revoked token → friendly "link expired — contact Arora Auto" page 7 
+ Public (read-only) /verify/[hash] — returns event type, invoice number, timestamp, hash, and chain-intact-through-this-entry status by walking from genesis. No PII in the response. Distinct copy for "no record" vs "chain broken" trust layer 
+ Machine (secret header, timingSafeEqual) POST /api/tick · POST /api/reseed (also needs DEMO_MODE=true ) · GET /api/health (public, {ok:true} only) — 
+ Demo controls (owner cookie + DEMO_MODE ) POST /api/demo/advance {date} runs the tick inline · POST /api/demo/reset Settings → Demo date / Reset demo 
+ 8 · Pinned conventions (the 2 AM Saturday rules) 
+ Hash chain: payload stored as TEXT, hashed exactly as stored; canonicalize() = recursively sorted keys, values limited to string/int/bool/null (money in paise ints, rates in basis points, timestamps ISO-8601); genesis prev_hash = 64 zeros; input framing hex(prev_hash) + "\n" + payload_text ; unit test = insert → read → re-verify. Verification walks stored bytes, parses only for display. 
+ Time: one shared today() helper returns the IST date string, honoring config.demo_clock ; dates are DATE columns compared as strings; raw Date.now()/new Date() is banned outside the helper — grep before the Sat 11 PM checkpoint. 
+ Letter guardrails (judged): title exactly "Payment Demand Letter"; the "not a GST department notice / not a legal notice from a lawyer" line near the top; interest shown as a separate figure, added to the demand only when the owner ticks the box; the MSMED paragraph renders only when the Udyam flag is set. 
+ Deterministic seed: pinned timestamps, payloads and genesis → identical hashes on every reseed; the reseed route asserts the demo letter's known hash exists afterward (so the QR in Friday's video still verifies on Sunday). Seed = our persona: 14 customers (archetypes incl. inter-state + unregistered), ~40 invoices over 4 months, the 6-case bank CSV (incl. a TDS shortfall), the pack's expense list, pinned demo numbers (3 reminders / 1 letter / 1 bundle-ready overnight). 
+ Resend reality: verify the sending domain Friday night first (DNS takes hours); every seed customer email = demo+name@ourdomain → one real inbox, which is precisely the "inbox ✓" demo shot. 
+ Demoted to roadmap (honesty slide, not built): AES field encryption · one-click data export · per-customer language · OCR · Marathi · real credit notes · consent manager · India residency. 
+ 9 · Who builds what (the seam is the API + event shape, frozen Sat 11 PM) 
+ Dev A — engines & pipes Dev B — product & proof 
+ Day-zero migration (10 tables incl. indexes/locks) · hash chain + canonicalize + /verify logic · ladder state machine + tick (cron→Workflow, single-flight, CAS) · GST + interest engines + golden unit tests · recon engine + allocations · forecast + chase-first + reliability computation · outbox flush + Resend + n8n · auth middleware (cookie + machine secrets) · LLM-tone flag · deck + README (judge tour, FAQ, 5 WhatsApp templates) Seed persona + deterministic seed script + pinned demo numbers · dashboard / invoices / new-invoice (live GST math) / follow-ups / inbox / payments-import / customers / settings UI · Invoify invoice template + e-invoice JSON+QR + print pages (letter, ODR bundle) · /pay + /verify pages incl. error states · hero escalation-timeline screen · i18n fill (keys from scaffold) · video 
+ Schedule, gates and the ordered cut list live in the dossier §5 . This HLD is the build contract: if code must diverge from it, the divergence gets one line in the README's "design changes" note. 

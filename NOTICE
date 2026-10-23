@@ -1,0 +1,12 @@
+FullPay — third-party notices
+
+This project is MIT licensed (see LICENSE). It includes or adapts the following third-party material:
+
+- Append-only audit-table trigger pattern — adapted from the Solana Developer Platform migration
+  `0047_audit_ledger_integrity.sql` (MIT, Solana Foundation). https://github.com/solana-foundation/solana-developer-platform
+- GST state-code list — `gst-states` index.json (MIT, (c) 2019 Mohit Jain / Refrens). https://github.com/refrens/gst-states
+- JSON Canonicalization Scheme test vectors (`weird`, `french`) — cyberphone/json-canonicalization (Apache-2.0, Anders Rundgren). https://github.com/cyberphone/json-canonicalization
+- shadcn/ui components (MIT). https://ui.shadcn.com
+- Any further snippet is credited in a comment at its point of use.
+
+GPL-licensed projects (ERPNext, india-compliance) were read for domain patterns only; no code was copied.

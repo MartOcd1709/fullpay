@@ -1,0 +1,276 @@
+ FullPay LLD 
+/* Layout: implementation reference — code blocks + inventory tables, dense but navigable */
+:root{
+ --bg:#f7f6f2; --surface:#ffffff; --fg:#1d2520; --muted:#5b655f;
+ --accent:#0f6e56; --accent-soft:#e1f5ee; --amber:#b96f10; --amber-soft:#fdf3e3; --line:#dde3de;
+ --display:"Archivo",system-ui,sans-serif; --body:"Source Sans 3",system-ui,sans-serif; --mono:"Spline Sans Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+ --bg:#141917; --surface:#1d2420; --fg:#e8ece9; --muted:#9aa69f;
+ --accent:#3fbf99; --accent-soft:#17352c; --amber:#e3a44a; --amber-soft:#332815; --line:#2c3630; color-scheme:dark}}
+:root[data-theme="dark"]{
+ --bg:#141917; --surface:#1d2420; --fg:#e8ece9; --muted:#9aa69f;
+ --accent:#3fbf99; --accent-soft:#17352c; --amber:#e3a44a; --amber-soft:#332815; --line:#2c3630; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;
+ padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 72px}
+main{max-width:940px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(1.6rem,4.5vw,2.3rem);font-weight:800;margin:.2em 0 .1em}
+h2{font-size:1.25rem;font-weight:800;margin:1.9em 0 .4em;padding-top:.6em;border-top:2px solid var(--line)}
+h3{font-size:1rem;font-weight:700;margin:1.2em 0 .3em}
+p{margin:.5em 0;max-width:78ch}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:28px}
+.meta{color:var(--muted);font-size:.9rem;max-width:none}
+nav{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav a{font-family:var(--display);font-size:.76rem;font-weight:700;text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface)}
+nav a:hover{color:var(--accent);border-color:var(--accent)}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:.78rem;line-height:1.5;margin:12px 0}
+code{font-family:var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:.84em}
+pre code{border:none;padding:0;background:none}
+table{border-collapse:collapse;width:100%;font-size:.85rem;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px;margin:12px 0}
+th{text-align:left;font-family:var(--display);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 9px 5px;border-bottom:2px solid var(--line)}
+td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.warn{border-left:3px solid var(--amber);background:var(--amber-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+.warn p{max-width:none;margin:.3em 0}
+.rule{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+.rule p{max-width:none;margin:.3em 0}
+ul,ol{padding-left:1.25em;margin:.4em 0}
+li{margin:.3em 0;max-width:78ch}
+a{color:var(--accent)}
+.small{font-size:.85rem;color:var(--muted)}
+ FullPay · HackCache '26 · Low-Level Design · Rev B (post 3-lens review, ~45 findings folded in) 
+ FullPay LLD 
+ Build from this. Schema DDL, module contracts, algorithms, API table, state machine, seed, tests, env. Binds to the HLD and plan Rev D. 
+ Global invariants: plain JavaScript · money = Number integer paise end-to-end, BigInt nowhere (pg parsers set to Number; asPaise() throws on unsafe ints) · rates = integer basis points · quantities = qty_milli INT · dates = YYYY-MM-DD IST strings via lib/time.js only · every write that changes invoice state happens in one transaction with its chain event · errors = {error:{code,message}} with 400 validation · 401 auth · 404 unknown · 409 locked · 410 expired. 
+ 1 Repo 2 Schema 3 Config 4 Modules 5 Interest 6 Chain 7 Ladder 8 API 9 Events 10 Screens 11 Seed 12 Tests 13 Env 
+ 1 · Repository layout (Next.js App Router) 
+ fullpay/
+├─ app/
+│ ├─ (owner)/ page.jsx (dashboard) · invoices/ · invoices/new/ · invoices/[id]/ · customers/
+│ │ followups/ · inbox/ · payments/ · forecast/ · chase-first/ · settings/
+│ ├─ pay/[token]/ public, token-gated
+│ ├─ verify/[hash]/ public, read-only
+│ ├─ print/{invoice,letter,bundle}/[id]/ A4 print-CSS pages (cookie-gated)
+│ ├─ login/
+│ └─ api/ route handlers (§8)
+├─ lib/ db.js time.js money.js gst.js upi.js i18n.js interest.js chain.js ladder.js
+│ recon.js forecast.js outbox.js webhook.js auth.js llm.js
+├─ db/ schema.sql · seed.js · bank-statement.csv
+├─ i18n/ en.json · hi.json (UI strings + message templates)
+├─ tests/ *.test.js (node:test)
+└─ middleware.js (auth allowlist) 
+ 2 · Schema (schema.sql — the day-zero migration, 10 tables) 
+ CREATE TABLE customers (
+ id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, address TEXT NOT NULL,
+ gstin TEXT, state_code TEXT NOT NULL, -- gstin NULL = unregistered; check digit validated in app
+ credit_days INT, -- NULL = nothing agreed in writing ⇒ statutory 15 days
+ email TEXT, phone TEXT,
+ preferred_channel TEXT NOT NULL DEFAULT 'email' CHECK (preferred_channel IN ('email','wa','sms')),
+ opt_out BOOLEAN NOT NULL DEFAULT FALSE, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE invoices (
+ id BIGSERIAL PRIMARY KEY,
+ fy TEXT NOT NULL, seq INT, -- seq allocated at /send (drafts have none)
+ number TEXT, -- 'INV/26-27/0007' (≤16 chars), set with seq
+ customer_id BIGINT NOT NULL REFERENCES customers(id),
+ issue_date DATE NOT NULL, acceptance_date DATE, -- NULL ⇒ issue_date
+ credit_days INT, -- copied from customer at create, editable; NULL ⇒ 15
+ due_date DATE NOT NULL, -- (acceptance ?? issue) + (credit_days ?? 15)
+ place_of_supply TEXT NOT NULL, reverse_charge BOOLEAN NOT NULL DEFAULT FALSE, ship_to TEXT,
+ status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','sent','part_paid','paid','disputed')),
+ rung TEXT CHECK (rung IN ('heads_up','due_date','overdue_gentle','overdue_firm','demand_letter','odr_guidance')),
+ paused_by TEXT CHECK (paused_by IN ('dispute','promise')), snoozed_until DATE,
+ pay_token TEXT UNIQUE, pay_token_expires_at DATE,
+ letter_include_interest BOOLEAN NOT NULL DEFAULT FALSE,
+ taxable_paise BIGINT NOT NULL DEFAULT 0, tax_paise BIGINT NOT NULL DEFAULT 0,
+ round_off_paise BIGINT NOT NULL DEFAULT 0, total_paise BIGINT NOT NULL DEFAULT 0,
+ UNIQUE (fy, seq));
+CREATE INDEX idx_invoices_active ON invoices(status) WHERE status IN ('sent','part_paid');
+-- due_soon / overdue are DISPLAY states computed from due_date vs today(); never stored.
+CREATE TABLE invoice_items (
+ id BIGSERIAL PRIMARY KEY, invoice_id BIGINT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+ hsn_sac TEXT NOT NULL, description TEXT NOT NULL, qty_milli INT NOT NULL, unit TEXT NOT NULL,
+ rate_paise BIGINT NOT NULL, discount_paise BIGINT NOT NULL DEFAULT 0, gst_rate_bps INT NOT NULL,
+ taxable_paise BIGINT NOT NULL, tax_paise BIGINT NOT NULL);
+CREATE TABLE escalation_events (
+ id BIGSERIAL PRIMARY KEY, invoice_id BIGINT REFERENCES invoices(id),
+ type TEXT NOT NULL, actor TEXT NOT NULL CHECK (actor IN ('system','owner','customer')),
+ payload TEXT NOT NULL, -- canonical JSON TEXT (§6): the hash source of truth
+ run_id TEXT, ts TIMESTAMPTZ NOT NULL, -- NO default: caller passes (seed pins it)
+ prev_hash TEXT NOT NULL, entry_hash TEXT NOT NULL, UNIQUE (prev_hash), UNIQUE (entry_hash));
+CREATE INDEX idx_events_invoice ON escalation_events(invoice_id, id);
+CREATE TABLE promises (
+ id BIGSERIAL PRIMARY KEY, invoice_id BIGINT NOT NULL REFERENCES invoices(id),
+ promised_date DATE NOT NULL, amount_paise BIGINT,
+ status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','kept','broken')),
+ created_by TEXT NOT NULL CHECK (created_by IN ('owner','customer')), created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX one_open_promise ON promises(invoice_id) WHERE status='open';
+CREATE TABLE payments (
+ id BIGSERIAL PRIMARY KEY, source TEXT NOT NULL CHECK (source IN ('csv','manual','claim')),
+ amount_paise BIGINT NOT NULL, value_date DATE NOT NULL, ref TEXT, narration TEXT,
+ dedupe_hash TEXT UNIQUE, classification TEXT, match_reason TEXT, confidence INT,
+ confirmed_by_owner BOOLEAN NOT NULL DEFAULT FALSE, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE payment_allocations ( -- written inside confirm()'s txn; the ONLY allocation store
+ id BIGSERIAL PRIMARY KEY, payment_id BIGINT NOT NULL REFERENCES payments(id),
+ invoice_id BIGINT NOT NULL REFERENCES invoices(id), amount_paise BIGINT NOT NULL, value_date DATE NOT NULL);
+CREATE INDEX idx_alloc_invoice ON payment_allocations(invoice_id);
+CREATE TABLE outbox (
+ id BIGSERIAL PRIMARY KEY, customer_id BIGINT NOT NULL REFERENCES customers(id),
+ invoice_ids BIGINT[] NOT NULL, rung TEXT NOT NULL,
+ channel TEXT NOT NULL CHECK (channel IN ('email','wa','sms')),
+ recipient TEXT NOT NULL, subject TEXT, body TEXT NOT NULL, lang TEXT NOT NULL,
+ status TEXT NOT NULL CHECK (status IN ('queued','awaiting_owner','sent','failed')),
+ provider_id TEXT, sent_at TIMESTAMPTZ, error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE expenses (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, amount_paise BIGINT NOT NULL,
+ due_date DATE NOT NULL, recurrence TEXT NOT NULL DEFAULT 'once' CHECK (recurrence IN ('once','monthly')));
+CREATE TABLE config (id INT PRIMARY KEY CHECK (id=1), data JSONB NOT NULL); 
+ Dispute spans are derived from events (§5/§6), not stored. Anonymize-delete: UPDATE customers SET name='Customer #'||id, address='—', email=NULL, phone=NULL, gstin=NULL + anonymized event; ledger untouched. db.js : pg.types.setTypeParser(20, Number) , setTypeParser(1700, Number) , exports withTxn(fn) (one client, BEGIN/COMMIT/ROLLBACK) and asPaise(v) . 
+ 3 · Config (JSONB; every magic number carries its source) 
+ { "business": { "name":"Arora Auto Components", "address":"…, Ludhiana 141003", "gstin":"03AAXCA1234F1Z8",
+ "state_code":"03", "regtype":"regular", "turnover_paise":38000000000, "udyam":true,
+ "bank":{"name":"…","account":"…","ifsc":"…"}, "upi_vpa":"aroraauto@demo", "logo_data_uri":null,
+ "dispute_contact":"accounts@…, +91-…" },
+ "ladder_offsets": {"heads_up":-3,"due_date":0,"overdue_gentle":7,"overdue_firm":15,"demand_letter":30,"odr_guidance":45},
+ "messaging": {"max_per_customer_per_day":1},
+ "letter": {"deadline_days":7},
+ "rbi_bank_rate": {"source":"rbi.org.in, pulled 2026-10-23", "series":[{"from":"2025-02-07","bps":625}]}, // ⚠ real series
+ "interest": {"multiplier":3,"day_count":365,"rests":"due_anniversary","appropriation":"interest_first"}, // ⚠ verify
+ "gst_rates": {"source":"cbic-gst.gov.in, checked 2026-10-23","bps":[0,300,500,1800,4000]},
+ "tds": {"rates_bps":[10,100,200,1000],"tolerance_paise":100},
+ "reliability": {"a_max_avg_late":5,"b_max_avg_late":20},
+ "forecast": {"weeks":13,"safety_buffer_paise":15000000,"opening_balance_paise":42000000},
+ "promise_max_days":14, "recon":{"date_window_days":3},
+ "ui": {"lang":"en","text_size":"normal"},
+ "demo": {"clock_date":null,"t0":"2026-10-24"} } 
+ 4 · Module contracts (lib/) 
+ Module Exports → behavior 
+ time.js initTime(cfg) once per request/tick entry · today() → IST date string, or cfg.demo.clock_date when set · addDays , daysBetween , dayAfter · addMonths(d,n) clamped to month-end (Jan 31 +1m → Feb 28) · fyOf(d) → '26-27' (Apr–Mar). Only module that touches Date. Grep-gate before Sat 11 PM: grep -rn "new Date\|Date.now" app lib | grep -v lib/time.js → empty. 
+ money.js paiseFromInput('1,23,456.78') → 12345678 (strip commas; string math; reject >2dp) · formatINR(paise) Intl en-IN · roundToRupee(paise) → {rounded, roundOff} · inWords(paise, lang) (to-words en-IN; hi via lib, EN fallback) · outstanding(invoice, allocations) = total − Σ confirmed allocations. 
+ gst.js lineTax(item) · invoiceTotals(items, supplierState, pos) → {taxable, cgst, sgst, igst, roundOff, total} (CGST/SGST half-rate each, rounded separately, when supplierState===pos; else IGST) · validateGSTIN (pattern + mod-36 check digit) · stateFromGSTIN · STATE_CODES {code→name} · docType(business, customer) · einvoiceRequired(business) (turnover > ₹5cr) · hsnDigitsRequired(business) (4 ≤₹5cr, else 6) · einvoiceJson(invoice, items) INV-1-shaped. 
+ upi.js upiString(invoice, business, amountPaise) → upi://pay?pa=<vpa>&pn=<enc name>&am=<rupees.2dp>&tn=<enc invoice no>&cu=INR (am = outstanding) · qrSvg(text) via qrcode (SVG for print). 
+ i18n.js t(lang, key, params) with {name} placeholders; amounts pre-formatted by caller · UI language/text size persisted in config.ui ; text size = root class (1rem / 1.125rem) · outbox bodies are rendered at queue time in the current app language (stored in outbox.lang ) · every outbound template ends with the safety footer : verify link + "FullPay messages never ask for OTP/PIN and never change payment details by message". 
+ interest.js §5. Pure. 
+ chain.js §6. canonicalize · appendEvent(client, e) (caller's txn) · verifyFromGenesis(db, hash) . 
+ ladder.js §7. tick(runId) · evaluate(inv, ctx) → {targetRung|null, skipped[]} · advance(client, inv, target, skipped, runId) one txn · pause/unpause . 
+ recon.js parseCsv(text) — pinned format Date(DD-MM-YYYY),Narration,Ref,Debit,Credit (Indian commas) → {rows (credits only), skipped:[{line,reason}]} · dedupeHash(row) = sha256(value_date|amount|ref|narration|line) · matchAll(rows, ctx) → per row {classification, candidates, reason, confidence}: ① exact = outstanding amount ± recon.date_window_days + invoice-no via /(?:INV[\s/.\-]*)?(\d{2}-\d{2})[\s/.\-]{0,3}(\d{1,5})\b/gi , accept only if group1 ∈ known FYs, seq = parseInt(group2) ② fuzzy name (fuse.js ≤.35; strip M/s, Pvt, Ltd, case) ③ residuals in order: TDS (shortfall ≈ rate × Σ taxable_paise, rates cfg, ±tolerance) → part (< outstanding) → over → multi (one credit, many invoices: earliest due first) → unknown · confirm(client, paymentId, allocations) : insert allocations; invoice fully covered → status 'paid', rung frozen, token revoked; partial → 'part_paid' (same rung, reminder amounts update); open promise covered → 'kept' + promise_kept + unpause; emits payment_confirmed . 
+ forecast.js reliability(customer, allocations) → {grade, avgLateDays, pctOnTime, reason} (on read; thresholds cfg) · build(ctx) → 13 × {weekStart, opening, inflows[], outflows[], closing}; weeks = [today, today+7)×13 (no calendar alignment); expected inflow date = open promise date OR due + avgLate, clamped to week 1 if < today ; monthly expenses expand from first occurrence ≥ today via addMonths; closing(w)=opening(w+1) by construction · gapCover(weeks, invoices) · chaseScore(inv, rel, gapImpact) → {score, reasonSentence} · whatIf(ctx, {latePayerDays?, bigOrder?:{week,paise}, supplierDelayDays?}) (the pack's three switches) · dashboard(ctx) → {toCollect, overdue, expectedThisWeek, expectedThisMonth, billsNext30, cashInBank, forecastLow, aging:[not_due, d1_30, d31_60, d61_90, d90p], topChase[5]}. 
+ outbox.js queue(client, {customer, rung, channel, invoiceIds, lang}) — merge key per tick = (customer_id, rung, channel); one message_queued event per invoice_id carrying outbox_id · flush(db) rows WHERE status='queued' → Resend with Idempotency-Key: outbox-<id> → CAS to 'sent' (+ message_sent per invoice) else 'failed'+error · sendOne(id) = CAS status IN ('awaiting_owner','failed') → send (owner's Retry / one-tap email) · markSentManual(id) after wa.me/sms tap · each queue touching an invoice extends pay_token_expires_at = max(current, today+30) . 
+ auth.js login(password) timingSafeEqual vs OWNER_PASSWORD, 5 attempts/min/IP (in-memory Map) → HMAC session cookie (SESSION_SECRET) · machineOk(req) timingSafeEqual vs TICK_SECRET · middleware allowlist: /login /pay/* /verify/* /api/login /api/pay/* /api/verify/* /api/tick /api/reseed /api/health /_next/* ; everything else incl. /print/* needs the cookie · pay tokens = randomBytes(16) base64url. 
+ webhook.js · llm.js postN8n(event) 2s timeout, try/catch, never throws · draftTone(rung, ctx, lang) → text or i18n template when no key/error; never in the money path. 
+ 5 · Interest engine (interest.js) — the correctness wedge 
+ computeInterest({ invoice, allocations, acceptedSpans, cfg, asOf })
+ → { segments:[{from,to,days,rate_bps,principal_paise,interest_paise}], total_paise, principal_now_paise, conventions }
+ 1 creditDays = invoice.credit_days ?? 15 // NULL = nothing agreed in writing ⇒ statutory 15, interest from day 16
+ due = (invoice.acceptance_date ?? issue_date) + creditDays ; start = dayAfter(due)
+ 2 asOf < start → zero result. Startup check: RBI series must cover start, else throw.
+ 3 boundaries = sorted unique of: start, asOf, RBI 'from' dates in (start,asOf], monthly rests
+ (addMonths(due,n) for n≥1), allocation value_dates, acceptedSpan edges.
+ 4 base = total_paise − Σ allocations.value_date ≤ start (clamped ≥ 0); accrued = 0
+ 5 for each [a,b) between boundaries:
+ inSpan = a inside an accepted dispute span // span = [dispute_opened.ts, dispute_accepted.ts)
+ rateBps = inSpan ? 0 : seriesRateAt(a) × cfg.interest.multiplier // rests still fire inside spans
+ seg.interest = Math.round(base × rateBps × days(a,b) / (10000 × cfg.interest.day_count)) // integer paise, half-up
+ accrued += seg.interest
+ at b: if b is a monthly rest → base += accrued; accrued = 0 // compound (monthly rests)
+ if b is an allocation → (rest first on a shared date, then allocate)
+ interest_first: pay = min(alloc, accrued); accrued −= pay; base = max(0, base − (alloc − pay))
+ principal_first: base = max(0, base − alloc)
+ 6 final partial period: simple accrual, no compounding at asOf
+ 7 total_paise = Σ seg.interest // letter table sums by construction
+Conventions footnote printed on the letter; rejected disputes exclude nothing. 
+ ⚠ Pre-event: real RBI series; appropriation order from the Act/MSEFC practice → set cfg.interest.appropriation , un-skip that branch's golden test. 
+ 6 · Hash chain (chain.js) 
+ canonicalize(v): whitelist, everything else THROWS
+ null | boolean → JSON literal
+ Number (safe integer) → decimal string (floats throw; money=paise, rates=bps, qty=milli)
+ bigint → decimal string
+ string → JSON.stringify(s)
+ Array (no holes) → '[' + items.map(canon).join(',') + ']'
+ plain Object (ctor===Object) → '{' + keys.sort() /*code-unit*/ .filter(v[k]!==undefined)
+ .map(k ⇒ JSON.stringify(k)+':'+canon(v[k])).join(',') + '}'
+ Date / class instances / undefined at top level → THROW (caller passes ISO strings)
+entry_hash = sha256_hex( prev_hash + "\n" + payload_text ); GENESIS prev_hash = '0'×64
+appendEvent(client, {invoice_id, type, actor, payload, run_id, ts}): // ts REQUIRED (seed pins it)
+ assert client is inside a txn; SELECT pg_advisory_xact_lock(42);
+ prev = last entry_hash by id DESC ?? GENESIS; INSERT (…, prev_hash=prev, entry_hash=…); retry once on unique_violation
+verifyFromGenesis(db, h): walk id ASC recomputing → {found, intact, event:{type, invoice_number, ts, hash}} // no payload/PII 
+ 7 · State machine (ladder.js) 
+ Global preconditions for every advance: status ∈ {sent, part_paid} · paused_by IS NULL · snoozed_until IS NULL OR today > snoozed_until · !customer.opt_out · customer under messaging.max_per_customer_per_day for this rung/channel. Entry & unpause rule: target = highest rung whose due + offset ≤ today ; intermediate rungs are skipped with rung_skipped events only (no messages); exactly one message (the target rung's) is queued; max one advance per invoice per tick . Tick = one transaction on one client, pg_try_advisory_xact_lock(7) else 409, serial loop grouped by customer (demo-scale ceiling, by design). 
+ Transition Rung-specific guard Action Events 
+ →heads_up today ≥ due−3 CAS rung; queue email queued (auto) rung_advanced, message_queued 
+ →due_date today ≥ due CAS; queue email auto same 
+ →overdue_gentle today ≥ due+7 CAS; queue awaiting_owner (one-tap wa/mail/sms) same 
+ →overdue_firm today ≥ due+15 CAS; queue awaiting_owner same 
+ →demand_letter today ≥ due+30 CAS; compute interest; letter draft exists (never auto-send); owner notified in Follow-ups rung_advanced, letter_generated 
+ →odr_guidance today ≥ due+45 CAS; bundle-ready; next-steps card (ODR/MSEFC line only if business.udyam ) rung_advanced, bundle_ready 
+ /send (draft→sent) owner allocate seq/number under pg_advisory_xact_lock(hashtext('inv'||fy)) ; mint pay_token (+30d); queue the invoice email with pay link invoice_sent, message_queued 
+ dispute open customer (/pay) or owner paused_by='dispute'; status 'disputed' (previous status remembered in payload); rungs halt; interest keeps accruing dispute_opened 
+ dispute accept owner (inbox) mark paid or adjust totals ( invoice_adjusted ); interest excludes [opened, accepted) dispute_accepted (+invoice_adjusted) 
+ dispute reject owner + reply status restored; unpause rule applies dispute_resolved 
+ promise ≤1 open; customer-made ≤ today+14d; none after a broken one paused_by='promise'; forecast inflow → promised date promise_made 
+ promise broken tick: today > promised_date, not paid status 'broken'; unpause rule; bypasses the date guard for one rung step promise_broken, rung_advanced 
+ paid confirm() covers outstanding status 'paid'; rung frozen; token NULL payment_confirmed 
+ 8 · API 
+ Route Auth Contract 
+ POST /api/login — {password} → cookie · 401 
+ GET/POST /api/customers · GET/PATCH /api/customers/:id · POST …/:id/anonymize · …/optout cookie POST validates GSTIN, derives state_code; list joins reliability() + total owed 
+ GET/POST /api/invoices · GET/PATCH /api/invoices/:id cookie server computes totals, due_date; draft until /send 
+ POST /api/invoices/:id/send · /snooze {until} · /promise {date,amount} · /regen-token · /letter {include_interest} · /bundle cookie /letter persists letter_include_interest , emits letter_generated; /bundle emits bundle_generated; both return print URLs 
+ GET /api/outbox?status= · POST /api/outbox/:id/send · /mark-sent cookie Follow-ups: awaiting_owner + failed (Retry) 
+ POST /api/payments/import (CSV) · POST /api/payments (manual) · GET /api/payments?unconfirmed · POST /api/payments/:id/confirm {allocations} cookie import returns {rows, skipped}; confirm = the gate 
+ GET /api/dashboard · /forecast?whatif= · /chase-first cookie forecast.js payloads (§4) 
+ GET /api/inbox · POST /api/inbox/:id/resolve {action: accept|reject|edit, reply?, adjust?} cookie disputes + claims 
+ GET/PATCH /api/config cookie settings incl. ui.lang/text_size 
+ POST /api/demo/advance {date} · POST /api/demo/reset cookie + DEMO_MODE sets demo.clock_date and runs the tick loop inline (same lock); reset = reseed. Settings "Demo date" uses these (1 day = 5 s pacing labeled on screen) 
+ GET /api/pay/:token token invoice view (outstanding, UPI string) · 404 unknown · 410 expired · refuses drafts 
+ POST /api/pay/:token/claim {ref,date,amount_paise} · /dispute {reason} · /promise {date} token · 10/min/token claim → payments(source='claim', unconfirmed) → inbox; promise guarded (§7) 
+ GET /api/verify/:hash — {found, intact, event:{type, invoice_number, ts, hash}, payee?:{vpa, bank_last4}} — for invoice/letter events the payee details as recorded at issue , so a buyer can confirm whom to pay (anti invoice-tampering). Still no customer PII 
+ POST /api/tick · POST /api/reseed TICK_SECRET (reseed also DEMO_MODE) tick → {advanced, queued, sent, runId} | 409; reseed asserts the pinned demo-letter hash exists after 
+ GET /api/health — {ok:true} only (lastTick/db detail requires the secret header) 
+ 9 · Event types (payload canonical) 
+ seeded · invoice_created{payee_vpa,bank_last4,total_paise} · invoice_sent · notice_shown{token_hash,lang} · invoice_edited · invoice_adjusted{old_total,new_total,reason} · rung_advanced{from,to} · rung_skipped{rung} · message_queued{outbox_id,channel,rung} · message_sent{outbox_id,provider_id} · message_failed{outbox_id,error} · marked_sent_manual{outbox_id} · letter_generated{interest_paise,segments_n,include_interest,deadline_date} · bundle_ready · bundle_generated · promise_made{date,amount} · promise_kept · promise_broken · dispute_opened{reason,prev_status} · dispute_accepted · dispute_resolved{reply} · claim_submitted{ref,date,amount} · payment_imported{dedupe} · payment_confirmed{allocations} · snooze_set{until} · optout_set · anonymized · token_regenerated · config_changed{keys} 
+ 10 · Screens → data (Dev B map; each has one i18n-keyed empty state) 
+ Screen Data Components / pinned details 
+ Dashboard /api/dashboard 7 stats · 5-bucket aging bar (not due · 1–30 · 31–60 · 61–90 · 90+) · top-5 chase. Empty: "No invoices yet — add your first" 
+ Invoices + detail /api/invoices status chips (stored + computed due_soon/overdue); detail = hero timeline (events as thread with hash stamps) + action rail 
+ New invoice POST /api/invoices pick/add customer; GSTIN validates on blur; HSN digit count enforced; IRN banner when einvoiceRequired; reverse-charge + ship-to fields; live totals; Invoify preview 
+ Customers /api/customers grade A/B/C + reason, avg days late, % on time, total owed; opt-out toggle; anonymize 
+ Follow-ups /api/outbox?status=awaiting_owner,failed one-tap wa.me/mailto/sms (body prefilled) + Mark-as-sent; email Send; Failed section with error + Retry ; snooze; promise modal. Empty: "All caught up — next reminder due {date}" 
+ Inbox /api/inbox dispute cards accept/reject/edit; claims with ref + amount 
+ Payments import + confirm dropzone → {rows, skipped list} → classified table (reason, confidence) → allocation editor → Confirm 
+ Forecast /api/forecast 13-week line + buffer band; breach badge; gap-cover list; 3 what-ifs (late payer / big order / supplier delay) 
+ Chase-first /api/chase-first ranked cards with reason sentence 
+ Settings /api/config · /api/demo/* profile (incl. address, logo, Udyam) · ladder days · buffer · language EN/हिंदी · text size · Demo date (+ advance) · Reset demo · Privacy card : data map (what we hold per customer and why), retention rule (GST, 72 months ⚠), opt-outs in force, anonymize action, notice log (count + last shown) 
+ /pay/[token] /api/pay invoice + UPI QR (outstanding) + claim/dispute/promise; first open appends notice_shown ; "Is this message genuine?" panel (verify link + "we never ask OTP/PIN"); expired copy: "This link has expired — contact {business} at {dispute_contact}" 
+ /verify/[hash] /api/verify green "chain intact through this entry" · amber "no record" · red "chain broken" · "Pay only to:" payee block (VPA + bank last-4 as recorded at issue) with a one-line "if the invoice you received shows different details, do not pay" 
+ /print/invoice server Tax Invoice / Bill of Supply / plain by docType; both addresses; place of supply name+code; HSN/SAC; CGST+SGST or IGST; round-off; words; reverse-charge line; ship-to block when set; UPI QR; signature block; IRN-applies note when >₹5cr 
+ /print/letter server Title "Payment Demand Letter" · disclaimer line near top ("…not a notice from the GST department and not a legal notice from a lawyer") · per-invoice schedule with part payments + balance · pay-by date (letter date + 7) · bank details + UPI QR · dispute contact · MSMED paragraph + interest table only if udyam ; interest shown separately, added to the demand only if letter_include_interest · verify QR → /verify/:hash of letter_generated · signature 
+ /print/bundle server cover · invoice print copy · each letter verbatim · reminder bodies with channel + timestamp · payments with allocations · customer replies (claims/disputes) · interest table · document checklist for the ODR portal (⚠ field list) · chain-verification page with QR 
+ 11 · Deterministic seed (db/seed.js) 
+ T0 = config.demo.t0 ; all dates relative; every event ts pinned ⇒ identical hashes on every reseed. 
+ 14 customers (address, 6-digit HSN items; GSTINs pass check digit; one Haryana/IGST; one unregistered; one with credit_days NULL ⇒ 15-day statutory default; 2 prompt A · 2 chronic C · 1 disputer); emails demo+c01…c14@<domain> . 
+ ~40 invoices / 4 months (seq allocated; drafts excluded from numbering): 8 paid · 4 part_paid (allocations rows) · 9 current, 3 of them with heads_up/due falling exactly on T0 · 14 overdue incl. INV/26-27/0042 seeded at rung=demand_letter with its full backdated chain incl. letter_generated (pinned ts) — this is the hash the reseed asserts and the video QR points at · one at due+29 (crosses 30 on the live demo tick) · one at due+44 (bundle-ready) · 1 disputed · 1 draft · 2 open promises (one breaking at T0+1). 
+ Expenses: salaries ₹2.6L (1st, monthly) · rent ₹45k (5th) · 3 supplier bills · electricity · GST (20th). Opening ₹4.2L, buffer ₹1.5L ⇒ breach ≈ week 4 (~₹1.8L) by construction. 
+ bank-statement.csv (pinned format): the 6 cases (exact · part · one-credit-two-invoices · exactly 2% of taxable short ⇒ TDS · over · unknown) + one debit row + one malformed row (prove the skipped path); re-import = 0 new. 
+ Assertions, two stages: (a) after seed — rung pointers set, 1 letter-rung invoice (0042) with verifiable hash, 1 bundle-ready, DSO = 58d, 0 outbox rows; (b) after one deterministic tick at T0 (demo clock = T0, rungs due on or after T0 fire) — exactly 3 queued auto sends, the due+29 invoice untouched until T0+1. Script prints 0042's interest figure → frozen into the deck at Sat 11 PM. 
+ 12 · Tests (tests/, node:test, golden numbers) 
+ gst : ₹10,000@18% same-state 900/900/11,800 · other-state 1,800 · 3×₹333@5% · 10% discount · composition · 0% · round-off + words · GSTIN valid / one-char flip · HSN digits by turnover · einvoiceRequired. 
+ interest : flat · RBI change mid-delay · partial payment both appropriations (one skipped until ⚠) · accepted span as rate-0 with a rest inside it · 30 vs 45-day terms · NULL terms ⇒ day 16 · allocation on a rest date (compound first) · Σ segments === total · asOf before start. 
+ chain : canonicalize determinism · float/Date throw · append→verify intact · tamper → broken · unique_violation retry. 
+ ladder : each guard · global preconditions block (paused/snoozed/opt-out/paid) · entry at highest due rung skips silently · one advance per tick · promise-break step · 1 msg/customer/rung/day merge · invoice sent at due+10 reaches overdue_gentle with no heads_up/due emails. 
+ recon : 6 CSV cases · debit + malformed skipped · TDS precedence + taxable base · regex rejects dates/FY-as-number · lakh-comma parse · duplicate import = 0 · multi earliest-due split · outstanding (not total) matching. 
+ forecast : closing(w)=opening(w+1) · past-dated clamp · monthly expansion from ≥ today · promise shift/restore · breach week = seed design · dashboard aging buckets. 
+ time : IST 18:30 UTC flip · demo-clock override · addMonths clamp (31st) · fyOf · grep-gate. 
+ e2e (Playwright, one): login → dashboard → demo advance → outbox grew → letter print 200 → /verify green. 
+ 13 · Environment & services 
+ # .env.example
+DATABASE_URL= SESSION_SECRET= TICK_SECRET= OWNER_PASSWORD=
+RESEND_API_KEY= MAIL_FROM=collect@fullpay-demo.<tld> APP_URL= DEMO_MODE=true
+N8N_WEBHOOK_URL= LLM_API_KEY= # optional 
+ Render: Web (starter $7 during judging — never sleeps) · Postgres (free) · Render cron 04:30 UTC (=10:00 IST) → Render Workflow → POST /api/tick (the track qualifier). 
+ cron-job.org (free): GET /api/health every 10 min (keep-alive) · POST /api/reseed 19:30 UTC (=01:00 IST) during judging week with the secret header · tick fallback if Workflows misbehave (Sat 2 PM gate). 
+ Friday-night order: ① Resend domain DNS ② repo + schema.sql ③ seed ④ deploy skeleton ⑤ everything else. 
+ Non-goals enforced in code: no IRN call sites · wa.me/sms links only · the only letter-send button lives on the letter page · drafts get no number. 
+ Change control: freezes with the plan. Divergence during the build = one line in README "design changes" (+ a note here if structural). 
