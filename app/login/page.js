@@ -1,53 +1,19 @@
-"use client";
+import Shell from "@/components/public/Shell";
+import { getLang, tr } from "@/components/public/lang";
+import LoginForm from "./LoginForm";
 
-import { useState } from "react";
-import Button from "@/components/ui/Button";
+export const metadata = { title: "Sign in" };
 
-function nextPath() {
-  const next = new URLSearchParams(window.location.search).get("next");
-  return next && /^\/(?![\/\\])/.test(next) ? next : "/dashboard";
-}
-
-export default function LoginPage() {
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function onSubmit(event) {
-    event.preventDefault();
-    setBusy(true);
-    setError("");
-    const password = new FormData(event.currentTarget).get("password");
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
-      if (res.ok) {
-        window.location.assign(nextPath());
-        return;
-      }
-      const data = await res.json().catch(() => null);
-      setError(data?.error?.message ?? "Could not log in. Try again.");
-    } catch {
-      setError("Network problem. Check your connection and try again.");
-    }
-    setBusy(false);
-  }
-
+export default async function LoginPage() {
+  const lang = await getLang();
+  const t = tr(lang);
+  const keys = ["auth.title", "auth.password", "auth.wrong", "auth.too_many", "btn.login", "error.generic", "error.network", "public.login.intro", "public.login.busy", "public.login.or", "public.landing.open_demo", "public.login.demo_hint"];
+  const s = Object.fromEntries(keys.map((k) => [k, t(k)]));
   return (
-    <main className="flex min-h-dvh items-center justify-center p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-sm" aria-describedby={error ? "login-error" : undefined}>
-        <p className="text-2xl font-bold text-accent">FullPay</p>
-        <h1 className="mt-1 text-lg font-semibold">Owner login</h1>
-        <p className="mt-1 text-ink-muted">Only the business owner can see customers, invoices and payments.</p>
-        <label htmlFor="password" className="label mt-5">Password</label>
-        <input id="password" name="password" type="password" required autoComplete="current-password" autoFocus className="field" aria-invalid={error ? "true" : undefined} />
-        {error && (
-          <p id="login-error" role="alert" className="mt-3 rounded-xl bg-error-soft px-3 py-2 font-medium text-error">{error}</p>
-        )}
-        <Button type="submit" full className="mt-5" disabled={busy}>{busy ? "Logging in…" : "Log in"}</Button>
-      </form>
-    </main>
+    <Shell lang={lang}>
+      <div className="flex justify-center py-6">
+        <LoginForm s={s} demo={process.env.DEMO_MODE === "1"} />
+      </div>
+    </Shell>
   );
 }

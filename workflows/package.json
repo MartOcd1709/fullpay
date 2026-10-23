@@ -2,7 +2,7 @@
   "name": "fullpay-workflows",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22.12 <23" },
   "scripts": { "start": "node main.js" },
   "dependencies": { "@renderinc/sdk": "1.4.0" }
 }

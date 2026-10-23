@@ -43,7 +43,7 @@ function NavLink({ item, active, compact = false }) {
   return (
     <Link href={item.href} aria-current={active ? "page" : undefined} className={`${base} ${tone}`}>
       <Icon name={item.icon} className={compact ? "h-6 w-6" : "h-5 w-5"} />
-      <span>{item.label}</span>
+      <span>{compact ? item.short ?? item.label : item.label}</span>
     </Link>
   );
 }

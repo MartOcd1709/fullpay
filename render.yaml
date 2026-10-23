@@ -8,12 +8,17 @@ services:
     plan: starter
     region: singapore
     buildCommand: npm ci && npm run build
+    preDeployCommand: npm run db:migrate
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "22.22.1"
+      - key: TZ
+        value: Asia/Kolkata
       - key: DATABASE_URL
         fromDatabase:
           name: fullpay-db
@@ -21,7 +26,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: TICK_SECRET
-        sync: false
+        generateValue: true
       - key: RESEED_SECRET
         sync: false
       - key: OWNER_PASSWORD
@@ -50,14 +55,16 @@ services:
     region: singapore
     schedule: "30 4 * * *" # 04:30 UTC = 10:00 IST
     buildCommand: echo "nothing to build"
+    # Node fetch, not curl (K35): the cron image is not guaranteed to ship curl. Exit code follows the HTTP status.
     startCommand: >-
-      curl -fsS -X POST https://api.render.com/v1/task-runs
-      -H "Authorization: Bearer $RENDER_API_KEY"
-      -H "Content-Type: application/json"
-      -d '{"task":"fullpay-workflows/daily-tick","input":[]}'
+      node -e "fetch('https://api.render.com/v1/task-runs',{method:'POST',headers:{Authorization:'Bearer '+process.env.RENDER_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({task:'fullpay-workflows/daily-tick',input:[]})}).then(async r=>{console.log(r.status,await r.text());process.exitCode=r.ok?0:1}).catch(e=>{console.error(e);process.exitCode=1})"
     envVars:
       - key: RENDER_API_KEY
         sync: false
+      - key: NODE_VERSION
+        value: "22.22.1"
+      - key: TZ
+        value: Asia/Kolkata
 
   - type: workflow
     name: fullpay-workflows
@@ -70,7 +77,14 @@ services:
       - key: APP_URL
         sync: false
       - key: TICK_SECRET
-        sync: false
+        fromService:
+          type: web
+          name: fullpay-web
+          envVarKey: TICK_SECRET
+      - key: NODE_VERSION
+        value: "22.22.1"
+      - key: TZ
+        value: Asia/Kolkata
 
 databases:
   - name: fullpay-db
