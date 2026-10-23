@@ -8,7 +8,8 @@
     "start": "next start",
     "test": "node --env-file-if-exists=.env.local --test --test-concurrency=1 'tests/**/*.test.js'",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.js",
-    "db:seed": "node --env-file-if-exists=.env.local scripts/seed.js"
+    "db:seed": "node --env-file-if-exists=.env.local scripts/seed.js",
+    "start:render": "node scripts/bootstrap.js && next start"
   },
   "dependencies": {
     "fuse.js": "^7.5.0",

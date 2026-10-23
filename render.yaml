@@ -1,15 +1,14 @@
-# FullPay on Render: web service + Postgres + a cron job that starts the Render Workflow task "daily-tick".
-# The Workflow service itself ("fullpay-workflows", root dir workflows/) is created in the Dashboard if
-# this Blueprint's `type: workflow` entry is rejected (Workflows do not yet replicate via Blueprints).
+# FullPay on Render, free plan: one web service + one Postgres database. ₹0, no card needed.
+# The daily 10:00 IST reminder run and the keep-alive ping come from cron-job.org (free), calling
+# POST /api/tick with the x-tick-secret header. For the Render Workflows bonus track, see render.paid.yaml.
 services:
   - type: web
     name: fullpay-web
     runtime: node
-    plan: starter
+    plan: free
     region: singapore
     buildCommand: npm ci && npm run build
-    preDeployCommand: npm run db:migrate
-    startCommand: npm start
+    startCommand: npm run start:render
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
@@ -28,63 +27,23 @@ services:
       - key: TICK_SECRET
         generateValue: true
       - key: RESEED_SECRET
-        sync: false
+        generateValue: true
       - key: OWNER_PASSWORD
         sync: false
-      - key: RESEND_API_KEY
+      - key: DEMO_MODE
+        value: "1"
+      - key: APP_URL
+        sync: false
+      - key: MAIL_TEST_MODE
+        value: "1"
+      - key: MAIL_TEST_TO
         sync: false
       - key: MAIL_FROM
         sync: false
       - key: MAIL_REPLY_TO
         sync: false
-      - key: MAIL_TEST_MODE
-        value: "0"
-      - key: MAIL_TEST_TO
+      - key: RESEND_API_KEY
         sync: false
-      - key: APP_URL
-        sync: false
-      - key: DEMO_MODE
-        value: "1"
-      - key: N8N_WEBHOOK_URL
-        sync: false
-
-  - type: cron
-    name: fullpay-daily-tick
-    runtime: node
-    plan: starter
-    region: singapore
-    schedule: "30 4 * * *" # 04:30 UTC = 10:00 IST
-    buildCommand: echo "nothing to build"
-    # Node fetch, not curl (K35): the cron image is not guaranteed to ship curl. Exit code follows the HTTP status.
-    startCommand: >-
-      node -e "fetch('https://api.render.com/v1/task-runs',{method:'POST',headers:{Authorization:'Bearer '+process.env.RENDER_API_KEY,'Content-Type':'application/json'},body:JSON.stringify({task:'fullpay-workflows/daily-tick',input:[]})}).then(async r=>{console.log(r.status,await r.text());process.exitCode=r.ok?0:1}).catch(e=>{console.error(e);process.exitCode=1})"
-    envVars:
-      - key: RENDER_API_KEY
-        sync: false
-      - key: NODE_VERSION
-        value: "22.22.1"
-      - key: TZ
-        value: Asia/Kolkata
-
-  - type: workflow
-    name: fullpay-workflows
-    runtime: node
-    region: singapore
-    rootDir: workflows
-    buildCommand: npm ci
-    startCommand: node main.js
-    envVars:
-      - key: APP_URL
-        sync: false
-      - key: TICK_SECRET
-        fromService:
-          type: web
-          name: fullpay-web
-          envVarKey: TICK_SECRET
-      - key: NODE_VERSION
-        value: "22.22.1"
-      - key: TZ
-        value: Asia/Kolkata
 
 databases:
   - name: fullpay-db
