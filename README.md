@@ -1,7 +1,6 @@
 # FullPay — get paid in full, with the interest the law owes you
 
-**HackCache '26 · Problem statement 4: The Small Business Invoice Chase · Team FullPay** (two developers + Claude as pair programmer)
-
+**HackCache '26 · Problem statement 4: The Small Business Invoice Chase · Team FullPay** 
 FullPay helps an Indian micro or small business track unpaid invoices, follow up on time and politely (English or Hindi), issue GST-compliant tax invoices and Payment Demand Letters, match bank payments, see a cash shortage weeks ahead — and, when a buyer still will not pay, walk into the MSME ODR portal with a filing-ready, tamper-evident bundle and period-correct MSMED §16 interest.
 
 > Every "-Pay" app helps you pay. FullPay is for getting paid — in full.
