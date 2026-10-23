@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 
 const ICONS = {
   dashboard: "M3 11l9-8 9 8M5 10v10h14V10",
+  approvals: "M22 11.1V12a10 10 0 1 1-5.9-9.1M22 4 12 14l-3-3",
+  analytics: "M3 3v18h18M7 15l4-4 3 3 6-6",
+  team: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
+  activity: "M22 12h-4l-3 9L9 3l-3 9H2",
   invoices: "M6 3h9l4 4v14H6zM15 3v4h4M9 12h6M9 16h6",
   newInvoice: "M6 3h9l4 4v14H6zM15 3v4h4M12 11v6M9 14h6",
   customers: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
@@ -38,7 +42,7 @@ function activeHref(items, pathname) {
 function NavLink({ item, active, compact = false }) {
   const base = compact
     ? "flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline"
-    : "flex min-h-12 items-center gap-3 rounded-xl px-3 py-2 font-medium no-underline";
+    : "flex min-h-11 items-center gap-3 rounded-xl px-3 py-1.5 font-medium no-underline";
   const tone = active ? (compact ? "text-accent" : "bg-accent-soft text-accent") : "text-ink hover:bg-surface-2";
   return (
     <Link href={item.href} aria-current={active ? "page" : undefined} className={`${base} ${tone}`}>
@@ -71,7 +75,7 @@ export function Nav({ items, brand = "FullPay", labels = {} }) {
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-line bg-surface lg:flex print:hidden">
         <Link href="/dashboard" className="px-5 py-5 text-xl font-bold text-accent no-underline">{brand}</Link>
         <nav aria-label={nav} className="flex-1 overflow-y-auto px-3">
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
             {items.map((item) => (
               <li key={item.href}><NavLink item={item} active={item.href === active} /></li>
             ))}

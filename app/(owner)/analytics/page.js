@@ -55,7 +55,7 @@ export default async function AnalyticsPage() {
 
   return (
     <>
-      <PageHeader title={T("pages.an.title")} subtitle={T("pages.an.intro", { date: d.as_of })} />
+      <PageHeader title={T("pages.an.title")} subtitle={T("pages.an.intro", { date: T.date(d.as_of) })} />
 
       <section className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label={T("pages.an.kpis")}>
         <Tile label={T("pages.an.dso")} hint={T("pages.an.dso_hint")}
@@ -122,7 +122,7 @@ export default async function AnalyticsPage() {
               {d.at_risk.map((c) => (
                 <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
                   <Grade grade={c.grade} T={T} />
-                  <Link href={`/customers/${c.id}`} className="min-w-0 flex-1 font-semibold">{c.name}</Link>
+                  <Link href={`/customers/${c.id}`} className="min-w-[10rem] flex-1 font-semibold">{c.name}</Link>
                   <Money paise={c.total_owed_paise} className="font-bold" />
                   <p className="w-full text-ink-muted">{T("pages.an.risk_line", { pct: Math.round(c.pct_on_time ?? 0), days: Math.round(c.avg_late_days ?? 0) })}</p>
                 </li>

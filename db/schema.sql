@@ -277,3 +277,10 @@ CREATE INDEX IF NOT EXISTS invoices_due_idx ON invoices (due_date) WHERE status 
 CREATE INDEX IF NOT EXISTS allocations_invoice_idx ON payment_allocations (invoice_id);
 CREATE INDEX IF NOT EXISTS payments_status_idx ON payments (status, paid_on);
 CREATE INDEX IF NOT EXISTS outbox_customer_idx ON outbox (customer_id, created_at);
+
+-- Invoices brought in from the owner's existing books (Tally / Vyapar / Excel); numbered by that system, not FullPay.
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS imported BOOLEAN NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX IF NOT EXISTS invoices_number_uniq ON invoices (lower(number)) WHERE number IS NOT NULL;
+CREATE INDEX IF NOT EXISTS credit_notes_invoice_idx ON credit_notes (invoice_id);
+CREATE INDEX IF NOT EXISTS inbox_items_invoice_idx ON inbox_items (invoice_id);
+CREATE INDEX IF NOT EXISTS promises_invoice_idx ON promises (invoice_id);

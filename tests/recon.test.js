@@ -329,3 +329,18 @@ test("fys default: today's FY first, then every FY that has an invoice (April pa
   const [r] = matchCredits([c], [march], customers, { today: "2027-04-05" });
   assert.deepEqual([r.matches, r.confidence], [[{ invoice_id: 7, amount_paise: 11800000 }], 95]);
 });
+
+test("an imported invoice is found by its own (Tally) number, with or without punctuation", async () => {
+  const { matchCredits } = await import("../lib/recon.js");
+  const invoices = [
+    { id: 1, customer_id: 7, fy: "26-27", seq: null, number: "TI/0412", status: "sent", due_date: "2026-09-17", outstanding_paise: 11800000, taxable_paise: 11800000 },
+    { id: 2, customer_id: 7, fy: "26-27", seq: 412, number: "INV/26-27/0412", status: "sent", due_date: "2026-09-20", outstanding_paise: 500000, taxable_paise: 500000 },
+  ];
+  const customers = [{ id: 7, name: "Rana Transport Company" }];
+  const credit = (narration) => ({ line: 2, date: "2026-10-20", narration, reference: "R1", debit_paise: 0, credit_paise: 11800000 });
+  for (const n of ["NEFT CR-RANA TRANSPORT-TI/0412", "UPI/TI0412/PAYMENT", "IMPS TI 0412 RANA"]) {
+    const [m] = matchCredits([credit(n)], invoices, customers, { fys: ["26-27"] });
+    assert.deepEqual(m.matches, [{ invoice_id: 1, amount_paise: 11800000 }], n);
+    assert.equal(m.confidence, 95, n);
+  }
+});

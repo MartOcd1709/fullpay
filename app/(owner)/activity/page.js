@@ -3,17 +3,20 @@ import EmptyState from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
 import { run } from "@/lib/services/context";
+import { keys } from "@/lib/i18n";
+
+const KNOWN = new Set(keys);
 
 export async function generateMetadata() {
   const T = await getT();
   return { title: T("pages.act.title") };
 }
 
-// "/api/payments/12/confirm" → "payments · confirm #12".
-const label = (path) => {
-  const id = path.match(/\/(\d+)(\/|$)/)?.[1];
-  const words = path.replace(/^\/api\//, "").replace(/\/\d+/g, "").split("/").filter(Boolean).join(" · ");
-  return id ? `${words} #${id}` : words;
+// "/api/payments/12/confirm" → slug "payments.confirm", id 12 → "Confirmed payment #12" (falls back to the path words).
+const parse = (path) => {
+  const id = path.match(/\/(\d+)(\/|$)/)?.[1] ?? null;
+  const slug = path.replace(/^\/api\//, "").replace(/\/\d+/g, "").split("/").filter(Boolean).join(".");
+  return { id, slug };
 };
 
 export default async function ActivityPage() {
@@ -46,8 +49,15 @@ export default async function ActivityPage() {
               <span className="mono text-ink-muted">{fmt(r.at)}</span>
               <span className="font-semibold">{r.user_name ?? T("pages.act.system")}</span>
               {r.role && <span className="rounded-full bg-surface-2 px-2 text-sm">{T(`pages.role.${r.role}`)}</span>}
-              <span className="min-w-0 flex-1 break-words"><span className="mono text-sm text-ink-muted">{r.action}</span> {label(r.target ?? "")}</span>
-              <span className={`mono text-sm ${r.status === 202 ? "text-warning" : "text-ink-muted"}`}>{r.status === 202 ? T("pages.act.queued") : r.status}</span>
+              {(() => {
+                const { id, slug } = parse(r.target ?? "");
+                const key = `pages.act.a.${r.action === "PATCH" && slug === "settings" ? "settings" : slug}`;
+                const text = KNOWN.has(key) ? T(key) : slug.replaceAll(".", " · ");
+                return <span className="min-w-0 flex-1 break-words">{text}{id ? ` #${id}` : ""}</span>;
+              })()}
+              <span className={`text-sm font-semibold ${r.status === 202 ? "text-warning" : r.status < 300 ? "text-success" : "text-error"}`}>
+                {r.status === 202 ? T("pages.act.queued") : r.status < 300 ? T("pages.act.ok") : r.status}
+              </span>
             </li>
           ))}
         </ol>

@@ -16,7 +16,8 @@ export default async function InvoicePrint({ params }) {
   const { view: v, lang, verifyUrl } = await loadPrint(params, invoicePrint);
   const t = (k, vars) => translate(k, "en", vars);
   const { business: b, customer: c, invoice: inv } = v;
-  const taxed = inv.doc_type === "tax_invoice";
+  const imported = inv.imported === true; // raised in Tally etc.: FullPay prints what is owed, never a second tax invoice
+  const taxed = inv.doc_type === "tax_invoice" && !imported;
   const owed = Math.max(0, inv.outstanding_paise);
   const draft = inv.status === "draft";
   const recordUrl = verifyUrl(v.record_hash);
@@ -44,7 +45,8 @@ export default async function InvoicePrint({ params }) {
           <p className="pf-small">{[b.phone, b.email].filter(Boolean).join(" · ")}</p>
         </div>
         <div className="pf-box shrink-0 text-right" style={{ minWidth: "62mm" }}>
-          <p style={{ fontSize: "14pt", fontWeight: 800, margin: 0 }}><H k={TITLE[inv.doc_type]} lang={lang} /></p>
+          <p style={{ fontSize: "14pt", fontWeight: 800, margin: 0 }}><H k={imported ? "print.imported_statement" : TITLE[inv.doc_type]} lang={lang} /></p>
+          {imported && <p className="pf-small">{translate("print.imported_note", lang, { number: inv.number })}</p>}
           {inv.doc_type === "bill_of_supply" && <p className="pf-small font-semibold">{COMPOSITION_HEADING}</p>}
           <p className="pf-small"><H k="print.original" lang={lang} /></p>
         </div>

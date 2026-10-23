@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Icon from "./Icon";
 
 // Bottom sheet on phones, side panel on laptops, built on the native <dialog> (focus trap, Esc, inert page for free).
-export function Sheet({ open, onClose, title, children, footer, closeLabel = "Close" }) {
+export function Sheet({ open, onClose, title, children, footer, closeLabel = "Close", wide = false }) {
   const ref = useRef(null);
   useEffect(() => {
     const d = ref.current;
@@ -15,7 +15,7 @@ export function Sheet({ open, onClose, title, children, footer, closeLabel = "Cl
   return (
     <dialog
       ref={ref}
-      className="sheet"
+      className={wide ? "sheet sheet-wide" : "sheet"}
       aria-labelledby="sheet-title"
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose?.()}

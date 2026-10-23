@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Icon from "@/components/ui/Icon";
 import DemoBanner from "@/components/ui/DemoBanner";
+import DemoTour, { TourButton } from "@/components/ui/DemoTour";
+import { demoLinks } from "@/lib/services/letters";
 import LangSwitch from "@/components/ui/LangSwitch";
 import { ToastRegion } from "@/components/ui/Toast";
 import { getSessionFromCookies } from "@/lib/auth";
@@ -21,10 +23,10 @@ const NAV = [
   ["/forecast", "forecast", "nav.forecast"],
   ["/chase-first", "chaseFirst", "nav.chase_first"],
   ["/documents", "documents", "nav.documents"],
-  ["/approvals", "check", "nav.approvals"],
-  ["/analytics", "trend", "nav.analytics"],
-  ["/team", "user", "nav.team"],
-  ["/activity", "hash", "nav.activity"],
+  ["/approvals", "approvals", "nav.approvals"],
+  ["/analytics", "analytics", "nav.analytics"],
+  ["/team", "team", "nav.team"],
+  ["/activity", "activity", "nav.activity"],
   ["/settings", "settings", "nav.settings"],
 ];
 
@@ -39,7 +41,8 @@ async function shell(session) {
       }
       const who = session?.uid ? (await c.query("SELECT name FROM users WHERE id = $1", [session.uid])).rows[0]?.name : null;
       const pending = (await c.query("SELECT count(*)::int AS n FROM approvals WHERE status = 'pending'")).rows[0].n;
-      return { demo, business: ctx.cfg.business?.name, asOf: ctx.asOf, minutes, who, pending };
+      const links = demo ? await demoLinks(c).catch(() => null) : null;
+      return { demo, business: ctx.cfg.business?.name, asOf: ctx.asOf, minutes, who, pending, links };
     });
   } catch {
     return { demo, business: null, asOf: null, minutes: null, who: null, pending: 0 }; // the page itself shows the error state
@@ -51,7 +54,7 @@ export default async function OwnerLayout({ children }) {
   if (!session) redirect("/login");
   const lang = await getLang();
   const T = makeT(lang);
-  const { demo, business, asOf, minutes, who, pending } = await shell(session);
+  const { demo, business, asOf, minutes, who, pending, links } = await shell(session);
   const items = NAV.map(([href, icon, label, short, mobile]) => ({
     href, icon, label: href === "/approvals" && pending > 0 ? `${T(label)} (${pending})` : T(label), short: short ? T(short) : undefined, mobile: !!mobile,
   }));
@@ -74,6 +77,7 @@ export default async function OwnerLayout({ children }) {
               {who ? `${who} · ` : ""}
               <strong>{T(`pages.role.${session.role}`)}</strong>
             </span>
+            {demo && <TourButton label={T("pages.tour.start")} />}
             {demo && (
               <form method="post" action="/api/auth/demo" className="hidden items-center gap-1 md:flex" aria-label={T("pages.role.view_as")}>
                 <span className="text-sm text-ink-muted">{T("pages.role.view_as")}</span>
@@ -141,6 +145,7 @@ export default async function OwnerLayout({ children }) {
           <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">{children}</div>
         </main>
       </div>
+      {demo && <DemoTour lang={T.lang} links={links ? { pay_token: links.pay_token, verify_prefix: links.verify_prefix } : null} role={session.role} />}
       <ToastRegion />
     </>
   );

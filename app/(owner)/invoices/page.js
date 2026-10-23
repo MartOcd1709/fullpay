@@ -9,6 +9,7 @@ import DataTable from "@/components/ui/DataTable";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
+import { ImportInvoices } from "@/components/pages/ImportInvoices";
 import { run } from "@/lib/services/context";
 import * as invoices from "@/lib/services/invoices";
 import { isDueSoon, isOverdue } from "@/lib/services/common";
@@ -99,7 +100,7 @@ export default async function InvoicesPage({ searchParams }) {
       <PageHeader
         title={T("nav.invoices")}
         subtitle={T("core.inv.list_sub", { n: rows.length })}
-        actions={<Button href="/invoices/new"><Icon name="plus" />{T("nav.new_invoice")}</Button>}
+        actions={<><ImportInvoices lang={T.lang} /><Button href="/invoices/new"><Icon name="plus" />{T("nav.new_invoice")}</Button></>}
       />
 
       <nav aria-label={T("core.inv.filter_status")} className="-mx-1 mb-4 flex flex-wrap gap-2">

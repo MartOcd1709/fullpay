@@ -20,7 +20,8 @@ export async function POST(request) {
     await users.ensureDemoTeam(c);
     return users.byRole(c, role);
   });
-  const next = role === "owner" ? "/dashboard" : role === "accountant" ? "/payments" : "/dashboard";
+  const asked_next = String(form?.get("next") ?? url.searchParams.get("next") ?? "");
+  const next = /^\/(?![/\\])[\w\-/]*$/.test(asked_next) ? asked_next : role === "accountant" ? "/payments" : "/dashboard";
   const response = NextResponse.redirect(new URL(next, request.url), 303);
   response.cookies.set(SESSION_COOKIE, signSession(process.env.SESSION_SECRET, SESSION_TTL_SECONDS, { uid: Number(member?.id ?? 0), role }), sessionCookieOptions(request));
   return response;

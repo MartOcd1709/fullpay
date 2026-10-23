@@ -140,6 +140,7 @@ dialog.sheet {
   color: var(--ink);
 }
 dialog.sheet::backdrop { background: rgb(26 34 51 / 0.45); }
+@media (min-width: 64rem) { dialog.sheet.sheet-wide { width: 52rem; } }
 @media (min-width: 40rem) {
   dialog.sheet {
     margin: 0 0 0 auto;

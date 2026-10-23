@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/time";
 import { route, v } from "@/lib/http";
 import { badRequest } from "@/lib/services/errors";
 import { guard } from "@/lib/services/approvals";
@@ -12,6 +13,6 @@ export const POST = route(async ({ client, ctx, params, body }) => {
   const p = (await client.query("SELECT amount_paise, paid_on, narration FROM payments WHERE id = $1", [id])).rows[0];
   return guard(client, ctx, {
     kind: "payment_confirm", target_id: id, payload: { allocations }, amount_paise: p?.amount_paise ?? null,
-    summary: p ? `Confirm payment of ${fmtINR(p.amount_paise)} received ${p.paid_on}${p.narration ? ` (${p.narration.slice(0, 60)})` : ""}` : `Confirm payment #${id}`,
+    summary: p ? `Confirm payment of ${fmtINR(p.amount_paise)} received ${formatDate(p.paid_on)}${p.narration ? ` (${p.narration.slice(0, 48)})` : ""}` : `Confirm payment #${id}`,
   });
 });

@@ -1,7 +1,8 @@
 import { loadChain, verifyChain } from "@/lib/chain";
-import { interestEligible, interestFor, interestInputs, INVOICE_SELECT } from "@/lib/services/common";
+import { interestEligible, interestFor, interestInputs, interestInputsMany, INVOICE_SELECT } from "@/lib/services/common";
 
 // Chain check for one invoice: the whole chain from genesis up to this invoice's newest entry must verify.
+// ponytail: re-hashes from genesis on every view (0.34 s at 74k entries, linear); add daily verified checkpoints past ~500k.
 export async function chainFor(client, timeline) {
   const last = timeline?.at(-1);
   if (!last) return null;
@@ -19,8 +20,9 @@ export async function interestTotal(client, ctx) {
   );
   let total = 0;
   let count = 0;
+  const inputs = await interestInputsMany(client, rows.map((r) => r.id));
   for (const inv of rows) {
-    const r = interestFor(ctx.cfg, inv, await interestInputs(client, inv.id), ctx.asOf);
+    const r = interestFor(ctx.cfg, inv, inputs.get(Number(inv.id)), ctx.asOf);
     if (r?.total_interest_paise > 0) {
       total += r.total_interest_paise;
       count += 1;
