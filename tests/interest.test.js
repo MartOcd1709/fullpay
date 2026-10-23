@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { computeInterest, conventionFootnote } from "../lib/interest.js";
+import { addDays } from "../lib/time.js";
 
 const LAKH5 = 50_000_000;
 const DUE = "2026-01-15";
@@ -14,7 +16,7 @@ function assertInvariants(r, principal) {
   assert.equal(sumInterest(r), r.total_interest_paise);
   assert.equal(r.total_due_paise, principal + r.total_interest_paise - sumPaid(r) + r.overpaid_paise);
   assert.equal(r.total_due_paise, r.outstanding_principal_paise + r.unpaid_interest_paise);
-  for (let i = 1; i < r.segments.length; i++) assert.equal(r.segments[i].from, r.segments[i - 1].to);
+  for (let i = 1; i < r.segments.length; i++) assert.equal(r.segments[i].from, addDays(r.segments[i - 1].to, 1));
   if (r.segments.length) {
     assert.equal(r.segments[0].from, r.start_date);
     assert.equal(r.segments.at(-1).to, r.as_of);
@@ -64,8 +66,8 @@ test("RBI rate change mid-period switches on the change date", () => {
   assert.deepEqual(
     r.segments.map((s) => [s.from, s.to, s.days, s.bank_rate_bps]),
     [
-      ["2026-09-16", "2026-10-07", 21, 550],
-      ["2026-10-07", "2026-10-15", 8, 575],
+      ["2026-09-16", "2026-10-06", 21, 550],
+      ["2026-10-07", "2026-10-14", 8, 575],
       ["2026-10-15", "2026-11-10", 27, 575],
     ],
   );
@@ -119,7 +121,7 @@ test("accepted dispute span: 0% inside, rests still fire, rate resumes after", (
   assertInvariants(r, LAKH5);
   const inside = r.segments.filter((s) => s.from >= "2026-02-20" && s.from < "2026-03-20");
   const outside = r.segments.filter((s) => !inside.includes(s));
-  assert.deepEqual(inside.map((s) => [s.from, s.to]), [["2026-02-20", "2026-03-15"], ["2026-03-15", "2026-03-20"]]);
+  assert.deepEqual(inside.map((s) => [s.from, s.to]), [["2026-02-20", "2026-03-14"], ["2026-03-15", "2026-03-19"]]);
   assert.ok(inside.every((s) => s.dispute && s.rate_bps === 0 && s.interest_paise === 0 && s.bank_rate_bps === 650));
   assert.ok(outside.every((s) => !s.dispute && s.rate_bps === 1950 && s.interest_paise > 0));
   assert.deepEqual(r.rests, ["2026-02-15", "2026-03-15", "2026-04-15"]);
@@ -210,4 +212,59 @@ test("conventionFootnote states day count, rests, rate switch, dispute and appro
   assert.ok(pf.includes("first towards principal"));
   assert.ok(conventionFootnote(flat("2026-01-10")).startsWith("No interest has accrued"));
   assert.ok(conventionFootnote(flat("2026-02-01")).includes("no monthly rest fell"));
+});
+
+test("segment rows are inclusive and never share a day (letter table)", () => {
+  const r = flat("2026-03-10", { allocations: [{ date: "2026-03-01", amount_paise: 1 }] });
+  assert.deepEqual(r.segments.map((s) => [s.from, s.to, s.days]), [
+    ["2026-01-16", "2026-02-14", 30],
+    ["2026-02-15", "2026-02-28", 14],
+    ["2026-03-01", "2026-03-10", 10],
+  ]);
+});
+
+test("conventionFootnote: prototype-key lang falls back to English", () => {
+  const r = flat("2026-04-30");
+  for (const lang of ["constructor", "__proto__", "toString"]) assert.equal(conventionFootnote(r, lang), conventionFootnote(r));
+  const odd = { ...r, convention: { ...r.convention, appropriation: "constructor" } };
+  assert.ok(conventionFootnote(odd).includes("first towards interest"));
+});
+
+test("footnote cites V.K. Patel for the varying rate, not for the change-date rule", () => {
+  const en = conventionFootnote(flat("2026-04-30"));
+  assert.ok(en.includes("varies over the period, not fixed at the due date (V.K. Patel"));
+  assert.ok(en.includes("each RBI change applies from its change date"));
+});
+
+test("engine never touches Date (LLD grep-gate: only lib/time.js may)", () => {
+  assert.doesNotMatch(readFileSync(new URL("../lib/interest.js", import.meta.url), "utf8"), /new Date|Date\.now|Date\.UTC/);
+});
+
+test("matches a day-by-day oracle across rate change, straddling dispute, rest-day and early payments", () => {
+  const series = [{ from: "2025-12-05", bps: 550 }, { from: "2026-03-15", bps: 575 }];
+  const allocations = [
+    { date: "2026-01-10", amount_paise: 1_000_000 },
+    { date: "2026-04-15", amount_paise: 3_000_000 },
+    { date: "2026-04-15", amount_paise: 500_000 },
+    { date: "2026-06-02", amount_paise: 7_000_000 },
+  ];
+  const dispute_spans = [{ from: "2026-03-01", to: "2026-03-20" }];
+  const as_of = "2026-07-31";
+  const r = computeInterest({ principal_paise: LAKH5, due_date: DUE, as_of, series, allocations, dispute_spans });
+  assertInvariants(r, LAKH5);
+  const rests = new Set(r.rests);
+  let p = LAKH5, cap = 0, acc = 0, tot = 0;
+  for (let d = "2026-01-16"; d <= as_of; d = addDays(d, 1)) {
+    if (rests.has(d)) [cap, acc] = [cap + acc, 0];
+    for (const a of allocations.filter((a) => a.date === d || (d === "2026-01-16" && a.date < d))) {
+      let left = a.amount_paise;
+      const t1 = Math.min(left, acc); acc -= t1; left -= t1;
+      const t2 = Math.min(left, cap); cap -= t2; left -= t2;
+      p -= Math.min(left, p);
+    }
+    const bps = d >= "2026-03-01" && d < "2026-03-20" ? 0 : (d >= "2026-03-15" ? 575 : 550) * 3;
+    const x = ((p + cap) * bps) / (10_000 * 365);
+    acc += x; tot += x;
+  }
+  assert.ok(Math.abs(r.total_interest_paise - tot) <= r.segments.length / 2 + 1, `${r.total_interest_paise} vs ${tot}`);
 });

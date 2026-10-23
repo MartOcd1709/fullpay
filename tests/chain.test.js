@@ -1,7 +1,7 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { GENESIS, canonicalize, hashEntry, appendEvent, verifyChain, loadChain, verifyEntry } from "../lib/chain.js";
+import { GENESIS, canonicalize, hashEntry, entryHash, appendEvent, verifyChain, loadChain, verifyEntry } from "../lib/chain.js";
 import { pool, query, withTxn } from "../lib/db.js";
 
 const fixture = (name) => readFileSync(new URL(`./fixtures/jcs/${name}.json`, import.meta.url), "utf8");
@@ -34,6 +34,12 @@ describe("canonicalize", () => {
   test("escapes strings exactly as JSON.stringify", () => {
     const s = 'a"b\\c\n\t\u0001\u001f€😂\u007f\u0080</script>';
     assert.equal(canonicalize(s), JSON.stringify(s));
+  });
+
+  test("lone surrogates are escaped (stay distinct from U+FFFD) and U+2028 stays raw, as JCS", () => {
+    assert.equal(canonicalize({ "\ud800": "\udc00", "\u2028": "\u2029" }), '{"\u2028":"\u2029","\\ud800":"\\udc00"}');
+    assert.notEqual(hashEntry(GENESIS, canonicalize("\ud800")), hashEntry(GENESIS, canonicalize("\ufffd")));
+    assert.equal(canonicalize(JSON.parse('{"__proto__":[1],"constructor":{}}')), '{"__proto__":[1],"constructor":{}}');
   });
 
   test("safe integers (and -0) serialise as plain decimals", () => {
@@ -73,18 +79,27 @@ describe("hashEntry / verifyChain (pure)", () => {
 
   test("first row must link to GENESIS", () => {
     const prev = "a".repeat(64);
-    const r = verifyChain([{ id: 7, prev_hash: prev, payload: "{}", entry_hash: hashEntry(prev, "{}") }]);
+    const row = { id: 7, prev_hash: prev, type: "seeded", actor: "system", ts: "2026-10-23T04:32:00.000Z", payload: "{}" };
+    const r = verifyChain([{ ...row, entry_hash: entryHash(row) }]);
     assert.deepEqual(r, { ok: false, count: 0, head: GENESIS, reason: "chain_break", breakAtId: 7 });
   });
 
   test("id gaps are not a failure", () => {
-    const h1 = hashEntry(GENESIS, "{}");
-    const h2 = hashEntry(h1, '{"a":1}');
-    const rows = [
-      { id: 1, prev_hash: GENESIS, payload: "{}", entry_hash: h1 },
-      { id: 9, prev_hash: h1, payload: '{"a":1}', entry_hash: h2 },
-    ];
+    const meta = { type: "seeded", actor: "system", ts: "2026-10-23T04:32:00.000Z" };
+    const r1 = { id: 1, prev_hash: GENESIS, payload: "{}", ...meta };
+    const h1 = entryHash(r1);
+    const r2 = { id: 9, prev_hash: h1, payload: '{"a":1}', ...meta };
+    const h2 = entryHash(r2);
+    const rows = [{ ...r1, entry_hash: h1 }, { ...r2, entry_hash: h2 }];
     assert.deepEqual(verifyChain(rows), { ok: true, count: 2, head: h2, reason: null, breakAtId: null });
+  });
+
+  test("editing sealed metadata (ts, type, invoice) is detected, not just the payload", () => {
+    const r1 = { id: 1, prev_hash: GENESIS, payload: "{}", type: "letter_generated", actor: "owner", invoice_id: 42, ts: "2026-10-23T04:32:00.000Z" };
+    const row = { ...r1, entry_hash: entryHash(r1) };
+    for (const edit of [{ ts: "2026-09-01T04:32:00.000Z" }, { type: "reminder_sent" }, { invoice_id: 41 }, { actor: "tick" }]) {
+      assert.equal(verifyChain([{ ...row, ...edit }]).reason, "hash_mismatch");
+    }
   });
 });
 
@@ -96,14 +111,16 @@ const unguarded = (fn) =>
     await fn(client);
     await client.query("ALTER TABLE escalation_events ENABLE TRIGGER USER");
   });
-const resetEvents = () => unguarded((client) => client.query("DELETE FROM escalation_events"));
 
 describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL unset" }, () => {
-  let first, second, third, customerId, invoiceId;
+  let first, second, third, customerId, invoiceId, base;
 
-  before(resetEvents);
+  before(async () => {
+    const rows = await loadChain(query);
+    base = { count: rows.length, head: verifyChain(rows).head, maxId: rows.at(-1)?.id ?? 0 };
+  });
   after(async () => {
-    await resetEvents();
+    await unguarded((c) => c.query("DELETE FROM escalation_events WHERE id > $1", [base.maxId]));
     if (invoiceId) await query("DELETE FROM invoices WHERE id = $1", [invoiceId]);
     if (customerId) await query("DELETE FROM customers WHERE id = $1", [customerId]);
   });
@@ -112,15 +129,15 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
     first = await append({ type: "seeded", payload: {} });
     second = await append({ type: "config_changed", payload: { keys: ["business.name"] } });
     third = await append({ type: "config_changed", payload: { keys: ["interest.bank_rate_bps"] }, run_id: "run-1" });
-    assert.equal(first.prev_hash, GENESIS);
-    assert.equal(first.entry_hash, hashEntry(GENESIS, "{}"));
+    assert.equal(first.prev_hash, base.head);
+    assert.equal(first.entry_hash, entryHash({ prev_hash: base.head, type: "seeded", actor: "system", ts: TS, payload: "{}" }));
     assert.equal(first.ts, TS);
     assert.equal(second.prev_hash, first.entry_hash);
-    assert.equal(second.entry_hash, hashEntry(first.entry_hash, '{"keys":["business.name"]}'));
+    assert.equal(second.entry_hash, entryHash({ prev_hash: first.entry_hash, type: "config_changed", actor: "system", ts: TS, payload: '{"keys":["business.name"]}' }));
     assert.equal(third.prev_hash, second.entry_hash);
     assert.deepEqual(verifyChain(await loadChain(query)), {
       ok: true,
-      count: 3,
+      count: base.count + 3,
       head: third.entry_hash,
       reason: null,
       breakAtId: null,
@@ -131,15 +148,15 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
     await assert.rejects(query("UPDATE escalation_events SET payload = '{}' WHERE id = $1", [first.id]), /append-only/);
     await assert.rejects(query("DELETE FROM escalation_events WHERE id = $1", [first.id]), /append-only/);
     await assert.rejects(query("TRUNCATE escalation_events"), /append-only/);
-    assert.equal((await loadChain(query)).length, 3);
+    assert.equal((await loadChain(query)).length, base.count + 3);
   });
 
   test("a tampered payload is reported as hash_mismatch at that row", async () => {
     const rows = (await loadChain(query)).map((row) => ({ ...row }));
-    rows[1].payload = '{"keys":["business.gstin"]}';
+    rows[base.count + 1].payload = '{"keys":["business.gstin"]}';
     assert.deepEqual(verifyChain(rows), {
       ok: false,
-      count: 1,
+      count: base.count + 1,
       head: first.entry_hash,
       reason: "hash_mismatch",
       breakAtId: second.id,
@@ -148,8 +165,9 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
 
   test("a re-linked tampered row breaks the chain at the next row", async () => {
     const rows = (await loadChain(query)).map((row) => ({ ...row }));
-    rows[1].payload = '{"keys":["business.gstin"]}';
-    rows[1].entry_hash = hashEntry(rows[1].prev_hash, rows[1].payload);
+    const row = rows[base.count + 1];
+    row.payload = '{"keys":["business.gstin"]}';
+    row.entry_hash = entryHash(row);
     const r = verifyChain(rows);
     assert.equal(r.ok, false);
     assert.equal(r.reason, "chain_break");
@@ -162,28 +180,30 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
       Array.from({ length: 12 }, (_, i) => append({ type: "rung_skipped", payload: { rung: "heads_up", i } })),
     );
     assert.equal(new Set(results.map((r) => r.entry_hash)).size, 12);
-    const r = verifyChain(await loadChain(query));
+    const rows = await loadChain(query);
+    assert.equal(new Set(rows.map((row) => row.prev_hash)).size, rows.length);
+    const r = verifyChain(rows);
     assert.equal(r.ok, true);
     assert.equal(r.count, before + 12);
   });
 
   test("appendEvent rejects bad input before touching the chain", async () => {
-    const base = { type: "x", actor: "system", payload: {}, ts: TS };
-    await assert.rejects(appendEvent(pool, base), TypeError);
-    await assert.rejects(appendEvent(query, base), TypeError);
+    const input = { type: "x", actor: "system", payload: {}, ts: TS };
+    await assert.rejects(appendEvent(pool, input), TypeError);
+    await assert.rejects(appendEvent(query, input), TypeError);
     const idle = await pool.connect();
     try {
-      await assert.rejects(appendEvent(idle, base), TypeError);
+      await assert.rejects(appendEvent(idle, input), TypeError);
     } finally {
       idle.release();
     }
-    await assert.rejects(withTxn((c) => appendEvent(c, { ...base, type: undefined })), /type is required/);
-    await assert.rejects(withTxn((c) => appendEvent(c, { ...base, ts: undefined })), /ts is required/);
-    await assert.rejects(withTxn((c) => appendEvent(c, { ...base, payload: undefined })), /payload is required/);
-    await assert.rejects(withTxn((c) => appendEvent(c, { ...base, payload: { amount_paise: 10.5 } })), TypeError);
+    await assert.rejects(withTxn((c) => appendEvent(c, { ...input, type: undefined })), /type is required/);
+    await assert.rejects(withTxn((c) => appendEvent(c, { ...input, ts: undefined })), /ts is required/);
+    await assert.rejects(withTxn((c) => appendEvent(c, { ...input, payload: undefined })), /payload is required/);
+    await assert.rejects(withTxn((c) => appendEvent(c, { ...input, payload: { amount_paise: 10.5 } })), TypeError);
     const r = verifyChain(await loadChain(query));
     assert.equal(r.ok, true);
-    assert.equal(r.count, 15);
+    assert.equal(r.count, base.count + 15);
   });
 
   test("verifyEntry returns found/intact, invoice number and payee for a real hash", async () => {
@@ -200,7 +220,7 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
       invoice_id: invoiceId,
       type: "invoice_created",
       actor: "owner",
-      payload: { payee: { vpa: "arora@upi", bank_last4: "4321" }, total_paise: 1180000 },
+      payload: { payee_vpa: "arora@upi", bank_last4: "4321", total_paise: 1180000 },
     });
     const letter = await append({
       invoice_id: invoiceId,
@@ -213,7 +233,6 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
       intact: true,
       event: {
         type: "letter_generated",
-        invoice_id: invoiceId,
         invoice_number: "INV/26-27/9042",
         ts: TS,
         hash: letter.entry_hash,
@@ -227,7 +246,7 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
     assert.deepEqual(v, {
       found: true,
       intact: true,
-      event: { type: "seeded", invoice_id: null, invoice_number: null, ts: TS, hash: first.entry_hash },
+      event: { type: "seeded", invoice_number: null, ts: TS, hash: first.entry_hash },
       payee: null,
     });
   });
@@ -250,6 +269,29 @@ describe("chain (postgres)", { skip: !process.env.DATABASE_URL && "DATABASE_URL 
         c.query("UPDATE escalation_events SET payload = $2 WHERE id = $1", [original.id, '{"keys":["business.name"]}']),
       );
     }
+    assert.equal(verifyChain(await loadChain(query)).ok, true);
+  });
+
+  test("a unique_violation from a lock-bypassing writer is retried once on the new head", async () => {
+    let rogue;
+    const appended = await withTxn((client) => {
+      const spy = Object.create(client);
+      spy.query = async (text, params) => {
+        const res = await client.query(text, params);
+        if (!rogue && /ORDER BY id DESC/.test(text)) {
+          const prev = res.rows[0].entry_hash;
+          rogue = entryHash({ prev_hash: prev, type: "seeded", actor: "system", ts: TS, payload: '{"rogue":1}' });
+          await query(
+            `INSERT INTO escalation_events (type, actor, payload, ts, prev_hash, entry_hash)
+             VALUES ('seeded', 'system', '{"rogue":1}', $1, $2, $3)`,
+            [TS, prev, rogue],
+          );
+        }
+        return res;
+      };
+      return appendEvent(spy, { type: "seeded", actor: "system", payload: {}, ts: TS });
+    });
+    assert.equal(appended.prev_hash, rogue);
     assert.equal(verifyChain(await loadChain(query)).ok, true);
   });
 });

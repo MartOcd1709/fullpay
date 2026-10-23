@@ -271,3 +271,61 @@ test("matchCredits is pure: inputs are not mutated", () => {
   matchCredits(rows, invoices, customers, { fys: FYS });
   assert.equal(JSON.stringify([rows, invoices, customers]), before);
 });
+
+test("amount cells: '-' placeholder, unsafe size, Cr/Dr on the wrong side, debit and credit on one row", () => {
+  const h = "Date,Narration,Ref,Withdrawal Amt.,Deposit Amt.,Closing Balance\n";
+  const csv = [
+    '01/10/26,dash debit,R1,-,"1,18,000.5","5,000.00 Dr"',
+    "01/10/26,too big,R2,,99999999999999999,",
+    '01/10/26,Dr in credit column,R3,,"1,000.00 Dr",',
+    '01/10/26,Cr in debit column,R4,"1,000.00 Cr",,',
+    "01/10/26,both sides,R5,500.00,1000.00,",
+    '01/10/26,rupee sign,R6,,"₹2,500",',
+  ].join("\n");
+  const { rows, skipped } = parseBankCsv(h + csv);
+  assert.deepEqual(
+    rows.map((r) => [r.line, r.debit_paise, r.credit_paise, r.balance_paise]),
+    [
+      [2, 0, 11800050, null],
+      [7, 0, 250000, null],
+    ],
+  );
+  assert.deepEqual(skipped, [
+    { line: 3, reason: "bad_amount" },
+    { line: 4, reason: "bad_amount" },
+    { line: 5, reason: "bad_amount" },
+    { line: 6, reason: "debit_and_credit" },
+  ]);
+});
+
+test("dedupeHash: identical rows in one file stay distinct, re-import is stable", () => {
+  const csv = "Date,Narration,Ref,Deposit\n05/10/26,CASH DEP,,10000\n05/10/26,CASH DEP,,10000\n05/10/26,UPI,U1,10000\n05/10/26,UPI,U2,10000\n";
+  const hashes = parseBankCsv(csv).rows.map(dedupeHash);
+  assert.equal(new Set(hashes).size, 4);
+  assert.equal(hashes[0], createHash("sha256").update("2026-10-05|1000000|").digest("hex"));
+  assert.deepEqual(parseBankCsv(csv).rows.map(dedupeHash), hashes);
+});
+
+test("invoice number of one customer, payer name or another invoice of a different customer", () => {
+  const wrongPayer = matchOne(credit("NEFT CR-BHARAT STEEL WORKS LLP-INV/26-27/0012", 5900000));
+  assert.deepEqual([wrongPayer.customer_id, wrongPayer.confidence], [1, 40]);
+  assert.match(wrongPayer.reason, /payer name Bharat Steel Works LLP\): check before confirming/);
+  const twoCustomers = matchOne(credit("NEFT CR-X-INV/26-27/0012 INV/26-27/0009", 5900000 + 23600000));
+  assert.equal(twoCustomers.confidence, 40);
+  assert.ok(twoCustomers.matches.every((m) => [7, 12, 13].includes(m.invoice_id)));
+  assert.match(twoCustomers.reason, /INV\/26-27\/0009/);
+  const payerPicks = matchOne(credit("NEFT CR-BHARAT STEEL WORKS-INV/26-27/0012 INV/26-27/0009", 23600000));
+  assert.deepEqual([payerPicks.customer_id, payerPicks.matches], [2, [{ invoice_id: 9, amount_paise: 23600000 }]]);
+});
+
+test("extractInvoiceRefs: an FY with no sequence or an over-long sequence is not a bare invoice number", () => {
+  assert.deepEqual(extractInvoiceRefs("INV 26-27", FYS), []);
+  assert.deepEqual(extractInvoiceRefs("INV/26-27/123456", FYS), []);
+});
+
+test("fys default: today's FY first, then every FY that has an invoice (April payment of a March invoice)", () => {
+  const march = inv(7, 1, 7, 10000000, "2027-03-15");
+  const c = credit("NEFT INV/26-27/0007", 11800000, { date: "2027-04-05" });
+  const [r] = matchCredits([c], [march], customers, { today: "2027-04-05" });
+  assert.deepEqual([r.matches, r.confidence], [[{ invoice_id: 7, amount_paise: 11800000 }], 95]);
+});

@@ -7,7 +7,9 @@ import {
   reliability,
   chaseScore,
   chaseList,
+  dashboard,
 } from "../lib/forecast.js";
+import { readFileSync } from "node:fs";
 
 const TODAY = "2026-10-24";
 const L = (rupees) => rupees * 100; // paise
@@ -238,7 +240,7 @@ test("reliability grades at the thresholds, with the reason in words", () => {
 
 test("chase: large, old, grade-C, gap-covering invoice ranks first with the reason in words", () => {
   const invoices = [
-    inv(42, 3, "2026-09-16", 120000), // 38 days overdue, grade C
+    inv(42, 3, "2026-09-16", 120000, { promise_date: "2026-11-14" }), // 38 days overdue, grade C, promised for week 3
     inv(43, 1, "2026-10-20", 5000), // 4 days overdue, grade A
     inv(44, 1, "2026-11-20", 20000), // not yet due
     inv(45, 2, "2026-10-01", 30000, { status: "disputed" }),
@@ -246,15 +248,17 @@ test("chase: large, old, grade-C, gap-covering invoice ranks first with the reas
   ];
   const forecast = buildForecast({
     today: TODAY,
-    opening_cash_paise: L(10000),
+    opening_cash_paise: L(30000),
     buffer_paise: L(50000),
     customers,
     invoices,
     expenses: [{ id: 1, category: "salaries", amount_paise: L(130000), due_on: "2026-11-01", recurring: null, paid: false }],
   });
   assert.equal(forecast.first_shortfall_week, 1);
-  assert.deepEqual(forecast.lowest, { index: 1, closing_paise: L(35000) });
-  assert.deepEqual(forecast.cover_gap.map((g) => g.invoice_id), [42]);
+  assert.deepEqual(forecast.lowest, { index: 1, closing_paise: L(-65000) });
+  assert.deepEqual(forecast.cover_gap.map((g) => g.invoice_id), [42], "44 lands in week 3 too but 42 already covers weeks 1-2");
+  assert.equal(forecast.gap_paise, L(115000));
+  assert.equal(forecast.gap_uncovered_paise, 0);
 
   const top = chaseScore(invoices[0], customers[2], forecast, TODAY);
   assert.equal(top.reason, "₹1,20,000, 38 days overdue, customer usually pays 20 days late, covers the shortfall in week 2");
@@ -281,4 +285,97 @@ test("chase score: paise amounts, singular day, not-yet-due wording, no forecast
   const c = chaseScore(inv(1, 1, "2026-10-23", 100), { id: 1, avg_late_days: 40 }, null, TODAY);
   const a = chaseScore(inv(1, 1, "2026-10-23", 100), { id: 1, avg_late_days: 0 }, null, TODAY);
   assert.equal(c.score - a.score, 15, "grade C derived from avg_late_days adds urgency");
+});
+
+const coverScenario = () => ({
+  today: TODAY,
+  opening_cash_paise: L(10000),
+  buffer_paise: L(50000),
+  customers,
+  invoices: [
+    inv(1, 1, "2026-09-01", 120000), // overdue: already counted in week 0
+    inv(2, 1, "2026-11-20", 20000), // week 3
+    inv(3, 1, "2026-11-27", 30000), // week 4
+    inv(4, 1, "2027-06-01", 70000), // after the 13 weeks
+  ],
+  expenses: [{ id: 1, category: "salaries", amount_paise: L(130000), due_on: "2026-11-01", recurring: null, paid: false }],
+});
+
+test("cover_gap never lists an invoice the forecast already counts, and collecting the list today clears the shortfall", () => {
+  const f = buildForecast(coverScenario());
+  assert.deepEqual(closings(f).slice(0, 5).map((p) => p / 100), [130000, 0, 0, 20000, 50000]);
+  assert.equal(f.first_shortfall_week, 1);
+  assert.equal(f.gap_paise, L(50000));
+  assert.deepEqual(f.cover_gap.map((g) => g.invoice_id), [2, 3], "oldest-due first; overdue invoice 1 is already in week 0");
+  assert.equal(f.gap_uncovered_paise, 0);
+  const ids = new Set(f.cover_gap.map((g) => g.invoice_id));
+  const s = coverScenario();
+  const collected = buildForecast({ ...s, invoices: s.invoices.map((i) => (ids.has(i.id) ? { ...i, promise_date: TODAY } : i)) });
+  assert.equal(collected.first_shortfall_week, null);
+});
+
+test("cover_gap when the shortfall cannot be covered reports what is left", () => {
+  const f = buildForecast({ ...coverScenario(), buffer_paise: L(300000) });
+  assert.equal(f.gap_paise, L(300000));
+  assert.deepEqual(f.cover_gap.map((g) => g.invoice_id), [2, 3, 4]);
+  assert.equal(f.gap_uncovered_paise, L(300000 - 20000 - 30000 - 70000));
+});
+
+test("inflows after week 13 are reported separately so totals reconcile with outstanding", () => {
+  const f = buildForecast(coverScenario());
+  assert.equal(f.totals.after_window_inflow_paise, L(70000));
+  assert.deepEqual(f.after_window_inflows.map((r) => [r.invoice_id, r.date]), [[4, "2027-06-01"]]);
+  assert.equal(f.totals.inflow_paise + f.totals.after_window_inflow_paise, f.outstanding_paise);
+  const edge = buildForecast({ today: TODAY, invoices: [inv(1, 9, "2027-01-22", 1), inv(2, 9, "2027-01-23", 2)] });
+  assert.deepEqual(edge.weeks[12].inflows.map((r) => r.invoice_id), [1], "last day of week 12 is inside");
+  assert.deepEqual(edge.after_window_inflows.map((r) => r.invoice_id), [2], "day 91 is outside");
+  const boundary = buildForecast({ today: TODAY, invoices: [inv(1, 9, "2026-10-30", 1), inv(2, 9, "2026-10-31", 2)] });
+  assert.deepEqual(boundary.weeks.map((w) => w.inflows.map((r) => r.invoice_id)).slice(0, 2), [[1], [2]]);
+});
+
+test("what-if inputs from a query string still work; fractional big-order week is ignored", () => {
+  const f = buildForecast({ ...scenarioA(), whatIf: { late_customer_id: "1", late_days: "30", supplier_delay_days: "14" } });
+  assert.equal(f.weeks[4].inflows[0].invoice_id, 4);
+  assert.equal(f.weeks[4].outflows[0].date, "2026-11-24");
+  assert.equal(buildForecast({ ...scenarioA(), whatIf: { big_order: { amount_paise: L(1), week_index: 1.5 } } }).totals.inflow_paise, L(230000));
+});
+
+test("reliability: only unpaid history past due grades C; thresholds come from config", () => {
+  const open = [{ due_date: "2026-08-25", paid_on: null }, { due_date: "2026-09-24", paid_on: null }, { due_date: "2026-11-01", paid_on: null }];
+  assert.equal(reliability({}, open).grade, "B", "without today there is no history");
+  assert.deepEqual(reliability({}, open, { today: TODAY }), {
+    grade: "C",
+    avg_late_days: 45,
+    pct_on_time: 0,
+    reason: "Paid 0 of 2 invoices on time, average 45 days late, 2 invoices still unpaid past due",
+  });
+  const h = [{ due_date: "2026-05-10", paid_on: "2026-05-20" }];
+  assert.equal(reliability({}, h).grade, "C");
+  assert.equal(reliability({}, h, { thresholds: { c_max_pct_on_time: 0 } }).grade, "B");
+});
+
+test("chase score: prototype-key grade does not poison the score; amounts near 2^53 format exactly", () => {
+  const r = chaseScore(inv(1, 1, "2026-10-01", 1), { grade: "constructor" }, null, TODAY);
+  assert.ok(Number.isFinite(r.score));
+  const big = chaseScore({ ...inv(1, 1, "2026-10-23", 1), outstanding_paise: Number.MAX_SAFE_INTEGER }, undefined, null, TODAY);
+  assert.ok(big.reason.startsWith("₹9,00,71,99,25,47,409.91,"), big.reason);
+  assert.equal(chaseScore({ ...inv(1, 1, "2026-10-23", 1), outstanding_paise: 0 }, undefined, { outstanding_paise: 0 }, TODAY).score, 0, "zero book total: no divide-by-zero");
+});
+
+test("dashboard: totals, ageing and top chase from one context", () => {
+  const d = dashboard(coverScenario());
+  assert.equal(d.to_collect_paise, L(240000));
+  assert.equal(d.overdue_paise, L(120000));
+  assert.equal(d.expected_this_week_paise, L(120000));
+  assert.equal(d.expected_this_month_paise, L(120000));
+  assert.equal(d.bills_next_30_paise, L(130000));
+  assert.equal(d.cash_in_bank_paise, L(10000));
+  assert.deepEqual(d.forecast_low, { index: 1, closing_paise: 0 });
+  assert.equal(d.aging.d31_60.amount_paise, L(120000));
+  assert.deepEqual(d.top_chase.map((c) => c.id), [1]);
+});
+
+test("grep-gate: forecast.js never touches Date", () => {
+  const src = readFileSync(new URL("../lib/forecast.js", import.meta.url), "utf8");
+  assert.equal(/new Date|Date\.now/.test(src), false);
 });
