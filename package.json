@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --env-file-if-exists=.env.local --test 'tests/**/*.test.js'",
+    "test": "node --env-file-if-exists=.env.local --test --test-concurrency=1 'tests/**/*.test.js'",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.js",
     "db:seed": "node --env-file-if-exists=.env.local scripts/seed.js"
   },

@@ -169,3 +169,61 @@ CREATE TABLE IF NOT EXISTS expenses (
   recurring     TEXT CHECK (recurring IN ('monthly')),
   paid          BOOLEAN NOT NULL DEFAULT false
 );
+
+-- ---- Service-layer additions (idempotent) ----
+
+ALTER TABLE promises ADD COLUMN IF NOT EXISTS created_by TEXT NOT NULL DEFAULT 'owner' CHECK (created_by IN ('owner','customer'));
+
+-- Matcher proposals for a pending payment. Only confirm() turns them into payment_allocations.
+CREATE TABLE IF NOT EXISTS payment_proposals (
+  payment_id    BIGINT NOT NULL REFERENCES payments(id) ON DELETE CASCADE,
+  invoice_id    BIGINT NOT NULL REFERENCES invoices(id),
+  amount_paise  BIGINT NOT NULL CHECK (amount_paise > 0),
+  PRIMARY KEY (payment_id, invoice_id)
+);
+
+-- Credit notes issued when the owner accepts a dispute. The invoice keeps its printed totals; outstanding drops.
+CREATE TABLE IF NOT EXISTS credit_notes (
+  id            BIGSERIAL PRIMARY KEY,
+  invoice_id    BIGINT NOT NULL REFERENCES invoices(id),
+  fy            TEXT NOT NULL,
+  seq           INT NOT NULL,
+  number        TEXT NOT NULL UNIQUE,             -- 'CN/26-27/0001'
+  issue_date    DATE NOT NULL,
+  amount_paise  BIGINT NOT NULL CHECK (amount_paise > 0),
+  reason        TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (fy, seq)
+);
+
+-- Inbox: customer disputes and "already paid" claims. An accepted dispute is a 0% interest span [opened_on, resolved_on).
+CREATE TABLE IF NOT EXISTS inbox_items (
+  id           BIGSERIAL PRIMARY KEY,
+  invoice_id   BIGINT NOT NULL REFERENCES invoices(id),
+  kind         TEXT NOT NULL CHECK (kind IN ('dispute','claim')),
+  payment_id   BIGINT REFERENCES payments(id),
+  reason       TEXT,
+  status       TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','resolved')),
+  opened_on    DATE NOT NULL,
+  resolved_on  DATE,
+  resolution   TEXT CHECK (resolution IN ('accept_credit_note','mark_paid','reject','edit')),
+  accepted     BOOLEAN NOT NULL DEFAULT false,
+  reply        TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS one_open_inbox_item ON inbox_items (invoice_id, kind) WHERE status = 'open';
+
+-- outstanding = total - confirmed allocations - credit notes. The one place this rule lives.
+CREATE OR REPLACE VIEW invoice_balances AS
+SELECT i.id AS invoice_id,
+       COALESCE(a.paid, 0)::BIGINT AS paid_paise,
+       COALESCE(cn.credited, 0)::BIGINT AS credited_paise,
+       (i.total_paise - COALESCE(a.paid, 0) - COALESCE(cn.credited, 0))::BIGINT AS outstanding_paise,
+       a.last_paid_on,
+       GREATEST(a.last_paid_on, cn.last_credit_on) AS last_settled_on
+FROM invoices i
+LEFT JOIN (SELECT pa.invoice_id, SUM(pa.amount_paise) AS paid, MAX(pa.allocated_on) AS last_paid_on
+           FROM payment_allocations pa JOIN payments p ON p.id = pa.payment_id AND p.status = 'confirmed'
+           GROUP BY pa.invoice_id) a ON a.invoice_id = i.id
+LEFT JOIN (SELECT invoice_id, SUM(amount_paise) AS credited, MAX(issue_date) AS last_credit_on
+           FROM credit_notes GROUP BY invoice_id) cn ON cn.invoice_id = i.id;
