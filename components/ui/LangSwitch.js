@@ -11,12 +11,14 @@ export default function LangSwitch({ lang, label }) {
   async function pick(next) {
     if (next === lang || busy) return;
     setBusy(true);
+    // The cookie is what every page reads: set it here first, so the switch works even if saving the preference fails.
+    document.cookie = `lang=${next}; path=/; max-age=31536000; samesite=lax`;
     try {
       await api("/api/lang", { body: { lang: next } });
-      router.refresh();
     } catch {
-      // A failed switch leaves the page as it was; nothing to undo.
+      // The business-wide preference was not saved (e.g. a view-only user); this browser still switches.
     }
+    router.refresh();
     setBusy(false);
   }
   return (

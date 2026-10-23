@@ -142,7 +142,23 @@ export default async function OwnerLayout({ children }) {
           />
         )}
         <main id="main" className="pb-24 lg:pb-8">
-          <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">{children}</div>
+          <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6">
+            {session.role !== "owner" && (
+              <div role="note" className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border p-3 ${session.role === "viewer" ? "border-warning/40 bg-warning-soft" : "border-info/40 bg-info-soft"}`}>
+                <p className="min-w-0 flex-1">
+                  <strong>{T(`pages.role.banner_${session.role}`, { name: who ?? T(`pages.role.${session.role}`) })}</strong>{" "}
+                  <span className="text-ink-muted">{T(`pages.role.banner_${session.role}_hint`)}</span>
+                </p>
+                {demo && (
+                  <form method="post" action="/api/auth/demo">
+                    <input type="hidden" name="next" value="/dashboard" />
+                    <button name="as" value="owner" type="submit" className="min-h-11 rounded-xl bg-accent px-4 font-semibold text-on-accent hover:bg-accent-strong">{T("pages.role.back_to_owner")}</button>
+                  </form>
+                )}
+              </div>
+            )}
+            {children}
+          </div>
         </main>
       </div>
       {demo && <DemoTour lang={T.lang} links={links ? { pay_token: links.pay_token, verify_prefix: links.verify_prefix } : null} role={session.role} />}

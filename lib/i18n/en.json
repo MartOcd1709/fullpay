@@ -1890,5 +1890,10 @@
   "public.nf.title": "This page does not exist",
   "public.nf.body": "The link may be mistyped, or the page has moved. A customer's payment link that has expired shows its own message.",
   "public.nf.home": "Go to the start page",
-  "public.nf.app": "Open the owner's app"
+  "public.nf.app": "Open the owner's app",
+  "pages.role.banner_viewer": "Viewing as {name}: read only.",
+  "pages.role.banner_viewer_hint": "You can open every screen and print every document; saving changes is switched off for this role.",
+  "pages.role.banner_accountant": "Signed in as {name}, the accountant.",
+  "pages.role.banner_accountant_hint": "Confirming or rejecting payments, TDS, Inbox decisions and settings go to the owner for approval.",
+  "pages.role.back_to_owner": "Switch to the owner"
 }
