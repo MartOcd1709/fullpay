@@ -917,5 +917,9 @@
   "collect.ch.grade_B": "Usually late (B)",
   "collect.ch.grade_C": "Chase early (C)",
   "collect.ch.call": "Call {name}",
-  "collect.ch.open": "Open the invoice"
+  "collect.ch.open": "Open the invoice",
+  "pages.set.city": "शहर",
+  "pages.set.account_name": "खाते का नाम",
+  "pages.docs.none": "अभी कोई भेजा गया बिल नहीं है।",
+  "pages.docs.entries": "रिकॉर्ड में {n} प्रविष्टियां"
 }
