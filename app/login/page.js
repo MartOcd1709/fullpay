@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 
 function nextPath() {
   const next = new URLSearchParams(window.location.search).get("next");
-  return next && /^\/(?!\/)/.test(next) ? next : "/dashboard";
+  return next && /^\/(?![\/\\])/.test(next) ? next : "/dashboard";
 }
 
 export default function LoginPage() {

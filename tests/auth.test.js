@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  clientIp,
   signSession,
   verifySession,
   checkPassword,
@@ -95,4 +96,9 @@ test("session cookie is secure only over https", () => {
   assert.equal(local.maxAge, 12 * 60 * 60);
   const proxied = sessionCookieOptions(new Request("http://fullpay.onrender.com/api/auth/login", { headers: { "x-forwarded-proto": "https" } }));
   assert.equal(proxied.secure, true);
+});
+
+test("clientIp uses the proxy-appended last X-Forwarded-For hop", () => {
+  const req = { headers: new Headers({ "x-forwarded-for": "6.6.6.6, 203.0.113.9" }) };
+  assert.equal(clientIp(req), "203.0.113.9");
 });
