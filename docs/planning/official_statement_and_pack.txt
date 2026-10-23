@@ -1,0 +1,358 @@
+Problem Statement
+The Small Business Invoice Chase
+Banking & Finance
+Help a small business track unpaid invoices, follow up on time, send GST invoices and demand letters, and see a cash shortage coming before it hits.
+
+Problem Statement 4: The Small Business Invoice Chase
+Track: Finance & Banking
+Focus: Small Businesses · Receivables · Cash Flow Management
+
+The Challenge
+Small businesses in India often supply goods or services on credit and receive payments days or weeks later. Tracking unpaid invoices, remembering payment deadlines, following up with customers, and managing expenses while waiting for payments can become difficult, especially for businesses without dedicated accounting teams.
+
+Delayed payments can leave business owners struggling to pay suppliers, salaries, rent, and other expenses, even when their businesses are profitable on paper. Many lack a simple system to track outstanding dues, identify risky delays, forecast cash shortages, and escalate payment requests professionally.
+
+Your challenge is to build a solution that helps small businesses manage receivables, automate payment follow-ups, generate appropriate invoice and payment-demand documents, and anticipate cash-flow problems before they become critical.
+
+Possible Areas to Explore
+Invoice Management: Organise invoices by customer, due date, payment status, GST details, and outstanding amount.
+
+Automated Payment Reminders: Generate personalised payment reminders through email, WhatsApp, or other suitable channels based on how overdue an invoice is.
+
+GST Invoice Generation: Help businesses generate GST-compliant tax invoices where applicable, with the necessary business, customer, tax, and transaction details.
+
+Payment-Demand Notices: Generate formal payment-demand letters for overdue invoices, including the outstanding amount, invoice references, payment deadline, and payment instructions.
+
+Escalation Workflow: Create a structured follow-up process that progresses from friendly reminders to stronger payment demands as invoices become overdue.
+
+Evidence & Documentation: Maintain invoice copies, payment records, reminder history, and customer communications to help businesses document unpaid dues.
+
+Payment Reconciliation: Match incoming payments against invoices and flag partial payments, unmatched transactions, or discrepancies.
+
+Cash-Flow Forecasting: Estimate future cash availability using expected collections, supplier payments, salaries, rent, and other financial obligations.
+
+Smart Prioritisation: Identify overdue invoices that need immediate attention based on their age, amount, customer payment history, and impact on business cash flow.
+
+Dispute Handling: Allow customers to flag incorrect invoices, report payments already made, or raise billing disputes before further escalation.
+
+Simple Financial Dashboard: Present total receivables, overdue amounts, expected collections, and upcoming expenses in an easy-to-understand format.
+
+Expected Outcome
+Build a working prototype that demonstrates how a small business can track unpaid invoices, automate payment reminders, generate GST-compliant invoices where applicable, prepare payment-demand notices, and forecast potential cash shortages.
+
+Your solution should help business owners move from manually chasing customers and reacting to financial difficulties towards managing collections through a structured, transparent, and proactive process.
+
+Important
+You do not need to build a complete accounting or enterprise resource planning system. You may focus on one high-impact problem or combine multiple features. You can use sample invoices and simulated transaction data; integration with actual banking, accounting, GST, or messaging systems is not mandatory.
+
+Generated payment-demand letters must be clearly distinguished from statutory GST notices or lawyer-issued legal notices. Do not misrepresent a document's legal status, and ensure tax calculations and invoice requirements are handled accurately.
+
+Evaluation Focus
+Practical usefulness, invoice management, payment-follow-up automation, accuracy of financial calculations, cash-flow forecasting, document generation, ease of use, technical execution, and real-world impact.
+
+Build it with AI
+Replace anything in [square brackets]. Start with Build 1, and run Build 2 if something is missing. If something breaks, use the Debug prompt that matches. Check current GST rates and rules on cbic-gst.gov.in before your demo.
+
+Build 1 · The whole prototype
+Copy
+Build a working web app prototype for a hackathon. Build the whole thing, not a plan: every screen below should work when I open it.
+
+OUR CHOICES (change these, or leave them as they are)
+- App name: Baaki
+- Business: Sharma Packaging, Pune (Maharashtra). It makes cartons, has 8 employees, is GST-registered (regular), and sells to 12 business customers on 30-day credit. The owner is Rakesh Sharma.
+- Part we go deepest on: knowing which invoices to chase this week so the business doesn't run short of cash
+
+THE PROBLEM
+Small businesses in India sell on credit and get paid weeks later. Without an accounts team, the owner loses track of who owes what, forgets to follow up, doesn't know how to escalate politely, and finds out about a cash shortage only when salaries are due. The app tracks every invoice, tells the owner exactly who to follow up with today and how, writes GST invoices and payment demand letters, matches incoming payments, and shows a cash shortage weeks before it happens. It does not connect to any bank, GST or messaging system. Every business, customer and transaction is made up.
+
+THE MONEY RULES (accuracy is judged)
+- Store every amount as whole paise (integers); never use decimals for money. Show amounts with Intl.NumberFormat('en-IN') (₹1,00,000), and write the invoice total in words the Indian way ("Rupees One Lakh Eighteen Thousand Only").
+- Dates are in IST. The financial year runs from 1 April to 31 March.
+- GST:
+  - Work out tax for each line on its taxable value (quantity x rate - discount), rounded to the paisa.
+  - Same state (the business's state code equals the place of supply's state code): CGST and SGST, each at half the rate, each rounded separately. Different state: IGST at the full rate. The first two digits of a GSTIN are the state code.
+  - Rates are kept in config.js and picked per item: 0%, 5% and 18% (the main rates since 22 September 2025), plus 3% and 40%. Add a note in config.js to check current rates on cbic-gst.gov.in.
+  - Round the grand total to the nearest rupee with a separate "Round off" line.
+- Who issues what, taken from the business profile:
+  - A regular GST-registered business issues a Tax Invoice.
+  - A composition business issues a Bill of Supply with no GST, headed "Composition taxable person, not eligible to collect tax on supplies".
+  - An unregistered business issues a plain invoice with no GST.
+- A Tax Invoice shows:
+  - the business's name, address and GSTIN
+  - a unique invoice number (at most 16 characters, using letters, numbers, / and -, consecutive within the financial year, e.g. INV/26-27/0001) and the invoice date
+  - the customer's name and address, and their GSTIN if they are registered
+  - the place of supply, with state name and code
+  - for each item: HSN code (4 digits up to ₹5 crore turnover, 6 above) or SAC code, description, quantity and unit
+  - taxable value, then the rate and amount of CGST and SGST, or of IGST, then the total
+  - whether tax is payable on reverse charge, the delivery address if it is different, and a signature line
+- Validate every GSTIN: 15 characters in the right pattern, with a correct check digit. Sample GSTINs must pass this check and be made up.
+- e-invoicing (an IRN from the government portal) is required only above ₹5 crore turnover. The app doesn't generate IRNs; if the turnover in the business profile is above ₹5 crore, the invoice screen says so.
+
+THE DEMAND LETTER AND WHAT IT IS (this is not optional)
+- Title it "Payment Demand Letter". Never call it a legal notice, and never use a court or government emblem, a seal, or wording that suggests it comes from a lawyer, the GST department or a court.
+- Near the top of every letter: "This letter is from Sharma Packaging about money owed for the invoices listed below. It is not a notice from the GST department and not a legal notice from a lawyer."
+- It lists:
+  - each invoice's number and date, its amount, any part payments, and what is still owed
+  - a deadline to pay (7 days from the letter's date, set in config.js)
+  - how to pay: bank details and a UPI QR code
+  - who to contact about a dispute
+  Professional and firm, never threatening.
+- If the business profile says it is a Udyam-registered micro or small enterprise, the letter may add one factual line: under the MSMED Act, 2006, buyers should pay micro and small suppliers within the agreed period, which cannot exceed 45 days, and interest applies on late payment. It may show that interest as a separate figure, worked out as compound interest with monthly rests at three times the RBI bank rate (keep the bank rate in config.js, marked "check rbi.org.in"). The interest is not added to the amount demanded unless the owner ticks a box.
+- Once an invoice is 45 days overdue, the app suggests next steps to the owner: call the customer, consult a lawyer, and for a registered micro or small enterprise, the MSME Samadhaan portal. It never sends anything legal itself.
+
+HOW TO BUILD IT
+- React + Vite + Tailwind CSS, plain JavaScript (no TypeScript), React Router. No backend. Save everything in localStorage, with a "Reset demo" button that restores the sample data.
+- Keep all sample data in files under src/data:
+  - business.js
+  - customers.js: 12 customers with 6 months of payment history. Some always pay on time and some always pay late; one is in another state and one is unregistered.
+  - invoices.js: 40 invoices over 4 months, covering paid, part paid, due soon, overdue by different amounts, and one disputed.
+  - expenses.js: salaries on the 1st, rent on the 5th, supplier bills with due dates, electricity, and the GST payment on the 20th (monthly filers).
+  - bank-statement.csv: a sample statement to match against, including an exact payment, a part payment, one payment covering two invoices, a payment short by exactly 2% of the taxable value, an overpayment, and an unknown deposit.
+  - templates.js: the reminder message for each stage, in English and Hindi.
+  - config.js
+  Keep all interface text in src/i18n/en.js and src/i18n/hi.js.
+- Invoices, letters and the evidence pack are print-ready A4 pages that save as PDF with the browser's Save as PDF (no PDF library), so ₹ and Hindi print correctly.
+- Draw charts in plain SVG, or use one small chart library.
+- Use only made-up businesses, customers, GSTINs, phone numbers and bank details.
+- If you can't create a project (for example, you're a chat assistant), build it in plain HTML, CSS and JavaScript as a few files with no build step, each in its own code block with its file name above it. If you run out of space, stop at the end of a file and I'll say "continue".
+
+SCREENS
+1. Dashboard:
+   - Total to collect, overdue, expected this week and this month, bills due in the next 30 days, cash in the bank, and the lowest point in the forecast.
+   - An ageing bar: not yet due, 1-30, 31-60, 61-90 and 90+ days overdue.
+   - The top 5 from "Chase these first".
+2. Invoices: a list with filters (customer, status, due date, days overdue) and search. Statuses: draft, sent, due soon, overdue, part paid, paid, disputed. Opening an invoice shows its timeline.
+3. New invoice:
+   - Pick or add a customer. Their GSTIN is validated, and their state is taken from it.
+   - Add items with HSN/SAC code, quantity, unit, rate, discount and GST rate. Totals update live, with CGST and SGST or IGST worked out automatically.
+   - The due date comes from the customer's credit days.
+   - Preview the print-ready Tax Invoice (or Bill of Supply, or plain invoice). It includes a UPI QR code built from upi://pay?pa=<UPI ID>&pn=<business name>&am=<amount>&tn=<invoice number>&cu=INR.
+   - Save as a draft, or send.
+4. Customers: each with credit days, contact details, total owed, and payment record (average days late, % paid on time), plus a reliability grade A, B or C with the reason in words.
+5. Today's follow-ups:
+   - Every reminder the escalation ladder says is due today, with the message ready: customer name, invoice numbers, amount, days overdue, and their pay link.
+   - One tap sends it by WhatsApp (a wa.me link with the text), email (mailto) or SMS (an sms: link). This opens the owner's own app with the message filled in, and "Mark as sent" logs it.
+   - Snooze, or record "Customer promised to pay on [date]", which pauses the ladder until then.
+6. Escalation ladder (editable in Settings, defaults in config.js):
+   - 3 days before the due date: friendly heads-up
+   - on the due date: reminder
+   - 7 days overdue: firmer reminder
+   - 15 days overdue: final reminder, plus a prompt to call
+   - 30 days overdue: Payment Demand Letter
+   - 45 days overdue: next-steps suggestion
+   The tone steps up gradually and stays polite. A dispute or a promise to pay pauses it.
+7. Customer link (/pay/:token, what the customer sees, no login): the invoice, the amount owed, "Pay by UPI" (QR code and button, simulated), "I've already paid" with a reference number and date, and "Something's wrong with this invoice" with a reason. Either of the last two pauses the ladder and lands in the owner's Inbox.
+8. Inbox: disputes and "already paid" claims to resolve. The owner can accept (issue a credit note, or mark it paid), reject with a reply, or edit the invoice. Resolving resumes or stops the ladder.
+9. Payments:
+   - Import bank-statement.csv, or add a payment by hand.
+   - Each credit is matched to invoices automatically by the invoice number in its description, the amount and the customer name, with a confidence and the reason.
+   - Flag part payments, one payment covering several invoices, overpayments and unmatched deposits. Flag a shortfall of exactly 1%, 2% or 10% of the taxable value as "Possibly TDS deducted: ask the customer for the TDS certificate".
+   - The owner confirms each match. Nothing is marked paid without confirmation.
+10. Cash forecast:
+    - The next 13 weeks, week by week: opening cash, money expected in (each unpaid invoice on its due date plus that customer's average delay), money going out (from expenses.js), and closing cash.
+    - Highlight the first week that cash drops below the safety buffer (set in config.js).
+    - "What if" switches: a customer pays 30 days later, a big order comes in, a supplier payment is delayed.
+    - Show which invoices, if collected, would cover the gap.
+11. Chase these first: a score for each overdue invoice from its amount, days overdue, the customer's reliability, and how much it helps the cash gap, with the reason in words ("₹1,20,000, 38 days overdue, customer usually pays 20 days late, covers the shortfall in week 6").
+12. Documents: one timeline per invoice holding everything for it (the invoice, letters, reminders sent, payments, customer replies), and "Download evidence pack", which opens a print-ready page with all of it.
+13. Settings:
+    - business profile: name, address, state, GSTIN, registration type (regular / composition / unregistered), turnover, Udyam registered yes or no, bank details, UPI ID, logo
+    - the escalation ladder and the safety buffer
+    - language (English / हिंदी) and text size
+    - a "Demo date" to move "today" forward and watch reminders, letters and the forecast change
+    - Reset demo
+
+DESIGN RULES
+- Works well on a phone (360px wide), because owners run their business from one, and on a laptop.
+- Plain words, not accounting jargon: "money to collect", not "receivables", with the accounting term in a tooltip.
+- Body text at least 16px, buttons at least 48px tall, strong colour contrast (WCAG AA), visible keyboard focus, and a label on every icon and form field for screen readers. Never rely on colour alone for status: every status has a word.
+- Switching language changes every piece of interface text and the reminder templates.
+
+BEFORE YOU FINISH, CHECK
+- Every screen above opens and works, with no console errors.
+- An invoice of ₹10,000 at 18% to a customer in Maharashtra shows CGST ₹900 + SGST ₹900 = ₹11,800. The same invoice to a customer in Gujarat shows IGST ₹1,800 = ₹11,800.
+- Invoice numbers are consecutive within the financial year and never repeat.
+- Every sample GSTIN passes the check digit, and changing one character of it fails.
+- Every demand letter is titled "Payment Demand Letter" and carries the line about what it is not.
+- The ladder pauses for a dispute or a promise to pay, and never sends the same stage twice.
+- Payment matching handles all six cases in bank-statement.csv, and nothing is marked paid without confirmation.
+- In the forecast, each week's closing cash equals the next week's opening cash, and the totals agree with the invoices and expenses.
+- Every piece of text switches between English and Hindi; everything works at 360px wide; nothing is lost on a page reload.
+Then tell me how to run it, and list anything you did not finish.
+Build 2 · Finish what's missing
+Copy
+Go through the app you built and check it against this list. For each item, say whether it is done, partly done or missing. Then build everything that is partly done or missing, one item at a time, and keep everything that already works exactly as it is.
+
+- Money in whole paise, Indian formatting, the invoice total in words, IST dates, the April-March financial year
+- GST per line, rounded to the paisa; CGST + SGST or IGST chosen by state code; rates from config.js; a round-off line
+- Tax Invoice, Bill of Supply or plain invoice chosen by registration type, with every required field
+- GSTIN pattern and check-digit validation; the e-invoicing note above ₹5 crore turnover
+- Payment Demand Letter with the "not a GST or legal notice" line, invoice details, deadline, how to pay, the optional MSMED line and interest, and never the words "legal notice"
+- Dashboard with totals, ageing bar and top 5 to chase
+- Invoices list with statuses, filters and a timeline; New invoice with live totals, a UPI QR code and a print-ready preview
+- Customers with credit days, payment record and an A/B/C grade with the reason
+- Today's follow-ups with ready messages and one-tap WhatsApp, email and SMS, mark as sent, snooze, promise to pay
+- An editable escalation ladder that pauses for a dispute or a promise
+- Customer link with pay, "already paid" and "something's wrong", feeding the Inbox
+- Payments: CSV import, automatic matching with reasons, all six flag types including possible TDS, confirmation before anything is marked paid
+- 13-week cash forecast with the buffer warning, what-if switches and the invoices that cover the gap
+- Chase these first, with scores and reasons in words
+- Documents timeline and evidence pack
+- Settings: business profile, ladder, buffer, language, text size, demo date, reset
+- All sample data in src/data, all text in the translation files, works at 360px wide and after a reload, with no console errors
+
+When you're done, go through every screen once more so spacing, buttons and wording are consistent, and list anything still not finished.
+Add-on · Send reminders for real
+Copy
+Send reminders automatically instead of opening the owner's apps.
+- Add a small server (Node + Express, or serverless functions on Vercel or Netlify) with a daily job at 10:00 IST that sends the reminders due that day.
+- Email through [Resend / an SMTP account]:
+  - The key lives in an environment variable, listed in a .env.example file.
+  - Each email is sent in the business's name, with reply-to set to the owner's email, and includes the invoice and pay links.
+- WhatsApp: keep the one-tap wa.me link, which needs no approval. In the README, explain that sending WhatsApp messages automatically needs the WhatsApp Business Platform with approved message templates, and write the five templates we'd submit.
+- Auto-send only the stages the owner switches on in Settings (by default, only the friendly heads-up and the due-date reminder). Demand letters are never sent automatically; the owner always presses Send.
+- Never send the same stage twice, never send for a disputed or paused invoice, never send a customer more than one message a day, and end every message with who to contact.
+- Log every send with its status, and show failed ones in Today's follow-ups to retry.
+- Add a test mode that sends everything to the owner's own email instead.
+Add-on · Add invoices from a photo
+Copy
+Let the owner add existing paper or PDF invoices by taking a photo, using [your AI provider, e.g. Gemini, OpenAI or Claude].
+- Never put the API key in the frontend. Add a small server endpoint that reads the key from an environment variable, listed in a .env.example file.
+- Read: invoice number, date, customer, GSTIN, items, HSN/SAC codes, quantities, rates, taxable value, tax amounts, total, and the due date if one is shown.
+- Fill the New invoice form for the owner to check. Never save without review, and highlight every field the AI was unsure of.
+- Recalculate the GST from the items, and flag it if the result doesn't match the printed totals. Check the GSTIN's check digit, and flag it if it fails.
+- Accept JPG, PNG and PDF up to 5 MB, and don't keep the file after reading it.
+- Then tell me how to test it: print an invoice from the app, photograph it, and read it back.
+Add-on · Another language
+Copy
+Add [Marathi] to the app as a third language.
+- Translate every string in src/i18n, every reminder template and the customer link page. Use the plain words a shopkeeper would use, and keep terms like GST, GSTIN, HSN and UPI as they are.
+- Give each customer a preferred language, so their reminders and their pay link use it.
+- Keep invoices and demand letters in English by default, with a setting to add the new language under each heading.
+- Show each language's name in its own script in the language picker, and make sure longer words don't break any layout at 360px wide.
+Submit · README, link and demo
+Copy
+Get this ready to submit to the hackathon.
+1. Write a README.md covering:
+   - the problem in two lines, and who the app is for
+   - what it does, one line per screen
+   - how GST is worked out, and which invoice type is issued when
+   - how the escalation ladder works, and why the demand letter is clearly not a legal or GST notice
+   - how payments are matched, how the forecast and the "chase these first" score are worked out
+   - how it improves on chasing payments by hand today
+   - how to run it, what is simulated, and what we'd build next
+2. Tell me step by step how to put it online on Vercel or Netlify from a GitHub repo, so the judges can open a link. Include the setting that stops a page refresh from showing a 404.
+3. Write a 3-minute demo script for judges who score practical usefulness, invoice management, payment-follow-up automation, accuracy of financial calculations, cash-flow forecasting, document generation, ease of use, technical execution and real-world impact. Show:
+   - the dashboard, then the forecast's shortfall week and the invoices that would cover it
+   - today's follow-ups, sending one by WhatsApp
+   - a customer disputing an invoice through their link, which pauses the ladder
+   - importing the bank statement, including the TDS shortfall
+   - a same-state and an other-state GST invoice side by side
+   - a demand letter
+   - moving the demo date forward
+   Include one sentence for each part on the problem it solves.
+4. List anything that could go wrong during a live demo, and how to avoid it.
+Debug · An error message
+Copy
+I'm getting this error:
+[paste the full error message from the terminal or the browser console]
+
+It happens when: [what you did, e.g. pressed Save on a new invoice, ran npm run dev]
+The file it points to: [paste the file, or the part the error names]
+
+Explain in two lines what is causing it. Then fix only that: give me the corrected code for each file that changes, with its file name, and don't change anything unrelated. Tell me how to check it's fixed.
+Debug · Blank white screen
+Copy
+The app shows a blank white screen.
+The browser console (right-click the page, Inspect, Console) shows: [paste any red text, or write "nothing"]
+The terminal shows: [paste it]
+What I changed last: [describe it]
+
+Find the cause step by step: the console error first, then the entry files (main.jsx and App.jsx), the routes, any import that might be wrong, and saved data in localStorage that no longer matches what the code expects (and make Reset demo clear it). Fix the cause, not the symptom. Also add a simple error screen, so a crash in one screen shows a message instead of a blank page.
+Debug · The GST or totals are wrong
+Copy
+The invoice maths is wrong: [e.g. GST shows 1800.0000002 / IGST is used for a customer in our own state / the total doesn't match the items].
+
+Check these one by one:
+- Every amount is in whole paise, and typed rupees are converted exactly once, when entered.
+- Each line's taxable value is quantity x rate - discount, worked out in paise.
+- Tax on each line is rounded to the paisa; CGST and SGST are each half the rate and rounded separately. They can differ from IGST by a paisa, which is expected.
+- Same state versus other state is decided by comparing the business's state code with the place of supply's state code.
+- The round-off line takes the total to the nearest rupee, and the amount in words matches the rounded total.
+Then run these cases and show me a table of expected against actual:
+- ₹10,000 at 18%, same state: CGST 900, SGST 900, total 11,800
+- ₹10,000 at 18%, other state: IGST 1,800, total 11,800
+- 3 x ₹333 at 5%, same state
+- an item with a 10% discount
+- a composition business (no GST)
+- a 0% item
+Debug · Reminders on the wrong day
+Copy
+Reminders show up on the wrong day or at the wrong stage: [e.g. the 7-days-overdue reminder appears on day 6 / a disputed invoice still gets reminders / the same reminder comes back every day].
+
+Check these one by one:
+- Days overdue are counted in whole IST days from the due date, not in hours and not in UTC.
+- Each stage is due once, and is marked done when sent.
+- A dispute or a promise to pay pauses the ladder until it is resolved or the promised date passes.
+- A part payment keeps the stage but updates the amount in the message.
+- The stage days are read from config.js, not hard-coded.
+Use the Demo date setting to test, and show me a table of one invoice moving through every stage.
+Debug · Payments matched wrongly
+Copy
+Payment matching is wrong: [e.g. a payment matched to the wrong customer / a part payment marked as fully paid / the TDS shortfall isn't flagged].
+
+Check these one by one:
+- The invoice number is found in the bank description even with different spacing or separators (INV/26-27/0012, INV 26-27 12, 0012).
+- Amounts are compared in paise.
+- Customer names match loosely (ignore M/s, Pvt Ltd and capital letters).
+- One payment can cover several invoices: oldest first, unless the description names them.
+- A part payment leaves the rest owed.
+- A shortfall of exactly 1%, 2% or 10% of the taxable value is flagged as possible TDS.
+- Nothing is marked paid until it is confirmed.
+- Importing the same file twice doesn't count anything twice (match on date, amount and reference).
+Run bank-statement.csv again and show me a table of each line, what it matched and why.
+Debug · A feature isn't working right
+Copy
+[The screen or feature, e.g. the cash forecast] isn't working properly.
+What I expected: [e.g. cash drops below the buffer in week 6 because salaries are due and two customers pay late]
+What happens instead: [e.g. it never drops, and one week's closing cash doesn't match the next week's opening cash]
+Steps to make it happen: [1, 2, 3]
+
+Read the code for this feature and work out why it behaves this way before changing anything. Explain the cause in plain words, then fix it with the smallest change that works, and tell me exactly how to test it.
+Debug · It broke after my last change
+Copy
+Everything worked until my last change. Now [what's broken].
+The change I made, or asked you to make: [describe it or paste it]
+
+Compare the code before and after that change and find what broke. Fix it so the new change and everything that worked before both work. If the change can't work without breaking something, tell me and suggest another way to do it.
+Debug · The AI keeps going in circles
+Copy
+Stop. We've tried to fix this several times and it still isn't fixed. Don't write any more code yet.
+The problem: [describe it]
+1. List what we've already tried, and why each attempt didn't work.
+2. List three possible root causes, most likely first, and what would confirm each one.
+3. Tell me exactly what to check or log (one console.log, or one thing to look at) to find out which it is.
+Once I tell you the result, make one focused fix.
+Debug · Broken on a phone
+Copy
+The app looks broken on a phone: [describe it, e.g. the invoice items table runs off the side of the screen].
+Fix the layout so every screen works at 360px wide and at the largest text size:
+- nothing scrolls sideways, and no text or amount is cut off
+- wide tables become stacked cards on a phone
+- buttons are at least 48px tall and don't overlap
+- long Hindi words wrap
+The print-ready invoice and letter pages must still print correctly on A4. Check every screen, not only the one I named, and tell me which ones you changed.
+Debug · Broken after deploying
+Copy
+The app works on my laptop but not after deploying to [Vercel / Netlify / GitHub Pages].
+What happens: [e.g. a blank page, a 404 when I open a customer's /pay link, reminders don't send]
+The build log or browser console shows: [paste it]
+
+Check the usual causes one by one:
+- the build command and output folder
+- the base path
+- a rewrite so every route (including /pay/:token) serves index.html
+- file names whose capital letters differ from their imports (my laptop may ignore case, but the server doesn't)
+- environment variables that exist on my laptop but were never added to the host
+- if we have a server, whether the app points at the server's live address instead of localhost
+Tell me exactly which settings to change and where.
