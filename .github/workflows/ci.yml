@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: fullpay
+          POSTGRES_PASSWORD: fullpay
+          POSTGRES_DB: fullpay
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fullpay"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://fullpay:fullpay@localhost:5432/fullpay
+      SESSION_SECRET: ci-only-secret-not-for-production
+      OWNER_PASSWORD: ci-only-password
+      APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm test
+      - run: npm run build
