@@ -109,7 +109,7 @@ Evidence: `npm test` (281 tests), [`/proof`](https://fullpay-web.onrender.com/pr
 | Item | Status |
 |---|---|
 | Add-on: invoices from a photo (AI reads it, owner reviews, GST recalculated, GSTIN checked) | In progress (see the build log) |
-| Add-on: another language (third language, customer's preferred language, own-script picker) | In progress (Punjabi, for a Ludhiana business) |
+| Add-on: another language (third language, customer's preferred language, own-script picker) | Not built: optional, team decision (English and Hindi cover every screen, message and print heading; each customer already has a preferred language) |
 | Submit 1: README with the pack's headings | Done (`README.md`) |
 | Submit 2: deploy steps, incl. the refresh-404 setting | Done: Render instead of Vercel/Netlify; server-rendered routes, so no SPA rewrite is needed (`docs/deploy.md`) |
 | Submit 3: 3-minute demo script with one problem sentence per part | `docs/demo-script.md` |
