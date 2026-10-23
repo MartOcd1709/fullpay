@@ -1,3 +1,3 @@
-# Click test: http://localhost:3100
+# Click test: https://fullpay-web.onrender.com
 
 Every button and link worked.
