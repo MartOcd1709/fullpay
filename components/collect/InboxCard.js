@@ -58,7 +58,7 @@ export default function InboxCard({ item, lang, asOf }) {
       </header>
 
       <blockquote className="mt-3 border-l-4 border-accent bg-accent-soft px-4 py-3 text-ink">
-        <p className="whitespace-pre-wrap">“{item.reason}”</p>
+        <p translate="no" className="whitespace-pre-wrap">“{item.reason}”</p>
       </blockquote>
 
       {isClaim && (

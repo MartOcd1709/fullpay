@@ -5,7 +5,7 @@ import { Field, Input, Select } from "./Field";
 import Term from "./Term";
 import { api } from "./api";
 import { makeT } from "./i18n";
-import { STATE_LIST, STATE_CODES, validateGSTIN } from "@/lib/gst";
+import { stateList, stateName, validateGSTIN } from "@/lib/gst";
 
 const GSTIN_REASON = { length: "core.cust.gstin_length", pattern: "core.cust.gstin_pattern", check_digit: "core.cust.gstin_check", state_code: "core.cust.gstin_state" };
 
@@ -71,7 +71,7 @@ export default function CustomerForm({ lang, initial, onSaved, onCancel, submitL
       <Field
         id="c-gstin"
         label={T("field.gstin")}
-        hint={g?.valid ? T("new_invoice.gstin_valid", { state: `${STATE_CODES[g.state_code]} (${g.state_code})` }) : T("core.cust.gstin_hint")}
+        hint={g?.valid ? T("new_invoice.gstin_valid", { state: `${stateName(g.state_code, T.lang)} (${g.state_code})` }) : T("core.cust.gstin_hint")}
         error={errors.gstin || gstinMsg}
       >
         <Input id="c-gstin" value={v.gstin} onChange={(e) => setV({ ...v, gstin: e.target.value.toUpperCase() })} maxLength={15} autoCapitalize="characters" spellCheck={false} className="mono uppercase" error={errors.gstin || gstinMsg} hint="1" />
@@ -79,7 +79,7 @@ export default function CustomerForm({ lang, initial, onSaved, onCancel, submitL
       <Field id="c-state" label={T("field.state")} hint={derivedState ? T("core.cust.state_from_gstin") : T("core.cust.state_hint")} error={errors.state_code}>
         <Select id="c-state" value={derivedState ?? v.state_code} onChange={set("state_code")} disabled={!!derivedState} error={errors.state_code} hint="1">
           <option value="">{T("core.cust.pick_state")}</option>
-          {STATE_LIST.map((s) => (
+          {stateList(T.lang).map((s) => (
             <option key={s.code} value={s.code}>
               {s.name} ({s.code})
             </option>

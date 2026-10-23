@@ -11,7 +11,7 @@ import { Field, Input, Select, Textarea, Check } from "@/components/ui/Field";
 import { toast } from "@/components/ui/Toast";
 import { api } from "@/components/ui/api";
 import { makeT } from "@/components/ui/i18n";
-import { invoiceTotals, isInterstate, validateHSN, hsnDigitsRequired, einvoiceRequired, docTypeFor, STATE_CODES, STATE_LIST } from "@/lib/gst";
+import { invoiceTotals, isInterstate, validateHSN, hsnDigitsRequired, einvoiceRequired, docTypeFor, stateName as stateNameOf, stateList } from "@/lib/gst";
 import { rupeesToPaise, amountInWords } from "@/lib/money";
 import { addDays } from "@/lib/time";
 import { UQC } from "@/lib/data/uqc";
@@ -87,7 +87,7 @@ export default function NewInvoiceForm({ lang, asOf, business, rates, customers:
   const hsnErr = (it) => (taxed && !validateHSN(it.hsn, business.turnover_paise) ? T("new_invoice.hsn_digits", { n: hsnNeed }) : "");
 
   const update = (key, patch) => setItems(items.map((it) => (it.key === key ? { ...it, ...patch } : it)));
-  const stateName = (code) => `${STATE_CODES[code] ?? code}`;
+  const stateName = (code) => stateNameOf(code, T.lang);
 
   function payload() {
     return {
@@ -188,7 +188,7 @@ export default function NewInvoiceForm({ lang, asOf, business, rates, customers:
           <Field id="pos" label={T("core.nw.pos")} labelExtra={<Term {...T.term("core.nw.pos")} iconOnly />} hint={T("core.nw.pos_hint")}>
             <Select id="pos" value={placeOfSupply} onChange={(e) => setPos(e.target.value)} hint="1">
               <option value="">{T("core.cust.pick_state")}</option>
-              {STATE_LIST.map((s) => (
+              {stateList(T.lang).map((s) => (
                 <option key={s.code} value={s.code}>{s.name} ({s.code})</option>
               ))}
             </Select>

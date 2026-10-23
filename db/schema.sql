@@ -284,3 +284,5 @@ CREATE UNIQUE INDEX IF NOT EXISTS invoices_number_uniq ON invoices (lower(number
 CREATE INDEX IF NOT EXISTS credit_notes_invoice_idx ON credit_notes (invoice_id);
 CREATE INDEX IF NOT EXISTS inbox_items_invoice_idx ON inbox_items (invoice_id);
 CREATE INDEX IF NOT EXISTS promises_invoice_idx ON promises (invoice_id);
+-- The match reason as translation keys + values (lib/i18n match.*), so it shows in the screen's language.
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS match_reason_parts JSONB;

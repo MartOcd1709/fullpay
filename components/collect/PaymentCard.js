@@ -62,7 +62,7 @@ export function PendingPayment({ p, lang, invoices }) {
         </div>
         <FlagChips p={p} lang={lang} />
       </header>
-      {p.narration && <p className="mt-2 break-words font-mono text-sm text-ink-muted">{p.narration}</p>}
+      {p.narration && <p translate="no" className="mt-2 break-words font-mono text-sm text-ink-muted">{p.narration}</p>}
       {p.reference && (
         <p className="mt-1 text-sm text-ink-muted">
           {T("field.reference")}: <span className="select-all break-all font-mono">{p.reference}</span>
@@ -77,14 +77,14 @@ export function PendingPayment({ p, lang, invoices }) {
       </div>
       <p className="mt-2">
         <span className="font-semibold">{T("payments.reason")}: </span>
-        {p.match_reason}
+        {Array.isArray(p.match_reason_parts) ? p.match_reason_parts.map((x) => T(`match.${x.k}`, x.v)).join("") : p.match_reason}
       </p>
 
       {tds && (
         <div className="mt-3 rounded-lg bg-warning-soft p-3 text-ink" role="note">
           <p className="font-semibold">{T("collect.pay.tds_line", { pct: tds.pct, amount: money(tds.amount_paise) })}</p>
           <p className="mt-1">{T("collect.pay.tds_ask")}</p>
-          {tds.label && <p className="mt-1 text-sm text-ink-muted">{tds.label}</p>}
+          {tds.label && <p lang="en" translate="no" className="mt-1 text-sm text-ink-muted">{tds.label}</p>}
         </div>
       )}
       {p.flags?.includes("overpaid") && <p className="mt-3 rounded-lg bg-warning-soft p-3">{T("collect.pay.over_note")}</p>}

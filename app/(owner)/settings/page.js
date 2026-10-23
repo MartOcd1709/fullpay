@@ -6,7 +6,7 @@ import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
 import SettingsForm, { DemoControls } from "@/components/pages/SettingsForm";
 import { run } from "@/lib/services/context";
-import { STATE_CODES } from "@/lib/gst";
+import { STATE_CODES, stateName } from "@/lib/gst";
 import { demoMode } from "@/lib/services/tick";
 
 export async function generateMetadata() {
@@ -36,7 +36,7 @@ export default async function SettingsPage() {
     );
   }
   const { cfg, asOf, optouts, notices, last_notice } = data;
-  const states = Object.entries(STATE_CODES).sort((a, b) => a[1].localeCompare(b[1]));
+  const states = Object.keys(STATE_CODES).map((code) => [code, stateName(code, T.lang)]).sort((a, b) => a[1].localeCompare(b[1], T.lang));
   return (
     <>
       <PageHeader title={T("settings.title")} />

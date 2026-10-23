@@ -10,7 +10,7 @@ import { AddCustomer } from "@/components/pages/CustomerActions";
 import { Grade, gradeReason } from "@/components/pages/Grade";
 import { run } from "@/lib/services/context";
 import * as customers from "@/lib/services/customers";
-import { STATE_CODES } from "@/lib/gst";
+import { stateName } from "@/lib/gst";
 
 export async function generateMetadata() {
   const T = await getT();
@@ -54,7 +54,7 @@ export default async function CustomersPage({ searchParams }) {
                   <span className="min-w-0">
                     <span className="block font-semibold">{c.name}</span>
                     <span className="mono block text-sm text-ink-muted">
-                      {c.gstin ?? T("customers.unregistered")} · {STATE_CODES[c.state_code] ?? c.state_code}
+                      {c.gstin ?? T("customers.unregistered")} · {stateName(c.state_code, T.lang)}
                     </span>
                   </span>
                   <span className="text-right">

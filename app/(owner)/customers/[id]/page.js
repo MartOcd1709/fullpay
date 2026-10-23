@@ -11,7 +11,7 @@ import { Grade, gradeReason } from "@/components/pages/Grade";
 import { run } from "@/lib/services/context";
 import * as customers from "@/lib/services/customers";
 import * as invoices from "@/lib/services/invoices";
-import { STATE_CODES } from "@/lib/gst";
+import { stateName } from "@/lib/gst";
 
 export async function generateMetadata({ params }) {
   const T = await getT();
@@ -54,8 +54,8 @@ export default async function CustomerPage({ params }) {
         </Card>
         <Card title={T("pages.cust.contact")}>
           <dl className="grid gap-2">
-            <div><dt className="text-sm text-ink-muted">{T("pages.cust.state")}</dt><dd>{STATE_CODES[c.state_code] ?? c.state_code} ({c.state_code})</dd></div>
-            {c.address && <div><dt className="text-sm text-ink-muted">{T("pages.set.address")}</dt><dd>{c.address}</dd></div>}
+            <div><dt className="text-sm text-ink-muted">{T("pages.cust.state")}</dt><dd>{stateName(c.state_code, T.lang)} ({c.state_code})</dd></div>
+            {c.address && <div><dt className="text-sm text-ink-muted">{T("pages.set.address")}</dt><dd translate="no">{c.address}</dd></div>}
             {c.email && <div><dt className="text-sm text-ink-muted">Email</dt><dd className="break-all select-all">{c.email}</dd></div>}
             {c.phone && <div><dt className="text-sm text-ink-muted">Phone</dt><dd className="select-all">{c.phone}</dd></div>}
             <div><dt className="text-sm text-ink-muted">{T("pages.cust.lang")}</dt><dd>{c.preferred_lang === "hi" ? "हिंदी" : "English"}</dd></div>
