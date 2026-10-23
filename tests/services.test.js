@@ -296,7 +296,8 @@ test("remaining paths: claim mark-paid, dispute reject/edit, promises, customers
     // Settings: deep-merged, validated, logged.
     await assert.rejects(settings.save(c, ctx, { ladder: { offsets: { heads_up: 5 } } }), { code: "config_invalid" });
     const s = await settings.save(c, ctx, { forecast: { buffer_paise: 20_000_000 }, ui: { lang: "hi" } });
-    assert.deepEqual([s.forecast.buffer_paise, s.ui.lang, s.demo.clock_date], [20_000_000, "hi", seedMod.SEED_ANCHOR]);
+    assert.deepEqual([s.forecast.buffer_paise, s.ui.lang, s.demo.clock_date, s.demo.t0], [20_000_000, "hi", null, seedMod.SEED_ANCHOR]);
+    assert.equal(ctx.asOf, seedMod.SEED_ANCHOR);
 
     // Evidence bundle and chase list.
     const letter = await byNumber(c, "INV/26-27/0042");

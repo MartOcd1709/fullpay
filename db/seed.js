@@ -4,7 +4,7 @@
 import { createHash } from "node:crypto";
 import { computeGSTINCheckDigit } from "../lib/gst.js";
 import { verifyChain, loadChain } from "../lib/chain.js";
-import { addDays, daysBetween } from "../lib/time.js";
+import { addDays, daysBetween, initTime, today } from "../lib/time.js";
 import { DEFAULT_CONFIG, mergeConfig } from "../lib/config.js";
 import * as customers from "../lib/services/customers.js";
 import * as invoices from "../lib/services/invoices.js";
@@ -170,7 +170,10 @@ export async function seed(client, { anchor = SEED_ANCHOR } = {}) {
   await client.query(`TRUNCATE ${TABLES.join(", ")} RESTART IDENTITY CASCADE`);
   await client.query("ALTER TABLE escalation_events ENABLE TRIGGER USER");
 
-  const overrides = { demo: { clock_date: anchor, t0: anchor } };
+  // The seeded world is pinned to the anchor, but the app clock then moves with the real calendar from the reseed day,
+  // so each day's scheduled run finds new rungs to fire; the nightly reseed resets it. The pinned letter hash is unaffected.
+  initTime();
+  const overrides = { demo: { clock_date: null, offset_days: daysBetween(today(), anchor), t0: anchor } };
   await client.query("INSERT INTO config (id, data, updated_at) VALUES (1, $1::jsonb, $2)", [JSON.stringify(overrides), `${anchor}T04:00:00.000Z`]);
   const cfg = mergeConfig(DEFAULT_CONFIG, overrides);
 
