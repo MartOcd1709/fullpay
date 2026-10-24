@@ -2,13 +2,16 @@ import { route, v } from "@/lib/http";
 import { guard } from "@/lib/services/approvals";
 import { fmtINR } from "@/lib/money";
 
-const LABEL = { accept_credit_note: "Issue a credit note", mark_paid: "Mark as paid", reject: "Reject with a reply", edit: "Edit the invoice terms" };
+const LABEL = {
+  accept_credit_note: "Issue a credit note", mark_paid: "Mark as paid", reject: "Reject with a reply", edit: "Edit the invoice terms",
+  approve_plan: "Approve the plan to pay in parts",
+};
 
-// action: accept_credit_note {amount_paise, reason?} | mark_paid | reject {reply} | edit {changes}
+// action: accept_credit_note {amount_paise, reason?} | mark_paid | reject {reply} | edit {changes} | approve_plan
 export const POST = route(async ({ client, ctx, params, body }) => {
   const id = v.id(params);
   const payload = {
-    action: v.oneOf(body, "action", ["accept_credit_note", "mark_paid", "reject", "edit"]),
+    action: v.oneOf(body, "action", ["accept_credit_note", "mark_paid", "reject", "edit", "approve_plan"]),
     amount_paise: v.int(body, "amount_paise", { min: 1, optional: true }) ?? undefined,
     reason: v.str(body, "reason", { max: 300, optional: true }) ?? undefined,
     reply: v.str(body, "reply", { max: 1000, optional: true }) ?? undefined,

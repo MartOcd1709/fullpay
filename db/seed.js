@@ -20,7 +20,7 @@ export const LETTER_INVOICE = "INV/26-27/0042";
 const HISTORY_START = "2026-04-01";
 
 const TABLES = [
-  "outbox", "payment_proposals", "payment_allocations", "payments", "promises", "credit_notes", "inbox_items",
+  "outbox", "payment_proposals", "payment_allocations", "payments", "promises", "payment_plans", "credit_notes", "inbox_items",
   "escalation_events", "invoice_items", "invoices", "expenses", "customers", "config",
 ];
 

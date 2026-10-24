@@ -309,3 +309,25 @@ ALTER TABLE customers ADD COLUMN IF NOT EXISTS treds_buyer BOOLEAN NOT NULL DEFA
 
 -- One link per customer listing all their open bills ("statement of account"), created when first needed.
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS statement_token TEXT UNIQUE;
+
+-- Instalment plans: a customer offers on the pay link to pay one bill in 2 or 3 parts; the owner approves or declines in
+-- the Inbox. While the offer waits, reminders pause ('plan'). Once approved, the part now due is the bill's open promise
+-- (promises.plan_id), so a missed part breaks the promise and restarts reminders as before.
+CREATE TABLE IF NOT EXISTS payment_plans (
+  id                  BIGSERIAL PRIMARY KEY,
+  invoice_id          BIGINT NOT NULL REFERENCES invoices(id),
+  inbox_item_id       BIGINT REFERENCES inbox_items(id),
+  parts               JSONB NOT NULL,              -- [{ "date": "YYYY-MM-DD", "amount_paise": n }], in order, adding up to what was owed
+  base_settled_paise  BIGINT NOT NULL,             -- paid + credited when offered; the parts count money on top of this
+  status              TEXT NOT NULL DEFAULT 'proposed' CHECK (status IN ('proposed','active','declined','completed','broken')),
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  decided_at          TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS one_live_plan ON payment_plans (invoice_id) WHERE status IN ('proposed','active');
+ALTER TABLE promises ADD COLUMN IF NOT EXISTS plan_id BIGINT REFERENCES payment_plans(id);
+ALTER TABLE inbox_items DROP CONSTRAINT IF EXISTS inbox_items_kind_check;
+ALTER TABLE inbox_items ADD CONSTRAINT inbox_items_kind_check CHECK (kind IN ('dispute','claim','plan'));
+ALTER TABLE inbox_items DROP CONSTRAINT IF EXISTS inbox_items_resolution_check;
+ALTER TABLE inbox_items ADD CONSTRAINT inbox_items_resolution_check CHECK (resolution IN ('accept_credit_note','mark_paid','reject','edit','approve_plan'));
+ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_paused_by_check;
+ALTER TABLE invoices ADD CONSTRAINT invoices_paused_by_check CHECK (paused_by IN ('dispute','promise','claim','plan'));

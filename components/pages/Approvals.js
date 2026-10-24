@@ -68,7 +68,7 @@ export function ApprovalQueue({ lang, rows, canDecide, myUid }) {
                 <input type="checkbox" className="mt-1 h-5 w-5" aria-label={r.summary} checked={picked.has(r.id)} onChange={() => toggle(r.id)} />
               )}
               <div className="min-w-0 flex-1">
-                <p className="font-semibold">{r.summary}</p>
+                <p className="font-semibold" lang="en">{r.summary}</p>{/* the stored record of what was prepared, in English; the type below is translated */}
                 <p className="mt-1 text-ink-muted">
                   {T(`pages.appr.kind.${r.kind}`)} · {T("pages.appr.by", { name: r.requested_by_name ?? "—" })} · {when(r.created_at, lang)}
                 </p>

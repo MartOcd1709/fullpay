@@ -63,7 +63,7 @@ export default async function ApprovalsPage() {
           <ul className="grid gap-2">
             {decided.map((a) => (
               <li key={a.id} className="rounded-xl border border-line bg-surface p-3">
-                <p className="font-semibold">{a.summary}</p>
+                <p className="font-semibold" lang="en">{a.summary}</p>
                 <p className="text-ink-muted">
                   <strong className={tone[a.status]}>{T(`pages.appr.st.${a.status}`)}</strong>
                   {" · "}{T("pages.appr.prepared_decided", { by: a.requested_by_name ?? "—", dec: a.decided_by_name ?? "—" })}

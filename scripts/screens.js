@@ -130,6 +130,30 @@ await go("/calculator?amount=117186&due=2026-09-19&on=2026-10-24", { w: 390, h: 
     await go("/followups"); await js(`[...document.querySelectorAll("article")].find((a) => /RCPT-/.test(a.textContent))?.scrollIntoView({block:"start"})`); await wait(300); await shot("28-payment-receipt");
   }
 }
+// Pay in parts: the customer's form (a customer who reads English), the owner's Inbox card, then the agreed plan.
+{
+  const custs = await fetch(`${base}/api/customers`, { headers: { cookie: ownerCookie } }).then((r) => r.json());
+  const english = new Set((Array.isArray(custs) ? custs : []).filter((c) => c.preferred_lang !== "hi").map((c) => String(c.id)));
+  const sent = await fetch(`${base}/api/invoices?status=sent`, { headers: { cookie: ownerCookie } }).then((r) => r.json());
+  const bill = sent.find((i) => !i.paused_by && i.outstanding_paise > 300000 && english.has(String(i.customer_id)));
+  const page = bill ? await fetch(`${base}/invoices/${bill.id}`, { headers: { cookie: ownerCookie } }).then((r) => r.text()) : "";
+  const token = (page.match(/\/pay\/([A-Za-z0-9_-]{20,})/) ?? [])[1];
+  if (token) {
+    await go(`/pay/${token}`, { w: 390, h: 844, mobile: true });
+    await js(`(() => { const d = [...document.querySelectorAll("details")].find((x) => /Pay in parts/.test(x.textContent)); if (d) { d.open = true; d.scrollIntoView({ block: "start" }); } })()`);
+    await wait(300); await shot("29-pay-in-parts-phone");
+    const half = Math.floor(bill.outstanding_paise / 2 / 100) * 100;
+    const today = (await fetch(`${base}/api/forecast`, { headers: { cookie: ownerCookie } }).then((r) => r.json())).today;
+    const day = (n) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+    await fetch(`${base}/api/pay/${token}`, { method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "plan", parts: [{ date: day(7), amount: (half / 100).toFixed(2) }, { date: day(21), amount: ((bill.outstanding_paise - half) / 100).toFixed(2) }] }) });
+    await go("/inbox"); await js(`document.getElementById("sec-plans")?.scrollIntoView({ block: "start" })`); await wait(300); await shot("30-plan-in-inbox");
+    const items = await fetch(`${base}/api/inbox`, { headers: { cookie: ownerCookie } }).then((r) => r.json());
+    const item = items.open?.find((i) => i.kind === "plan");
+    if (item) await fetch(`${base}/api/inbox/${item.id}/resolve`, { method: "POST", headers: { cookie: ownerCookie, "content-type": "application/json" }, body: JSON.stringify({ action: "approve_plan" }) });
+    await go(`/pay/${token}`, { w: 390, h: 844, mobile: true }); await shot("31-plan-agreed-phone", { full: true });
+  }
+}
 await signIn("accountant");
 await go("/approvals"); await shot("12-approvals-accountant-view");
 await signIn("viewer");

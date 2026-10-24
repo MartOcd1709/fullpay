@@ -8,6 +8,8 @@ const ICON = {
   promise_broken: "handshakeOff", dispute_opened: "dispute", dispute_accepted: "check", dispute_resolved: "check",
   invoice_adjusted: "letter", claim_submitted: "rupee", message_queued: "mail", message_sent: "mail", message_failed: "mailX",
   marked_sent_manual: "tick", snoozed: "snooze", notice_shown: "user", invoice_edited: "draft", tds_recorded: "rupee",
+  plan_proposed: "calendar", plan_approved: "handshake", plan_declined: "close", plan_completed: "check", plan_broken: "handshakeOff",
+  receipt_sent: "mail",
 };
 const RUNG_ICON = { heads_up: "bell", due_date: "calendar", overdue_gentle: "mail", overdue_firm: "phone", demand_letter: "letter", odr_guidance: "scale" };
 
@@ -33,7 +35,16 @@ function eventText(T, e) {
       detail = T("core.evd.payment", { amount: money(p.amount_paise), date: T.date(p.paid_on) });
       break;
     case "promise_made":
-      detail = p.amount ? T("core.evd.promise_amount", { amount: money(p.amount) }) : "";
+      detail = p.plan_id
+        ? T("core.evd.plan_part", { n: p.part, of: p.of, amount: money(p.amount) })
+        : p.amount ? T("core.evd.promise_amount", { amount: money(p.amount) }) : "";
+      break;
+    case "plan_proposed":
+    case "plan_approved":
+      detail = (p.parts ?? []).map((x) => `${T.date(x.date)} ${money(x.amount_paise)}`).join(" · ");
+      break;
+    case "plan_declined":
+      detail = p.reply ? `“${p.reply}”` : "";
       break;
     case "dispute_opened":
       detail = p.reason ? `“${p.reason}”` : "";
@@ -104,6 +115,7 @@ export function timelineModel({ inv, cfg, asOf, T, chain }) {
   if (inv.paused_by === "promise" && promise) pause = { title: T("core.tl.paused_promise", { date: T.date(promise.promised_date) }), detail: T("core.tl.resume_self") };
   else if (inv.paused_by === "dispute") pause = { title: T("core.tl.paused_dispute"), detail: T("core.tl.paused_dispute_detail"), href: "/inbox", hrefLabel: T("core.tl.open_inbox") };
   else if (inv.paused_by === "claim") pause = { title: T("core.tl.paused_claim"), detail: T("core.tl.paused_claim_detail"), href: "/inbox", hrefLabel: T("core.tl.open_inbox") };
+  else if (inv.paused_by === "plan") pause = { title: T("core.tl.paused_plan"), detail: T("core.tl.paused_plan_detail"), href: "/inbox", hrefLabel: T("core.tl.open_inbox") };
   else if (inv.snoozed_until && inv.snoozed_until >= asOf) pause = { title: T("core.tl.snoozed", { date: T.date(inv.snoozed_until) }), detail: T("core.tl.resume_self") };
 
   const next =

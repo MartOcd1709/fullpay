@@ -5,8 +5,67 @@ import { useRouter } from "next/navigation";
 
 const BTN = "inline-flex min-h-12 items-center justify-center rounded-xl px-5 py-2 font-semibold disabled:cursor-not-allowed disabled:opacity-60";
 const REASONS = ["wrong_amount", "wrong_quantity", "returned", "already_paid", "other"];
+const rupees = (paise) => (paise / 100).toFixed(2);
+const toPaise = (text) => {
+  const n = Number(String(text ?? "").replace(/[,\s₹]/g, ""));
+  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
+};
+const inr = (paise) => `₹${(paise / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-// The customer's three answers (already paid / something's wrong / pay on a date) and, in the demo, a simulated UPI payment.
+// "Pay in parts": 2 or 3 dated parts that must add up to what is owed. Starts from the server's even split.
+function PlanForm({ s, defaults, busy, onSubmit, Submit, Err }) {
+  const start = (n) => (n === 3 ? defaults.plan.parts3 : defaults.plan.parts2).map((p) => ({ date: p.date, amount: rupees(p.amount_paise) }));
+  const [n, setN] = useState(2);
+  const [parts, setParts] = useState(() => start(2));
+  const total = parts.reduce((sum, p) => sum + (toPaise(p.amount) || 0), 0);
+  const owed = defaults.owed_paise;
+  const set = (i, key) => (e) => setParts((ps) => ps.map((p, j) => (j === i ? { ...p, [key]: e.target.value } : p)));
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit({ action: "plan", parts: parts.map((p) => ({ date: p.date, amount: p.amount })) }); }}>
+      <p className="text-ink-muted">{s["public.pay.plan_intro"]}</p>
+      {defaults.plan.parts3 && (
+        <fieldset className="mt-3">
+          <legend className="label">{s["public.pay.plan_how_many"]}</legend>
+          <div className="flex flex-wrap gap-2">
+            {[2, 3].map((k) => (
+              <label key={k} className="flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border border-line px-4 hover:bg-surface-2">
+                <input type="radio" name="plan_n" value={k} checked={n === k} onChange={() => { setN(k); setParts(start(k)); }} />
+                <span>{s[`public.pay.plan_n${k}`]}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+      <ol className="mt-3 space-y-3">
+        {parts.map((p, i) => (
+          <li key={`${n}-${i}`} className="grid gap-3 rounded-xl border border-line p-3 sm:grid-cols-2">
+            <p className="font-semibold sm:col-span-2">{s["public.pay.plan_part"]} {i + 1}</p>
+            <div>
+              <label htmlFor={`plan-date-${i}`} className="label">{s["public.pay.plan_date"]}</label>
+              <input id={`plan-date-${i}`} type="date" required min={defaults.asOf} max={defaults.plan.last_by} value={p.date} onChange={set(i, "date")} className="field" />
+            </div>
+            <div>
+              <label htmlFor={`plan-amount-${i}`} className="label">{s["public.pay.plan_amount"]}</label>
+              <div className="flex items-center rounded-xl border border-line bg-surface focus-within:border-accent">
+                <span aria-hidden="true" className="pl-3 font-semibold text-ink-muted">₹</span>
+                <input id={`plan-amount-${i}`} required inputMode="decimal" pattern="[0-9,]*(\.[0-9]{0,2})?" value={p.amount} onChange={set(i, "amount")} className="w-full rounded-xl bg-transparent px-2 py-2.5 text-ink outline-none" />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p aria-live="polite" className={`mt-3 font-semibold ${total === owed ? "text-success" : "text-error"}`}>
+        {s["public.pay.plan_total"]}: <span className="tnum">{inr(total)}</span> / <span className="tnum">{inr(owed)}</span>
+        {total !== owed && <span className="block font-normal">{s["public.pay.plan_mismatch"]}</span>}
+      </p>
+      <p className="mt-1 text-ink-muted">{s["public.pay.plan_rules"]}</p>
+      <Submit kind="plan" disabled={busy !== null || total !== owed} />
+      <Err kind="plan" />
+    </form>
+  );
+}
+
+// The customer's answers (already paid / something's wrong / pay in parts / pay on a date) and, in the demo, a simulated UPI payment.
 export default function PayActions({ token, s, defaults, can }) {
   const router = useRouter();
   const [busy, setBusy] = useState(null);
@@ -39,8 +98,8 @@ export default function PayActions({ token, s, defaults, can }) {
 
   const Err = ({ kind }) => (errors[kind] ? <p role="alert" className="mt-3 rounded-xl bg-error-soft px-3 py-2 font-medium text-error">{errors[kind]}</p> : null);
   const Done = ({ text }) => <p role="status" className="rounded-xl bg-success-soft px-3 py-2 font-medium text-success">{text}</p>;
-  const Submit = ({ kind }) => (
-    <button type="submit" disabled={busy !== null} className={`${BTN} mt-4 w-full bg-accent text-on-accent hover:bg-accent-strong sm:w-auto`}>
+  const Submit = ({ kind, disabled }) => (
+    <button type="submit" disabled={disabled ?? busy !== null} className={`${BTN} mt-4 w-full bg-accent text-on-accent hover:bg-accent-strong sm:w-auto`}>
       {busy === kind ? s["public.pay.sending"] : s["pay.submit"]}
     </button>
   );
@@ -131,6 +190,15 @@ export default function PayActions({ token, s, defaults, can }) {
                 <Err kind="dispute" />
               </form>
             )}
+          </div>
+        </details>
+      )}
+
+      {can.plan && (
+        <details className="rounded-xl border border-line bg-surface">
+          <summary className="flex min-h-12 cursor-pointer items-center px-5 py-3 text-lg font-semibold">{s["public.pay.plan_title"]}</summary>
+          <div className="border-t border-line px-5 py-4">
+            {done.plan ? <Done text={s["public.pay.plan_done"]} /> : <PlanForm s={s} defaults={defaults} busy={busy} onSubmit={(body) => send("plan", body)} Submit={Submit} Err={Err} />}
           </div>
         </details>
       )}
