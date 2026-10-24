@@ -12,6 +12,7 @@ import { cookies } from "next/headers";
 import { getSessionFromCookies } from "@/lib/auth";
 
 import { t } from "@/lib/i18n";
+import { mailSetup } from "@/lib/mail";
 
 export async function generateMetadata() {
   return { title: t("collect.fu.title", await getLang()) };
@@ -46,6 +47,7 @@ export default async function FollowupsPage() {
     <>
       <PageHeader title={T("collect.fu.title")} subtitle={`${date(data.as_of, lang)} · ${summary.join(" · ")}`} />
       <p className="-mt-3 mb-6 max-w-prose text-ink-muted">{T("collect.fu.intro")}</p>
+      {!mailSetup().configured && <p role="note" className="mb-6 max-w-prose rounded-xl bg-info-soft p-3 text-info">{T("collect.fu.no_email_mode")}</p>}
       {festival?.quiet && <QuietBanner lang={lang} quiet={festival.quiet} />}
       {festival?.drive && <FestivalDrive lang={lang} view={festival} role={role} />}
 

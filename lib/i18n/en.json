@@ -2081,5 +2081,6 @@
   "receipt.balance_due": "Balance still due: {amount}.",
   "receipt.paid_one": "Your invoice is now fully paid.",
   "receipt.paid_all": "These invoices are now fully paid.",
-  "core.rung.festival": "Festival settlement request"
+  "core.rung.festival": "Festival settlement request",
+  "collect.fu.no_email_mode": "Email sending is not set up on this server, so nothing goes out on its own. Every message, including the ones that would be emailed automatically, waits here for one tap: WhatsApp, SMS or email from your own phone."
 }

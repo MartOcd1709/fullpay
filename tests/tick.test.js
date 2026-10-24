@@ -8,7 +8,9 @@ const SKIP = !process.env.DATABASE_URL && "DATABASE_URL not set";
 let db, T, O, ctxMod, chain, seedMod;
 before(async () => {
   if (SKIP) return;
-  delete process.env.RESEND_API_KEY; // flush must fail cleanly without a key
+  // A server with email set up (a dummy key: nothing here calls Resend until the key is removed for the flush test).
+  process.env.RESEND_API_KEY = "re_test_dummy_not_a_key";
+  process.env.MAIL_FROM = "FullPay test <test@example.in>";
   db = await import("../lib/db.js");
   T = await import("../lib/services/tick.js");
   O = await import("../lib/services/outbox.js");
@@ -60,6 +62,7 @@ test("a second tick the same day queues nothing (no stage twice)", { skip: SKIP 
 });
 
 test("flush without RESEND_API_KEY marks rows failed with a clear reason and does not throw", { skip: SKIP }, async () => {
+  delete process.env.RESEND_API_KEY; // the key went missing after these were queued
   const r = await O.flush();
   assert.equal(r.attempted, 3);
   assert.equal(r.failed, 3);
@@ -137,4 +140,13 @@ test("reseed restores the pinned letter hash and an empty outbox", { skip: SKIP 
   assert.equal(st.runs.length, 0);
   assert.equal(st.demo.minutes_since_reset, 0);
   assert.equal(JSON.stringify(st).includes("@"), false, "status carries no email addresses");
+});
+
+test("no email set up: the automatic steps wait as one-tap WhatsApp messages instead of failing", { skip: SKIP }, async () => {
+  delete process.env.RESEND_API_KEY;
+  const s = await tick();
+  assert.deepEqual([s.queued, s.awaiting_owner], [0, 3]);
+  const rows = await q("SELECT o.status, o.channel, c.phone FROM outbox o JOIN customers c ON c.id = o.customer_id");
+  assert.ok(rows.length === 3 && rows.every((r) => r.status === "awaiting_owner" && r.channel === (r.phone ? "whatsapp" : "email")));
+  assert.equal((await O.flush()).attempted, 0, "nothing is tried, so nothing fails");
 });

@@ -6,6 +6,8 @@ const skip = !process.env.DATABASE_URL;
 let db, seedMod, ctxMod, payments, outbox, followups;
 before(async () => {
   if (skip) return;
+  process.env.RESEND_API_KEY = "re_test_dummy_not_a_key"; // email set up; nothing here flushes, so Resend is never called
+  process.env.MAIL_FROM = "FullPay test <test@example.in>";
   db = await import("../lib/db.js");
   seedMod = await import("../db/seed.js");
   ctxMod = await import("../lib/services/context.js");
@@ -65,6 +67,19 @@ test("a customer who stopped automatic messages gets no automatic email; the rec
   assert.equal(queued.length, 0);
   const today = await owner((c, ctx) => followups.listToday(c, ctx));
   assert.ok(today.ready.some((r) => r.id === row.id), "a receipt for a fully paid bill is still shown");
+});
+
+test("no email set up: the receipt for a customer with an address waits as a one-tap WhatsApp message", { skip }, async () => {
+  const [, , , , inv] = await openInvoices();
+  await db.pool.query("UPDATE customers SET email = 'buyer2@example.in', phone = '9876500000', opt_out = false WHERE id = $1", [inv.customer_id]);
+  const key = process.env.RESEND_API_KEY;
+  delete process.env.RESEND_API_KEY;
+  try {
+    const { row, queued } = await pay(inv, Number(inv.outstanding_paise));
+    assert.deepEqual([row.status, row.channel, queued.length], ["awaiting_owner", "whatsapp", 0]);
+  } finally {
+    process.env.RESEND_API_KEY = key;
+  }
 });
 
 test("old money and TDS get no receipt", { skip }, async () => {
