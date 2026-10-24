@@ -178,6 +178,16 @@ export default function NewInvoiceForm({ lang, asOf, business, rates, customers:
             <div className="flex flex-wrap gap-x-2 sm:col-span-2"><dt className="font-semibold">{T("core.cust.credit_days")}:</dt><dd>{customer.credit_days == null ? T("core.inv.terms_none") : T("core.inv.terms_agreed", { n: credit })}</dd></div>
           </dl>
         )}
+        {customer && customer.grade && (
+          // Credit check before billing: the customer's own record, in words.
+          <p role="note" className={`mt-3 rounded-xl border p-3 ${!customer.history ? "border-line bg-surface-2" : customer.grade === "C" ? "border-error/40 bg-error-soft" : customer.grade === "B" ? "border-warning/40 bg-warning-soft" : "border-success/40 bg-success-soft"}`}>
+            <strong>{T("pages.credit.title")}: </strong>
+            {!customer.history ? T("pages.credit.new")
+              : customer.grade === "C" ? T("pages.credit.c", { name: customer.name, owed: T.money(customer.total_owed_paise), late: Math.round(customer.avg_late_days ?? 0) })
+              : customer.grade === "B" ? T("pages.credit.b", { name: customer.name, owed: T.money(customer.total_owed_paise), late: Math.round(customer.avg_late_days ?? 0), pct: Math.round(customer.pct_on_time ?? 0) })
+              : T("pages.credit.a", { name: customer.name, pct: Math.round(customer.pct_on_time ?? 100) })}
+          </p>
+        )}
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Field id="issue" label={T("field.invoice_date")}>
             <Input id="issue" type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} />

@@ -6,6 +6,8 @@ import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
 import SettingsForm, { DemoControls } from "@/components/pages/SettingsForm";
 import QuietDays from "@/components/pages/QuietDays";
+import SetupChecklist from "@/components/pages/SetupChecklist";
+import * as setup from "@/lib/services/setup";
 import { run } from "@/lib/services/context";
 import { STATE_CODES, stateName } from "@/lib/gst";
 import { demoMode } from "@/lib/services/tick";
@@ -25,7 +27,7 @@ export default async function SettingsPage() {
                 (SELECT count(*) FROM escalation_events WHERE type = 'notice_shown')::int AS notices,
                 (SELECT max(ts) FROM escalation_events WHERE type = 'notice_shown') AS last_notice`,
       );
-      return { cfg: ctx.cfg, asOf: ctx.asOf, ...rows[0] };
+      return { cfg: ctx.cfg, asOf: ctx.asOf, steps: await setup.steps(c, ctx), ...rows[0] };
     });
   } catch (err) {
     console.error("[settings]", err);
@@ -36,12 +38,15 @@ export default async function SettingsPage() {
       </>
     );
   }
-  const { cfg, asOf, optouts, notices, last_notice } = data;
+  const { cfg, asOf, steps, optouts, notices, last_notice } = data;
   const states = Object.keys(STATE_CODES).map((code) => [code, stateName(code, T.lang)]).sort((a, b) => a[1].localeCompare(b[1], T.lang));
   return (
     <>
       <PageHeader title={T("settings.title")} />
       <div className="grid gap-4">
+        <Card title={T("pages.setup.title")}>
+          <SetupChecklist steps={steps} T={T} />
+        </Card>
         <Card title={T("settings.language")}>
           <LangSwitch lang={T.lang} label={T("settings.language")} />
         </Card>
