@@ -3,7 +3,7 @@ import Shell from "@/components/public/Shell";
 import Icon from "@/components/public/Icon";
 import FauxThreeD from "@/components/public/FauxThreeD";
 import SlideIn from "@/components/ui/SlideIn";
-import Logo from "@/components/ui/Logo";
+import HeroVisual from "@/components/public/HeroVisual";
 import { getLang, tr, inr, lakh, day } from "@/components/public/lang";
 import { run } from "@/lib/services/context";
 import { demoLinks } from "@/lib/services/letters";
@@ -35,14 +35,14 @@ export default async function Landing() {
   const links = demo?.links;
   return (
     <Shell lang={lang} wide brandHref={null} footer={<p>{t("public.landing.honest")}</p>}>
-      <section className="enter relative overflow-hidden py-6 sm:py-14">
+      <section className="enter relative overflow-hidden py-3 sm:py-6 lg:py-8">
         <div className="hero-glow" aria-hidden="true" />
-        <div className="relative grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
+        <div className="relative grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="self-center space-y-2">
             <p className="font-semibold text-accent">{t("public.landing.kicker")}</p>
-            <h1 className="mt-3 max-w-xl text-4xl font-bold leading-tight sm:text-5xl">{t("public.landing.h1")}</h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-muted">{t("public.landing.problem")}</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <h1 className="max-w-xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">{t("public.landing.h1")}</h1>
+            <p className="max-w-xl leading-snug text-ink-muted sm:text-lg">{t("public.landing.problem")}</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {demo ? (
                 <form method="post" action="/api/auth/demo">
                   <button type="submit" className={`${BTN} hover-lift w-full bg-accent text-lg text-on-accent hover:bg-accent-strong sm:w-auto`}>
@@ -64,15 +64,13 @@ export default async function Landing() {
               <Link href="/calculator" className={`${BTN} hover-lift text-accent hover:bg-accent-soft`}>{t("public.landing.calculator")}</Link>
             </div>
             {demo && (
-              <p className="mt-4 text-ink-muted">
+              <p className="text-ink-muted">
                 <strong className="text-ink">{t("public.landing.cta_hint_bold")}</strong> {t("public.landing.cta_hint_rest")}
               </p>
             )}
-            {demo && <p className="mt-2 text-ink-muted">{t("public.landing.demo_note")}</p>}
+            {demo && <p className="text-ink-muted">{t("public.landing.demo_note")}</p>}
           </div>
-          <div className="relative flex justify-center lg:justify-end">
-            <Logo variant="mark" className="hero-mark h-40 w-40 sm:h-48 sm:w-48 lg:h-56 lg:w-56" alt="" />
-          </div>
+          <HeroVisual className="self-center" />
         </div>
       </section>
 

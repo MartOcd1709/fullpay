@@ -344,19 +344,40 @@ dialog.sheet::backdrop { background: rgb(26 34 51 / 0.45); }
 .slide-in-visible { opacity: 1; transform: translateY(0) translateX(0); }
 
 /* Landing hero: ambient glow behind the brand mark, theme-aware via --accent-glow (set per theme above) so
-   it reads as a soft accent halo in light mode and a brighter dark-hero glow without any separate dark CSS. */
+   it reads as a soft accent halo in light mode and a brighter dark-hero glow without any separate dark CSS.
+   Centering uses top + negative margin, not transform, because transform is also what the ambient-shift
+   animation below drives — an animated property always overrides a plain declaration of the same property
+   on the same element (animations sit above normal rules in the cascade), so a `transform: translateY(-50%)`
+   base rule would just get discarded the instant the animation starts. Reduced motion then cancels the
+   animation outright (sitewide rule below) and the glow sits still, already correctly centered. */
 .hero-glow {
   position: absolute;
   top: 50%;
   right: 1rem;
   width: 22rem;
   height: 22rem;
+  margin-top: -11rem;
   background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-  transform: translateY(-50%);
   pointer-events: none;
+  animation: hero-glow-shift 9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes hero-glow-shift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.85; }
+  50% { transform: translate3d(-0.5rem, 0.5rem, 0) scale(1.1); opacity: 1; }
 }
 .hero-mark {
   filter: drop-shadow(0 12px 28px var(--accent-glow));
+}
+/* Idle float for the hero mark; components/public/HeroVisual.js layers its own mouse-parallax transform on
+   a separate nested element so the two never fight over the same `transform` property (see note above). */
+.hero-float {
+  animation: hero-float 6s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes hero-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -10px, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
