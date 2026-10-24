@@ -72,13 +72,14 @@ const PROBE = `(() => {
   const errorScreen = /This screen could not load|यह स्क्रीन नहीं खुल सकी|Application error/.test(text);
   let english = [];
   if (/[ऀ-ॿ]/.test(text.slice(0, 4000))) {
-    // Data is not interface text: skip anything marked translate="no", text in another language (lang attribute), links, code.
+    // Data is not interface text: skip anything marked translate="no", text in another language (lang attribute), links, code,
+    // and <noscript> (a browser running scripts never shows it).
     const KEEP = /^(GST|GSTIN|UPI|HSN|SAC|IFSC|TDS|DSO|CEI|MSME|MSMED|RBI|ODR|NEFT|IMPS|RTGS|CSV|PDF|QR|ID|CA|FullPay|Tally|Vyapar|Excel|WhatsApp|SMS|Udyam|IRN|CGST|SGST|IGST|INV|Pvt|Ltd|Co|NOS|PCS|BOX|SET|HRS|Act|Section|Rule)$/;
     const blocks = new Map();
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       const el = n.parentElement;
-      if (!el || el.closest('[translate="no"], [lang]:not([lang="hi"]):not(html), a[href^="http"], code, script, style, .mono, .sr-only')) continue;
+      if (!el || el.closest('[translate="no"], [lang]:not([lang="hi"]):not(html), a[href^="http"], code, script, style, noscript, .mono, .sr-only')) continue;
       const block = el.closest("p, li, td, th, dd, dt, h1, h2, h3, label, button, option, span, div") ?? el;
       blocks.set(block, (blocks.get(block) ?? "") + n.textContent);
     }

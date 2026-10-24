@@ -69,8 +69,10 @@ export default async function OwnerLayout({ children }) {
       <Nav items={items} brand="FullPay" labels={{ nav: T("core.nav_label"), more: T("core.nav_short.more"), logout: T("nav.logout") }} />
       <div className="lg:pl-64">
         <header className="border-b border-line bg-surface print:hidden">
-          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-1.5 sm:px-6">
-            <p className="flex min-w-0 flex-1 items-center gap-1.5 truncate font-semibold">
+          {/* Controls keep their natural width and the row wraps when there is no room, so nothing ever squashes into a
+              letter-per-line column; the business name keeps at least a few words. */}
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 sm:px-6 [&>*:not(:first-child)]:shrink-0 [&>*:not(:first-child)]:whitespace-nowrap">
+            <p className="flex min-w-0 flex-1 items-center gap-1.5 truncate font-semibold sm:min-w-[7rem] sm:basis-28">
               <Logo variant="mark" className="h-5 w-5 shrink-0 lg:hidden" alt="FullPay" />
               <span className="truncate">{business ?? ""}</span>
             </p>
@@ -84,14 +86,15 @@ export default async function OwnerLayout({ children }) {
             <a href="/search" title={T("pages.search.header")} className={`inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-xl hover:bg-surface-2 ${demo ? "" : "lg:hidden"}`} aria-label={T("pages.search.header")}>
               <Icon name="search" className="h-5 w-5" />
             </a>
-            <span className="hidden items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-sm sm:inline-flex" title={T("pages.role.signed_in")}>
+            {/* In the demo, wide screens show the role in "View as" below, so this pill steps aside there. */}
+            <span className={`hidden items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-sm sm:inline-flex ${demo ? "xl:hidden" : ""}`} title={T("pages.role.signed_in")}>
               <Icon name="user" className="h-4 w-4" />
               {who ? `${who} · ` : ""}
               <strong>{T(`pages.role.${session.role}`)}</strong>
             </span>
             {demo && <TourButton label={T("pages.tour.start")} />}
             {demo && (
-              <form method="post" action="/api/auth/demo" className="hidden items-center gap-1 md:flex" aria-label={T("pages.role.view_as")}>
+              <form method="post" action="/api/auth/demo" className="hidden items-center gap-1 xl:flex" aria-label={T("pages.role.view_as")}>
                 <span className="text-sm text-ink-muted">{T("pages.role.view_as")}</span>
                 {["owner", "accountant", "viewer"].map((r) => (
                   <button key={r} name="as" value={r} type="submit" aria-pressed={session.role === r}
@@ -125,8 +128,11 @@ export default async function OwnerLayout({ children }) {
                 </div>
               </>
             )}
-            <ThemeToggle label={T("settings.theme")} />
-            <LangSwitch lang={lang} label={T("settings.language")} />
+            {/* Phones follow the system's light/dark setting; the switch shows from small tablets up. */}
+            <span className="hidden sm:inline-flex">
+              <ThemeToggle label={T("settings.theme")} />
+            </span>
+            <LangSwitch lang={lang} label={T("settings.language")} compact />
           </div>
         </header>
         {demo && asOf && (
