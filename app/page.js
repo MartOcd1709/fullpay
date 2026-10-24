@@ -4,6 +4,7 @@ import Icon from "@/components/public/Icon";
 import FauxThreeD from "@/components/public/FauxThreeD";
 import SlideIn from "@/components/ui/SlideIn";
 import HeroVisual from "@/components/public/HeroVisual";
+import MoneyRain from "@/components/public/MoneyRain";
 import { getLang, tr, inr, lakh, day } from "@/components/public/lang";
 import { run } from "@/lib/services/context";
 import { demoLinks } from "@/lib/services/letters";
@@ -35,6 +36,7 @@ export default async function Landing() {
   const links = demo?.links;
   return (
     <Shell lang={lang} wide brandHref={null} footer={<p>{t("public.landing.honest")}</p>}>
+      <MoneyRain />
       <section className="enter relative overflow-hidden py-3 sm:py-6 lg:py-8">
         <div className="hero-glow" aria-hidden="true" />
         <div className="relative grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
