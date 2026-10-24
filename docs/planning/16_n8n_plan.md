@@ -79,6 +79,22 @@ Settings gets a small "Integrations: n8n" card: connected or not (host name only
 
 What it does not do: it does not send anything to customers, it is not required by the problem statement, and it adds one outside service to the live demo (if n8n is down, FullPay keeps working and Settings shows the failed deliveries).
 
+## 6a. Coverage: where n8n helps across the whole chase
+
+| Stage of the chase | What FullPay already does | What n8n adds | When |
+|---|---|---|---|
+| 1. Bill sent | Numbered GST invoice, pay link | A row in the CA's register the moment a bill goes out | This weekend |
+| 2. Reminders | Daily run, one message a day, calls (simulated) | One morning digest on the owner's phone: today's reminders, calls, letters | This weekend |
+| 3. Customer replies on the link | Pauses reminders, lands in the Inbox | Instant phone alert for a dispute, "already paid", promise or plan offer, so the owner answers the same day | This weekend |
+| 4. Money in | Bank CSV import, matching, receipt | Every confirmed payment in the CA's sheet with its receipt number | This weekend |
+| 5. Cash | 13-week forecast, first short week | An alert when the forecast first drops below the safety buffer | This weekend (from the daily run) |
+| 6. Escalation | Letter at 30 days, dispute-portal steps at 45 | An alert that a letter is ready; later, a calendar task "Call Malhotra" | Alert now; calendar later |
+| 4b. Money in, without typing | The owner uploads the bank CSV by hand | The bank's statement email triggers n8n, which posts the CSV to FullPay's import | Later: needs an import API key in FullPay |
+| 7. Books | Tally / Vyapar / Excel import of bills | Push confirmed payments to Zoho Books or Tally (Tally only when it is reachable from the internet) | Later |
+| 8. Reports | Analytics screen | A weekly summary email to the CA or a partner | Later |
+
+This weekend the one webhook and two workflows cover stages 1–6 on the owner's side. Stages 4b, 7 and 8 go in the README and the deck as the n8n roadmap: each is a new n8n workflow, plus at most one small FullPay change (an import API key for 4b).
+
 ## 7. Who does what, and how long
 
 **FullPay side (Claude, about 1.5 hours), in one pull request:**
