@@ -24,15 +24,24 @@ export const metadata = {
 
 const LANGS = new Set(["en", "hi"]);
 const TEXT_SIZES = new Set(["md", "lg", "xl"]);
+const THEMES = new Set(["light", "dark"]);
 const pick = (value, allowed, fallback) => (allowed.has(value) ? value : fallback);
 
 export default async function RootLayout({ children }) {
   const store = await cookies();
   const lang = pick(store.get("lang")?.value, LANGS, "en");
   const textSize = pick(store.get("text_size")?.value, TEXT_SIZES, "md");
+  // No explicit cookie means "follow the system": omit data-theme and let the prefers-color-scheme rules in globals.css decide.
+  const theme = pick(store.get("theme")?.value, THEMES, undefined);
   return (
-    <html lang={lang} data-text-size={textSize} className={`${notoSans.variable} ${notoDevanagari.variable} font-sans`}>
-      <body>{children}</body>
+    <html lang={lang} data-text-size={textSize} data-theme={theme} className={`${notoSans.variable} ${notoDevanagari.variable} font-sans`}>
+      <body>
+        {/* SlideIn (components/ui/SlideIn.js) needs JS to reveal its content; without it, show everything plainly. */}
+        <noscript>
+          <style>{".slide-in{opacity:1!important;transform:none!important}"}</style>
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }
