@@ -2143,5 +2143,17 @@
   "public.event.plan_completed": "किस्तों वाली योजना पूरी हुई",
   "public.event.plan_broken": "किस्तों वाली योजना खत्म (एक किस्त छूटी)",
   "public.bundle.inbox_plan": "किस्तों में चुकाने का प्रस्ताव",
-  "public.bundle.res_approve_plan": "मंज़ूर"
+  "public.bundle.res_approve_plan": "मंज़ूर",
+  "collect.autocall.section": "आज की स्वचालित याद दिलाने वाली कॉल (नमूना)",
+  "collect.autocall.intro": "FullPay हर ग्राहक को बिल की तारीख से 7 दिन पहले और 7 दिन बाद, उनकी भाषा में कॉल करता है। इस डेमो में असली फ़ोन कॉल नहीं होती: ग्राहक जो सुनेगा, वही सुनने के लिए चलाएँ दबाएँ।",
+  "collect.autocall.before": "तय तारीख से {n} दिन पहले",
+  "collect.autocall.after": "तय तारीख के {n} दिन बाद",
+  "collect.autocall.simulated": "नमूना कॉल",
+  "collect.autocall.play": "कॉल चलाएँ",
+  "collect.autocall.stop": "रोकें",
+  "collect.autocall.unsupported": "यह ब्राउज़र कॉल पढ़कर नहीं सुना सकता; शब्द ऊपर लिखे हैं।",
+  "core.ev.call_placed": "स्वचालित याद दिलाने वाली कॉल (नमूना)",
+  "public.event.call_placed": "स्वचालित याद दिलाने वाली कॉल (नमूना)",
+  "collect.autocall.before_1": "तय तारीख से 1 दिन पहले",
+  "collect.autocall.after_1": "तय तारीख के 1 दिन बाद"
 }

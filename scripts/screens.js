@@ -154,6 +154,9 @@ await go("/calculator?amount=117186&due=2026-09-19&on=2026-10-24", { w: 390, h: 
     await go(`/pay/${token}`, { w: 390, h: 844, mobile: true }); await shot("31-plan-agreed-phone", { full: true });
   }
 }
+// Automatic reminder calls (simulated): run one demo day, then the calls section in Today's follow-ups.
+await fetch(`${base}/api/demo/advance`, { method: "POST", headers: { cookie: ownerCookie, "content-type": "application/json" }, body: JSON.stringify({ days: 1 }) });
+await go("/followups"); await js(`document.getElementById("sec-autocalls")?.scrollIntoView({ block: "start" })`); await wait(300); await shot("32-automatic-calls");
 await signIn("accountant");
 await go("/approvals"); await shot("12-approvals-accountant-view");
 await signIn("viewer");

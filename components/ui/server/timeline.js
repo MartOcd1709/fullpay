@@ -9,7 +9,7 @@ const ICON = {
   invoice_adjusted: "letter", claim_submitted: "rupee", message_queued: "mail", message_sent: "mail", message_failed: "mailX",
   marked_sent_manual: "tick", snoozed: "snooze", notice_shown: "user", invoice_edited: "draft", tds_recorded: "rupee",
   plan_proposed: "calendar", plan_approved: "handshake", plan_declined: "close", plan_completed: "check", plan_broken: "handshakeOff",
-  receipt_sent: "mail",
+  receipt_sent: "mail", call_placed: "phone",
 };
 const RUNG_ICON = { heads_up: "bell", due_date: "calendar", overdue_gentle: "mail", overdue_firm: "phone", demand_letter: "letter", odr_guidance: "scale" };
 
@@ -45,6 +45,9 @@ function eventText(T, e) {
       break;
     case "plan_declined":
       detail = p.reply ? `“${p.reply}”` : "";
+      break;
+    case "call_placed":
+      detail = p.script ? `“${p.script}”` : "";
       break;
     case "dispute_opened":
       detail = p.reason ? `“${p.reason}”` : "";
@@ -82,6 +85,7 @@ export function timelineModel({ inv, cfg, asOf, T, chain }) {
       id: e.id,
       title,
       detail,
+      detailLang: e.type === "call_placed" ? e.payload?.lang : undefined, // the call is quoted in the customer's language
       icon,
       milestone: MILESTONES.has(e.type),
       actor: T(`core.actor.${e.actor}`),

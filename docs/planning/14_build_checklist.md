@@ -1,4 +1,4 @@
-**Updated:** Sat 24 Oct 2026, 14:35 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
+**Updated:** Sat 24 Oct 2026, 15:05 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
 
 This is the single tracking document. Every work item has an ID, an owner, a schedule slot, a status and a "done when" test. Statuses: **TODO** · **DOING** · **DONE** · **BLOCKED** · **CUT**. Owners: **A** = Dev A (engine track), **B** = Dev B (product track), **V** = Ved (accounts, DNS, decisions), **C** = Claude. Claude pairs on every A and B row. Source plan: `10_build_plan.md` (Rev F.1); specs: `lld.html`; research: `13_reference_library.md`.
 
@@ -227,7 +227,8 @@ This is the single tracking document. Every work item has an ID, an owner, a sch
 | N13 | Payment receipt to the customer on every confirmed payment (amount, date, reference, bills, balance, RCPT number); email at once, else one-tap WhatsApp in Today's follow-ups | C | DONE | Live on main (PR #2, 24 Oct 12:58 IST); tests/receipt.test.js |
 | N14 | n8n hook for the sponsor (events → Google Sheet / Telegram / email) | C | TODO | Waiting for the team: build it? voucher claimed? where should alerts go? |
 | N15 | No-email mode: with no Resend key, automatic messages wait as one-tap messages instead of failing | C | DONE | Live on main (PR #3, 24 Oct); Follow-ups explains it; tick and receipt tests cover both paths |
-| N16 | Instalment plans: the customer offers 2–3 dated parts on `/pay`, the owner approves or declines in the Inbox, each paid part moves the promise on, the forecast expects each part, a missed part restarts reminders | C | DOING | Branch `feat/instalment-plans`; tests/plans.test.js + tests/plan-flow.test.js; screenshots 29–31; live once its PR is merged |
+| N16 | Instalment plans: the customer offers 2–3 dated parts on `/pay`, the owner approves or declines in the Inbox, each paid part moves the promise on, the forecast expects each part, a missed part restarts reminders | C | DONE | Live on main (PR #4, 24 Oct 14:39 IST); tests/plans.test.js + tests/plan-flow.test.js; screenshots 29–31 |
+| N17 | Automatic reminder calls (simulated): 7 days before and after the due date, in the customer's language, MSMED interest fact for micro/small only; "Play the call" in Follow-ups; script kept in the record | C | DOING | Branch `feat/reminder-calls`; tests/calls.test.js; screenshot 32; live once its PR is merged. Real calls need a provider + TRAI 160-series number + consent |
 
 ## Acceptance suite (ticked during P7; every item on the deployed app)
 

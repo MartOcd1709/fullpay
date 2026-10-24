@@ -2143,5 +2143,17 @@
   "public.event.plan_completed": "Plan to pay in parts completed",
   "public.event.plan_broken": "Plan to pay in parts ended (a part was missed)",
   "public.bundle.inbox_plan": "Offered to pay in parts",
-  "public.bundle.res_approve_plan": "approved"
+  "public.bundle.res_approve_plan": "approved",
+  "collect.autocall.section": "Automatic reminder calls today (simulated)",
+  "collect.autocall.intro": "FullPay calls each customer 7 days before a bill is due and 7 days after, in their language. This demo makes no real phone call: press Play to hear exactly what the customer would hear.",
+  "collect.autocall.before": "{n} days before the due date",
+  "collect.autocall.after": "{n} days after the due date",
+  "collect.autocall.simulated": "Simulated call",
+  "collect.autocall.play": "Play the call",
+  "collect.autocall.stop": "Stop",
+  "collect.autocall.unsupported": "This browser cannot read the call aloud; the words are shown above.",
+  "core.ev.call_placed": "Automatic reminder call (simulated)",
+  "public.event.call_placed": "Automatic reminder call (simulated)",
+  "collect.autocall.before_1": "1 day before the due date",
+  "collect.autocall.after_1": "1 day after the due date"
 }
