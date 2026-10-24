@@ -121,6 +121,15 @@ await go("/forecast"); await js(`document.getElementById("treds-h")?.scrollIntoV
 await go("/search?q=bhatia"); await shot("24-search", { full: true });
 await go("/settings"); await shot("26-setup-checklist");
 await go("/calculator?amount=117186&due=2026-09-19&on=2026-10-24", { w: 390, h: 844, mobile: true }); await shot("27-interest-calculator-phone", { full: true });
+// The owner confirms one matched payment; its thank-you receipt waits in Today's follow-ups.
+{
+  const pend = await fetch(`${base}/api/payments?status=pending`, { headers: { cookie: ownerCookie } }).then((r) => r.json());
+  const p = pend.find?.((x) => x.proposals?.length && x.match_confidence >= 90);
+  if (p) {
+    await fetch(`${base}/api/payments/${p.id}/confirm`, { method: "POST", headers: { cookie: ownerCookie, "content-type": "application/json" }, body: "{}" });
+    await go("/followups"); await js(`[...document.querySelectorAll("article")].find((a) => /RCPT-/.test(a.textContent))?.scrollIntoView({block:"start"})`); await wait(300); await shot("28-payment-receipt");
+  }
+}
 await signIn("accountant");
 await go("/approvals"); await shot("12-approvals-accountant-view");
 await signIn("viewer");

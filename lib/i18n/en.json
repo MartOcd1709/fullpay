@@ -2071,5 +2071,15 @@
   "pages.setup.bank": "Import a bank statement",
   "pages.setup.bank_why": "FullPay matches each payment to the right bill for you to confirm.",
   "pages.setup.email": "Turn on email sending",
-  "pages.setup.email_why": "Ask whoever runs your FullPay server to add the email key. Until then, send reminders by WhatsApp or SMS."
+  "pages.setup.email_why": "Ask whoever runs your FullPay server to add the email key. Until then, send reminders by WhatsApp or SMS.",
+  "rung.payment_received": "Payment receipt",
+  "core.rung.payment_received": "Payment receipt",
+  "core.ev.receipt_sent": "{rung} sent by {channel}",
+  "public.event.receipt_sent": "Payment receipt sent",
+  "collect.fu.receipt_note": "Thank-you receipt for the payment you confirmed against {numbers}. Send it so the customer knows the money has reached you.",
+  "receipt.ref": " (reference {ref})",
+  "receipt.balance_due": "Balance still due: {amount}.",
+  "receipt.paid_one": "Your invoice is now fully paid.",
+  "receipt.paid_all": "These invoices are now fully paid.",
+  "core.rung.festival": "Festival settlement request"
 }

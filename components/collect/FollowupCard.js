@@ -37,6 +37,7 @@ export default function FollowupCard({ row, lang, asOf, weeksN, expectedWeek, ma
   const [promiseOpen, setPromiseOpen] = useState(false);
   const failed = row.status === "failed";
   const queued = row.status === "queued";
+  const receipt = row.rung === "payment_received"; // a thank-you receipt: nothing to chase, so no bill rows, snooze or promise
 
   const phone = row.customer_phone;
   const email = row.recipient && row.recipient.includes("@") ? row.recipient : row.customer_email;
@@ -68,6 +69,10 @@ export default function FollowupCard({ row, lang, asOf, weeksN, expectedWeek, ma
         <StatusPill status={failed ? "failed" : row.status} label={T(`collect.ob.${row.status}`)} />
       </header>
 
+      {receipt ? (
+        <p className="mt-3 rounded-lg bg-success-soft p-3 text-success">{T("collect.fu.receipt_note", { numbers: row.invoices.map((i) => i.number).join(", ") })}</p>
+      ) : (
+      <>
       <ul className="mt-3 divide-y divide-line rounded-lg border border-line">
         {row.invoices.map((i) => (
           <li key={i.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-3 py-2">
@@ -83,6 +88,8 @@ export default function FollowupCard({ row, lang, asOf, weeksN, expectedWeek, ma
         <p className="mt-2 text-right font-semibold">
           {T("collect.total")}: <span className="tnum">{fmtINR(row.amount_paise, { paise: false })}</span>
         </p>
+      )}
+      </>
       )}
 
       {failed && (
@@ -157,18 +164,22 @@ export default function FollowupCard({ row, lang, asOf, weeksN, expectedWeek, ma
 
         </>
       )}
-      <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
+      <div className={`mt-3 flex flex-wrap gap-2 border-t border-line pt-3 ${receipt && !failed ? "hidden" : ""}`}>
         {failed && (
           <button type="button" className={btn("primary")} disabled={busy} onClick={() => call(`/api/outbox/${row.id}/retry`, {}, { success: (r) => T(r.status === "sent" ? "collect.fu.resent" : "collect.fu.retry_failed") })}>
             {T("btn.retry")}
           </button>
         )}
-        <button type="button" className={btn("secondary")} aria-expanded={snoozeOpen} onClick={() => setSnoozeOpen((s) => !s)}>
-          {T("btn.snooze")}
-        </button>
-        <button type="button" className={btn("secondary")} onClick={() => setPromiseOpen(true)}>
-          {T("btn.promise")}
-        </button>
+        {!receipt && (
+          <>
+            <button type="button" className={btn("secondary")} aria-expanded={snoozeOpen} onClick={() => setSnoozeOpen((s) => !s)}>
+              {T("btn.snooze")}
+            </button>
+            <button type="button" className={btn("secondary")} onClick={() => setPromiseOpen(true)}>
+              {T("btn.promise")}
+            </button>
+          </>
+        )}
       </div>
       {snoozeOpen && (
         <div className="mt-2 flex flex-wrap items-center gap-2" role="group" aria-label={T("btn.snooze")}>

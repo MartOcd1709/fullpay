@@ -219,7 +219,7 @@ export async function seed(client, { anchor = SEED_ANCHOR } = {}) {
         const inv = await invoices.get(client, ctx, ids[p.key]);
         const amount_paise = amount === "full" ? inv.outstanding_paise : amount * 100;
         const pay = await payments.addManual(client, ctx, { invoice_id: inv.id, paid_on: ctx.asOf, amount_paise, reference: `NEFT ${p.key}`, narration: `NEFT CR ${c.name.toUpperCase()} ${inv.number}` });
-        await payments.confirm(client, ctx, pay.id);
+        await payments.confirm(client, ctx, pay.id, null, { receipt: false }); // history: no receipts, so the pinned record stays the same
       });
     }
     if (p.tds != null) {
@@ -228,7 +228,7 @@ export async function seed(client, { anchor = SEED_ANCHOR } = {}) {
         const tds = Math.round((inv.taxable_paise * 200) / 10000);
         for (const [amount_paise, reference] of [[inv.outstanding_paise - tds, `NEFT ${p.key}`], [tds, `TDS certificate ${p.key}`]]) {
           const pay = await payments.addManual(client, ctx, { invoice_id: inv.id, paid_on: ctx.asOf, amount_paise, reference });
-          await payments.confirm(client, ctx, pay.id);
+          await payments.confirm(client, ctx, pay.id, null, { receipt: false });
         }
       });
     }

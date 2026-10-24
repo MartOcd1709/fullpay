@@ -1,4 +1,4 @@
-**Updated:** Sat 24 Oct 2026, 11:30 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
+**Updated:** Sat 24 Oct 2026, 12:45 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
 
 This is the single tracking document. Every work item has an ID, an owner, a schedule slot, a status and a "done when" test. Statuses: **TODO** · **DOING** · **DONE** · **BLOCKED** · **CUT**. Owners: **A** = Dev A (engine track), **B** = Dev B (product track), **V** = Ved (accounts, DNS, decisions), **C** = Claude. Claude pairs on every A and B row. Source plan: `10_build_plan.md` (Rev F.1); specs: `lld.html`; research: `13_reference_library.md`.
 
@@ -216,14 +216,16 @@ This is the single tracking document. Every work item has an ID, an owner, a sch
 | N2 | Pay-early offer sized below the owner's borrowing cost; matched payment becomes a credit note | C | DONE | Live on main (6e41a9e); tests/earlyPay + offers; GST already charged unchanged |
 | N3 | Payment habits + best day to remind; customer confirms the balance on `/pay` | C | DONE | Live on main (58a511c); tests/payDay; confirmation sealed into the record and the evidence pack |
 | N4 | TReDS cash-today check on the forecast | C | DONE | Live on main (6d87a01); tests/treds; card says whether the money lands before the short week |
-| N5 | Credit check on New invoice (grade, days late, % on time, already owed) | C | DOING | Built and tested on branch `feat/statement-search-setup`; live once its PR is merged to main |
-| N6 | Public MSMED interest calculator `/calculator` (no login) | C | DOING | Same branch; ₹1,901.89 on ₹1,17,186 due 19 Sep, paid 24 Oct; in the acceptance sweep |
-| N7 | Customer statement link `/s/…`: all open bills, one UPI QR, copy + WhatsApp share | C | DOING | Same branch; tests/statement.test.js; in the acceptance sweep |
-| N8 | Search box in the header: customers, bills (also by amount), payments (UTR) | C | DOING | Same branch; tests/search.test.js; in the acceptance sweep |
-| N9 | "Getting set up" checklist in Settings + on the dashboard until done | C | DOING | Same branch; tests/setup.test.js |
+| N5 | Credit check on New invoice (grade, days late, % on time, already owed) | C | DONE | Live on main (PR #1, merge a394680, 24 Oct 12:08 IST) |
+| N6 | Public MSMED interest calculator `/calculator` (no login) | C | DONE | Live; ₹1,901.89 on ₹1,17,186 due 19 Sep, paid 24 Oct; in the acceptance sweep |
+| N7 | Customer statement link `/s/…`: all open bills, one UPI QR, copy + WhatsApp share | C | DONE | Live; tests/statement.test.js; in the acceptance sweep |
+| N8 | Search in the header: customers, bills (also by amount), payments (UTR) | C | DONE | Live; tests/search.test.js; in the acceptance sweep |
+| N9 | "Getting set up" checklist in Settings + on the dashboard until done | C | DONE | Live; tests/setup.test.js |
 | N10 | Invoice from a photo (OCR) | C | TODO | Optional; needs an AI key and a team decision |
-| N11 | Fix: Settings "Save changes" and quiet days were refused (HTTP 400) on the live site since N1/N2 | C | DOING | Same branch; one shared check for the API and the save; services test sends the form's own payloads |
-| N12 | Fix: an icon given only a colour class drew page-wide (New invoice "Due on" line, also live) | C | DOING | Same branch; icons stay 20 px unless the caller sets a size |
+| N11 | Fix: Settings "Save changes" and quiet days were refused (HTTP 400) on the live site since N1/N2 | C | DONE | Live on main; one shared check for the API and the save; services test sends the form's own payloads |
+| N12 | Fix: an icon given only a colour class drew page-wide (New invoice "Due on" line, also live) | C | DONE | Live on main (merge a394680); icons stay 20 px unless the caller sets a size |
+| N13 | Payment receipt to the customer on every confirmed payment (amount, date, reference, bills, balance, RCPT number); email at once, else one-tap WhatsApp in Today's follow-ups | C | DOING | Branch `feat/payment-receipt`; tests/receipt.test.js; live once its PR is merged |
+| N14 | n8n hook for the sponsor (events → Google Sheet / Telegram / email) | C | TODO | Waiting for the team: build it? voucher claimed? where should alerts go? |
 
 ## Acceptance suite (ticked during P7; every item on the deployed app)
 

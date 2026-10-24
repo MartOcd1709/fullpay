@@ -16,6 +16,12 @@ const vars = {
   pay_link: 'https://fullpay.onrender.com/pay/abcdefghijklmnopqrstuv',
   verify_link: 'https://fullpay.onrender.com/verify/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
   contact: 'Harpreet Arora, +91 98XXXXXXXX, owner@example.in',
+  // the receipt's own values
+  amount_received: '₹1,18,000',
+  paid_on: '22 Oct 2026',
+  ref_part: ' (reference NEFT W18)',
+  balance_line: 'Your invoice is now fully paid.',
+  receipt_no: 'RCPT-000042',
 };
 
 const DEVANAGARI = /[ऀ-ॿ]/;
@@ -23,9 +29,9 @@ const THREATS = /legal|lawyer|court|notice|police|कानूनी|वकी�
 const { messaging } = DEFAULT_CONFIG;
 
 describe('templates', () => {
-  test('six template names (five ladder steps + the festival settlement request) and the rung map', () => {
-    assert.equal(TEMPLATE_NAMES.length, 6);
-    assert.deepEqual(Object.keys(RUNG_TEMPLATE), ['heads_up', 'due_date', 'overdue_gentle', 'overdue_firm', 'festival']);
+  test('seven template names (five ladder steps, the festival settlement request, the payment receipt) and the rung map', () => {
+    assert.equal(TEMPLATE_NAMES.length, 7);
+    assert.deepEqual(Object.keys(RUNG_TEMPLATE), ['heads_up', 'due_date', 'overdue_gentle', 'overdue_firm', 'festival', 'payment_received']);
     for (const name of Object.values(RUNG_TEMPLATE)) assert.ok(TEMPLATE_NAMES.includes(name));
   });
 
@@ -47,7 +53,10 @@ describe('templates', () => {
           assert.ok(!s.includes('}}'));
           assert.doesNotMatch(s, THREATS, `threatening word in ${s}`);
         }
-        assert.ok(body.endsWith(`${messaging[`stop_line_${lang}`]}\n${messaging[`footer_${lang}`]}`), body);
+        // A receipt asks for nothing, so it has no "reply STOP" line; every message keeps the safety footer.
+        const ending = name === 'payment_received' ? messaging[`footer_${lang}`] : `${messaging[`stop_line_${lang}`]}\n${messaging[`footer_${lang}`]}`;
+        assert.ok(body.endsWith(ending), body);
+        if (name === 'payment_received') assert.ok(!body.includes(messaging[`stop_line_${lang}`]));
         assert.ok(body.length <= 1024, `WhatsApp body too long: ${body.length}`);
         assert.ok(sms.length < 160, `sms ${sms.length} chars: ${sms}`);
         assert.ok(body.includes(vars.pay_link));
@@ -69,6 +78,15 @@ describe('templates', () => {
       });
     }
   }
+
+  test('the payment receipt states amount, date, reference, balance and receipt number, and asks for no payment', () => {
+    for (const lang of LANGS) {
+      const { subject, body, sms } = render('payment_received', lang, vars);
+      for (const v of [vars.amount_received, vars.paid_on, vars.receipt_no, 'NEFT W18', vars.balance_line]) assert.ok(body.includes(v), `${lang} body lacks ${v}`);
+      assert.ok(subject.includes(vars.receipt_no) && sms.includes(vars.receipt_no));
+    }
+    assert.doesNotMatch(render('payment_received', 'en', vars).body, /please pay|overdue|reminder/i);
+  });
 
   test('overdue templates use days_overdue and the tone steps up without threats', () => {
     const gentle = render('payment_overdue', 'en', vars);
