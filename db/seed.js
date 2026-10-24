@@ -42,17 +42,17 @@ export const CUSTOMERS = [
   { key: "c1", name: "Bhatia Tractors Pvt Ltd", pan: "AABCB4821K", state: "03", credit: 30, seg: "tractor", address: "G.T. Road, Dhandari Kalan, Ludhiana 141014", archetype: "prompt payer (A); bank-statement exact payment" },
   { key: "c2", name: "Sandhu Engineering Works", pan: "AAKFS6123M", state: "03", credit: 30, seg: "engineering", address: "Phase 7, Focal Point, Ludhiana 141010", archetype: "prompt payer (A); one payment for two invoices" },
   { key: "c3", name: "Garewal Motors", pan: "AAJFG2290Q", state: "03", credit: 30, seg: "spares", address: "Bus Stand Road, Jagraon 142026", archetype: "chronic late (C); owns INV/26-27/0042 (demand letter)" },
-  { key: "c4", name: "Rana Transport Company", pan: "AAHFR7715D", state: "03", credit: 30, seg: "fleet", address: "Transport Nagar, Ludhiana 141003", archetype: "chronic late (C); broke a promise; ODR rung" },
+  { key: "c4", lang: "hi", name: "Rana Transport Company", pan: "AAHFR7715D", state: "03", credit: 30, seg: "fleet", address: "Transport Nagar, Ludhiana 141003", archetype: "chronic late (C); broke a promise; ODR rung" },
   { key: "c5", name: "Malhotra Auto Spares", pan: "AAPFM3348H", state: "03", credit: 30, seg: "spares", address: "Gill Road, Ludhiana 141006", archetype: "disputer (B); the one disputed invoice" },
   { key: "c6", name: "Kohli Fleet Services Pvt Ltd", pan: "AACCK9031R", state: "03", credit: 30, seg: "fleet", address: "Ferozepur Road, Ludhiana 141012", archetype: "TDS deductor, pays total minus 2% of taxable (A)" },
-  { key: "c7", name: "Yadav Agro Implements", pan: "AAGFY5562L", state: "06", credit: 45, seg: "tractor", address: "Industrial Area, Karnal, Haryana 132001", archetype: "Haryana buyer, IGST (B)" },
-  { key: "c8", name: "Gill Repair Garage", pan: null, state: "03", credit: 15, seg: "garage", address: "Main Bazaar, Khanna 141401", archetype: "unregistered buyer, no GSTIN (B)" },
+  { key: "c7", lang: "hi", name: "Yadav Agro Implements", pan: "AAGFY5562L", state: "06", credit: 45, seg: "tractor", address: "Industrial Area, Karnal, Haryana 132001", archetype: "Haryana buyer, IGST (B)" },
+  { key: "c8", lang: "hi", name: "Gill Repair Garage", pan: null, state: "03", credit: 15, seg: "garage", address: "Main Bazaar, Khanna 141401", archetype: "unregistered buyer, no GSTIN (B)" },
   { key: "c9", name: "Dhillon Cycles", pan: "AAQFD1184C", state: "03", credit: null, seg: "cycles", address: "Cycle Market, Miller Ganj, Ludhiana 141003", archetype: "no written credit terms => 15 days statutory (B); 5% GST items" },
   { key: "c10", name: "Mehta Commercial Vehicles", pan: "AAECM4470P", state: "03", credit: 30, seg: "fleet", address: "Chandigarh Road, Ludhiana 141010", archetype: "mostly on time (B); part payment; due+29 crosses the letter rung on T0+1" },
   { key: "c11", name: "Chawla Rubber Udyog", pan: "AALFC8806G", state: "03", credit: 30, seg: "engineering", address: "Industrial Area-B, Ludhiana 141003", archetype: "prompt payer (A)" },
   { key: "c12", name: "Bajwa Logistics", pan: "AAMFB2651T", state: "03", credit: 30, seg: "fleet", address: "Dhandari Khurd, Ludhiana 141014", archetype: "opted out of reminders (B)" },
   { key: "c13", name: "Saini Body Builders", pan: "AANFS7393E", state: "03", credit: 30, seg: "engineering", address: "Sahnewal Road, Ludhiana 141120", archetype: "mixed (B); bank-statement overpayment" },
-  { key: "c14", name: "Kang Agro Industries", pan: "AACCK1958B", state: "03", credit: 30, seg: "tractor", address: "Samrala Road, Ludhiana 141008", archetype: "prompt payer (A)" },
+  { key: "c14", lang: "hi", name: "Kang Agro Industries", pan: "AACCK1958B", state: "03", credit: 30, seg: "tractor", address: "Samrala Road, Ludhiana 141008", archetype: "prompt payer (A)" },
 ];
 
 // Invoice plan. rel = days relative to the due date. pay: [[rel, rupees | 'full']]; tds: rel (pays total - 2% of taxable,
@@ -190,6 +190,7 @@ export async function seed(client, { anchor = SEED_ANCHOR } = {}) {
       email: `demo+c${pad(n)}@example.in`,
       phone: `+91 90000 000${pad(n)}`,
       credit_days: c.credit,
+      preferred_lang: c.lang ?? "en", // four customers read their reminders in Hindi
     });
     cust[c.key] = row;
   }

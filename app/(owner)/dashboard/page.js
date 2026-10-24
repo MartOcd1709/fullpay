@@ -10,6 +10,11 @@ import { InvoiceRow, InvoiceList } from "@/components/ui/InvoiceRow";
 import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
 import { interestTotal } from "@/components/ui/server/data";
+import { FestivalDrive, QuietBanner } from "@/components/collect/FestivalDrive";
+import * as festivalSvc from "@/lib/services/festival";
+import { cookies } from "next/headers";
+import { getSessionFromCookies } from "@/lib/auth";
+
 import { run } from "@/lib/services/context";
 import { forecastInputs } from "@/lib/services/views";
 import { displayStatus } from "@/lib/services/common";
@@ -38,6 +43,7 @@ async function load() {
       d: dashboardOf(input),
       fc: buildForecast(input),
       interest: await interestTotal(c, ctx),
+      festival: await festivalSvc.driveView(c, ctx),
     };
   });
 }
@@ -56,7 +62,8 @@ export default async function DashboardPage() {
       </>
     );
   }
-  const { asOf, input, d, fc, interest } = data;
+  const { asOf, input, d, fc, interest, festival } = data;
+  const role = getSessionFromCookies(await cookies())?.role ?? "owner";
 
   if (!input.invoices.length) {
     return (
@@ -86,6 +93,8 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader title={T("nav.dashboard")} subtitle={T("core.dash.as_of", { date: T.date(asOf) })} actions={<Button href="/invoices/new"><Icon name="plus" />{T("nav.new_invoice")}</Button>} />
+      {festival.quiet && <QuietBanner lang={T.lang} quiet={festival.quiet} />}
+      {festival.drive && <FestivalDrive lang={T.lang} view={festival} role={role} />}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <AmountHero

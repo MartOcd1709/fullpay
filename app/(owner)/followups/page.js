@@ -6,6 +6,11 @@ import CallCard from "@/components/collect/CallCard";
 import { ErrorState, SectionTitle, date, inr, tr } from "@/components/collect/kit";
 import { getLang, load } from "@/components/collect/server";
 import * as fu from "@/lib/services/followups";
+import { FestivalDrive, QuietBanner } from "@/components/collect/FestivalDrive";
+import * as festivalSvc from "@/lib/services/festival";
+import { cookies } from "next/headers";
+import { getSessionFromCookies } from "@/lib/auth";
+
 import { t } from "@/lib/i18n";
 
 export async function generateMetadata() {
@@ -18,6 +23,8 @@ export default async function FollowupsPage() {
   const lang = await getLang();
   const T = tr(lang);
   const { data, error } = await load((c, ctx) => fu.listToday(c, ctx));
+  const festival = (await load((c, ctx) => festivalSvc.driveView(c, ctx))).data;
+  const role = getSessionFromCookies(await cookies())?.role ?? "owner";
   if (error) {
     return (
       <>
@@ -39,6 +46,8 @@ export default async function FollowupsPage() {
     <>
       <PageHeader title={T("collect.fu.title")} subtitle={`${date(data.as_of, lang)} · ${summary.join(" · ")}`} />
       <p className="-mt-3 mb-6 max-w-prose text-ink-muted">{T("collect.fu.intro")}</p>
+      {festival?.quiet && <QuietBanner lang={lang} quiet={festival.quiet} />}
+      {festival?.drive && <FestivalDrive lang={lang} view={festival} role={role} />}
 
       {nothing && (
         <EmptyState

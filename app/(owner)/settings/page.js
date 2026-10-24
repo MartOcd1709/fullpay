@@ -5,6 +5,7 @@ import LangSwitch from "@/components/ui/LangSwitch";
 import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
 import SettingsForm, { DemoControls } from "@/components/pages/SettingsForm";
+import QuietDays from "@/components/pages/QuietDays";
 import { run } from "@/lib/services/context";
 import { STATE_CODES, stateName } from "@/lib/gst";
 import { demoMode } from "@/lib/services/tick";
@@ -45,6 +46,9 @@ export default async function SettingsPage() {
           <LangSwitch lang={T.lang} label={T("settings.language")} />
         </Card>
         <SettingsForm lang={T.lang} cfg={cfg} states={states} />
+        <Card title={T("pages.quiet.title")}>
+          <QuietDays lang={T.lang} festivals={cfg.calendar?.festivals ?? []} quietDays={cfg.calendar?.quiet_days ?? []} />
+        </Card>
         <Card title={T("settings.demo_date")}>
           <DemoControls lang={T.lang} enabled={demoMode()} date={asOf} />
         </Card>

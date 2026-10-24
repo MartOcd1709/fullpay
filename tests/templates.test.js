@@ -23,9 +23,9 @@ const THREATS = /legal|lawyer|court|notice|police|कानूनी|वकी�
 const { messaging } = DEFAULT_CONFIG;
 
 describe('templates', () => {
-  test('five template names and the rung map', () => {
-    assert.equal(TEMPLATE_NAMES.length, 5);
-    assert.deepEqual(Object.keys(RUNG_TEMPLATE), ['heads_up', 'due_date', 'overdue_gentle', 'overdue_firm']);
+  test('six template names (five ladder steps + the festival settlement request) and the rung map', () => {
+    assert.equal(TEMPLATE_NAMES.length, 6);
+    assert.deepEqual(Object.keys(RUNG_TEMPLATE), ['heads_up', 'due_date', 'overdue_gentle', 'overdue_firm', 'festival']);
     for (const name of Object.values(RUNG_TEMPLATE)) assert.ok(TEMPLATE_NAMES.includes(name));
   });
 

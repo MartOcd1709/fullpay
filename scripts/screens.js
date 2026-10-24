@@ -79,6 +79,8 @@ if (target1) await fetch(`${base}/api/payments/${target1.id}/confirm`, { method:
 
 await signIn("owner");
 await go("/dashboard"); await shot("01-dashboard", { full: true });
+await go("/dashboard"); await click("Review and send"); await wait(900); await shot("17-diwali-drive");
+await go("/settings"); await js(`document.querySelector("input[type=date]")?.scrollIntoView({block:"center"})`); await wait(300); await shot("18-festival-calendar");
 await go("/dashboard", { tour: "0" }); await shot("02-guided-tour");
 await go("/followups"); await shot("03-followups", { full: true });
 await go("/payments"); await shot("04-payments-matched", { full: true });

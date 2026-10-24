@@ -70,6 +70,7 @@ Indian micro and small suppliers sell on credit and wait months to be paid; an e
 | Approvals | Maker-checker: what the accountant prepared (payment confirmations, rejections, TDS, inbox decisions, settings) waits for the owner; approve one or many; nobody approves their own work |
 | Team | Owner, accountant and view-only (for the CA); add people, change roles, remove access; at least one owner always stays |
 | Activity log | Every change, who made it and when; "waiting" marks what went for approval |
+| Festivals | Two weeks before Diwali, a warm "settle before Dhanteras" request with festival wishes, in each customer's language, to everyone who owes (opted-out, disputed, paused and promised invoices left out; never twice). No reminders on festival quiet days (Diwali 6–10 Nov); the owner adds their own (Gurpurab, shop closed) in Settings |
 | Analytics | DSO, collection effectiveness (CEI), paid by the due date, billed vs collected by month, money collected after a FullPay reminder, payment promises kept and broken, customers to watch |
 | Cash forecast | 13 weeks of opening, in, out and closing cash; first week below the buffer; three what-ifs; invoices that would cover the gap |
 | Chase these first | Overdue invoices ranked by amount, days late, the customer's habits and how much they help the cash gap, with the reason in words |
@@ -175,11 +176,11 @@ npm run dev                       # http://localhost:3000
 - The 45-day step points to the MSME ODR portal, which replaced Samadhaan for new filings on 15 October 2025.
 - The RBI Bank Rate is a dated series, not one number, so interest is right across rate changes (the rate rose to 5.75% on 7 October 2026).
 
-## The five WhatsApp Business templates we would submit
+## The six WhatsApp Business templates we would submit
 
 Utility category, English and Hindi, no variable at the start or end, footer "We never ask for OTP/PIN or change bank details." Buttons: **Pay** (`/pay/{{1}}`) and **Check** (`/verify/{{1}}`).
 
-`invoice_sent` · `payment_due_soon` · `payment_due_today` · `payment_overdue` · `payment_overdue_final` — the exact bodies are in `lib/templates.js`.
+`invoice_sent` · `payment_due_soon` · `payment_due_today` · `payment_overdue` · `payment_overdue_final` · `festival_settlement` (the owner's settle-before-Dhanteras request, never sent by the daily run) — the exact bodies are in `lib/templates.js`.
 
 ## Path to production
 
