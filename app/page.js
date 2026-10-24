@@ -3,6 +3,7 @@ import Shell from "@/components/public/Shell";
 import Icon from "@/components/public/Icon";
 import FauxThreeD from "@/components/public/FauxThreeD";
 import SlideIn from "@/components/ui/SlideIn";
+import Logo from "@/components/ui/Logo";
 import { getLang, tr, inr, lakh, day } from "@/components/public/lang";
 import { run } from "@/lib/services/context";
 import { demoLinks } from "@/lib/services/letters";
@@ -34,32 +35,45 @@ export default async function Landing() {
   const links = demo?.links;
   return (
     <Shell lang={lang} wide brandHref={null} footer={<p>{t("public.landing.honest")}</p>}>
-      <section className="enter py-4 sm:py-10">
-        <p className="font-semibold text-accent">{t("public.landing.kicker")}</p>
-        <h1 className="mt-2 max-w-3xl text-3xl font-bold leading-tight sm:text-4xl">{t("public.landing.h1")}</h1>
-        <p className="mt-4 max-w-2xl text-lg text-ink-muted">{t("public.landing.problem")}</p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {demo ? (
-            <form method="post" action="/api/auth/demo">
-              <button type="submit" className={`${BTN} w-full bg-accent text-lg text-on-accent hover:bg-accent-strong sm:w-auto`}>
-                {t("public.landing.open_demo")}
-                <Icon name="arrow" />
-              </button>
-            </form>
-          ) : (
-            <Link href="/login" className={`${BTN} bg-accent text-lg text-on-accent hover:bg-accent-strong`}>{t("public.landing.sign_in")}</Link>
-          )}
-          {links?.pay_token && (
-            <Link href={`/pay/${links.pay_token}`} className={`${BTN} border border-line bg-surface text-ink hover:bg-surface-2`}>{t("public.landing.customer_view")}</Link>
-          )}
-          {links?.verify_prefix && (
-            <Link href={`/v/${links.verify_prefix}`} className={`${BTN} border border-line bg-surface text-ink hover:bg-surface-2`}>{t("public.landing.verify_letter")}</Link>
-          )}
-          <Link href="/status" className={`${BTN} text-accent hover:bg-accent-soft`}>{t("public.landing.status")}</Link>
-          <Link href="/proof" className={`${BTN} text-accent hover:bg-accent-soft`}>{t("public.landing.proof")}</Link>
-          <Link href="/calculator" className={`${BTN} text-accent hover:bg-accent-soft`}>{t("public.landing.calculator")}</Link>
+      <section className="enter relative overflow-hidden py-6 sm:py-14">
+        <div className="hero-glow" aria-hidden="true" />
+        <div className="relative grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="font-semibold text-accent">{t("public.landing.kicker")}</p>
+            <h1 className="mt-3 max-w-xl text-4xl font-bold leading-tight sm:text-5xl">{t("public.landing.h1")}</h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-muted">{t("public.landing.problem")}</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {demo ? (
+                <form method="post" action="/api/auth/demo">
+                  <button type="submit" className={`${BTN} hover-lift w-full bg-accent text-lg text-on-accent hover:bg-accent-strong sm:w-auto`}>
+                    {t("public.landing.open_demo")}
+                    <Icon name="arrow" />
+                  </button>
+                </form>
+              ) : (
+                <Link href="/login" className={`${BTN} hover-lift bg-accent text-lg text-on-accent hover:bg-accent-strong`}>{t("public.landing.sign_in")}</Link>
+              )}
+              {links?.pay_token && (
+                <Link href={`/pay/${links.pay_token}`} className={`${BTN} hover-lift border border-line bg-surface text-ink hover:bg-surface-2`}>{t("public.landing.customer_view")}</Link>
+              )}
+              {links?.verify_prefix && (
+                <Link href={`/v/${links.verify_prefix}`} className={`${BTN} hover-lift border border-line bg-surface text-ink hover:bg-surface-2`}>{t("public.landing.verify_letter")}</Link>
+              )}
+              <Link href="/status" className={`${BTN} hover-lift text-accent hover:bg-accent-soft`}>{t("public.landing.status")}</Link>
+              <Link href="/proof" className={`${BTN} hover-lift text-accent hover:bg-accent-soft`}>{t("public.landing.proof")}</Link>
+              <Link href="/calculator" className={`${BTN} hover-lift text-accent hover:bg-accent-soft`}>{t("public.landing.calculator")}</Link>
+            </div>
+            {demo && (
+              <p className="mt-4 text-ink-muted">
+                <strong className="text-ink">{t("public.landing.cta_hint_bold")}</strong> {t("public.landing.cta_hint_rest")}
+              </p>
+            )}
+            {demo && <p className="mt-2 text-ink-muted">{t("public.landing.demo_note")}</p>}
+          </div>
+          <div className="relative flex justify-center lg:justify-end">
+            <Logo variant="mark" className="hero-mark h-40 w-40 sm:h-48 sm:w-48 lg:h-56 lg:w-56" alt="" />
+          </div>
         </div>
-        {demo && <p className="mt-3 text-ink-muted">{t("public.landing.demo_note")}</p>}
       </section>
 
       <SlideIn as="section" aria-labelledby="flow" className="py-6">

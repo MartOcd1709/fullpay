@@ -23,6 +23,7 @@
   --radius: 0.75rem;
   --skeleton-hi: #f6f8fb;
   --elev-shadow: 0 12px 28px -10px rgb(15 23 42 / 0.25);
+  --accent-glow: rgb(33 63 154 / 0.16);
   color-scheme: light;
 }
 
@@ -50,6 +51,7 @@
     --info-soft: #10313a;
     --skeleton-hi: #2f3a52;
     --elev-shadow: 0 12px 28px -10px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06);
+    --accent-glow: rgb(138 160 245 / 0.35);
     color-scheme: dark;
   }
 }
@@ -74,6 +76,7 @@
   --info-soft: #10313a;
   --skeleton-hi: #2f3a52;
   --elev-shadow: 0 12px 28px -10px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06);
+  --accent-glow: rgb(138 160 245 / 0.35);
   color-scheme: dark;
 }
 
@@ -339,6 +342,22 @@ dialog.sheet::backdrop { background: rgb(26 34 51 / 0.45); }
 .slide-in-left { transform: translateX(-1.25rem); }
 .slide-in-right { transform: translateX(1.25rem); }
 .slide-in-visible { opacity: 1; transform: translateY(0) translateX(0); }
+
+/* Landing hero: ambient glow behind the brand mark, theme-aware via --accent-glow (set per theme above) so
+   it reads as a soft accent halo in light mode and a brighter dark-hero glow without any separate dark CSS. */
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.hero-mark {
+  filter: drop-shadow(0 12px 28px var(--accent-glow));
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

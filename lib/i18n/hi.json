@@ -1301,6 +1301,8 @@
   "public.landing.verify_letter": "मांग पत्र का रिकॉर्ड जांचें",
   "public.landing.status": "आज का अपने-आप हुआ काम देखें",
   "public.landing.demo_note": "डेमो साझा है: दूसरे लोग भी चला रहे हो सकते हैं। कभी भी रीसेट करें।",
+  "public.landing.cta_hint_bold": "कोई साइनअप नहीं, कोई कार्ड नहीं।",
+  "public.landing.cta_hint_rest": "सीधे लाइव डेमो खोलें और असली जैसे डेटा के साथ FullPay देखें।",
   "public.landing.diff_title": "FullPay जो दूसरे नहीं करते",
   "public.landing.d_interest": "कानून के तरीके से ब्याज का हिसाब",
   "public.landing.d_interest_body": "हर दिन लागू RBI बैंक दर के 3 गुना पर चक्रवृद्धि ब्याज, मासिक आधार पर; विवाद स्वीकार रहने तक 0%; आंशिक भुगतान पहले ब्याज में; हर दर का स्रोत साथ में।",
