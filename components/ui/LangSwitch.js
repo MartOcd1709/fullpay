@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { api } from "@/components/ui/api";
 
 // EN | हिंदी, each in its own script. Sets the cookie (and config) and re-renders every string on the page.
-export default function LangSwitch({ lang, label }) {
+// compact: short labels (EN | हिं) until very wide screens, for the crowded owner header; elsewhere only on phones.
+export default function LangSwitch({ lang, label, compact = false }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   async function pick(next) {
@@ -35,8 +36,8 @@ export default function LangSwitch({ lang, label }) {
           onClick={() => pick(code)}
           className={`min-h-12 rounded-[0.6rem] px-3 font-semibold ${lang === code ? "bg-accent text-on-accent" : "text-ink hover:bg-surface-2"}`}
         >
-          <span className="sm:hidden" aria-hidden="true">{shortName}</span>
-          <span className="max-sm:sr-only">{name}</span>
+          <span className={compact ? "2xl:hidden" : "sm:hidden"} aria-hidden="true">{shortName}</span>
+          <span className={compact ? "max-2xl:sr-only" : "max-sm:sr-only"}>{name}</span>
         </button>
       ))}
     </div>

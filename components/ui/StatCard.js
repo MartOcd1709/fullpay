@@ -28,9 +28,9 @@ export function StatCard({ term, label, paise, sub, tone = "neutral", icon, clas
 }
 
 // Hero amount (K21): big number with a lakh sub-label and a context line.
-export function AmountHero({ term, paise, lakh, sub, tone = "neutral", icon }) {
+export function AmountHero({ term, paise, lakh, sub, tone = "neutral", icon, className = "" }) {
   return (
-    <div className={`flex min-h-[8.5rem] flex-col rounded-xl border p-4 sm:p-5 ${TONE[tone] ?? TONE.neutral}`}>
+    <div className={`flex min-h-[8.5rem] flex-col rounded-xl border p-4 sm:p-5 ${TONE[tone] ?? TONE.neutral} ${className}`}>
       <div className="flex items-start gap-2 text-lg font-semibold leading-snug">
         {icon && <Icon name={icon} className="mt-1 h-5 w-5" />}
         <Term {...term} />

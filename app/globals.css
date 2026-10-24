@@ -21,7 +21,60 @@
   --info: #006d75;
   --info-soft: #dff3f4;
   --radius: 0.75rem;
+  --skeleton-hi: #f6f8fb;
+  --elev-shadow: 0 12px 28px -10px rgb(15 23 42 / 0.25);
   color-scheme: light;
+}
+
+/* Dark theme: <html data-theme="dark"> (explicit choice) or system default via prefers-color-scheme.
+   :not([data-theme="light"]) lets an explicit light choice always win over the system default. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10151f;
+    --surface: #1a212e;
+    --surface-2: #242c3a;
+    --line: #626f8f;
+    --ink: #e7ebf3;
+    --ink-muted: #a9b2c6;
+    --accent: #8aa0f5;
+    --accent-strong: #aabdf9;
+    --accent-soft: #212a47;
+    --on-accent: #0b1020;
+    --success: #5fd99a;
+    --success-soft: #123322;
+    --error: #ff8a80;
+    --error-soft: #3a1915;
+    --warning: #ffb84d;
+    --warning-soft: #3a2a0d;
+    --info: #5fd0dc;
+    --info-soft: #10313a;
+    --skeleton-hi: #2f3a52;
+    --elev-shadow: 0 12px 28px -10px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10151f;
+  --surface: #1a212e;
+  --surface-2: #242c3a;
+  --line: #626f8f;
+  --ink: #e7ebf3;
+  --ink-muted: #a9b2c6;
+  --accent: #8aa0f5;
+  --accent-strong: #aabdf9;
+  --accent-soft: #212a47;
+  --on-accent: #0b1020;
+  --success: #5fd99a;
+  --success-soft: #123322;
+  --error: #ff8a80;
+  --error-soft: #3a1915;
+  --warning: #ffb84d;
+  --warning-soft: #3a2a0d;
+  --info: #5fd0dc;
+  --info-soft: #10313a;
+  --skeleton-hi: #2f3a52;
+  --elev-shadow: 0 12px 28px -10px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.06);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -59,6 +112,15 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-wrap: anywhere;
+  /* Backstop for the hover/slide-in transforms below: a small translate on an element flush with the
+     viewport edge should never grow a horizontal scrollbar on the page itself. */
+  overflow-x: hidden;
+}
+
+/* Theme switch: colours fade instead of snapping when the toggle flips data-theme.
+   A more specific transition (e.g. Tailwind's transition-colors on a button) still wins over this. */
+*, *::before, *::after {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
 }
 
 /* UX4G: Devanagari needs more leading; no case or letter-spacing (matras misplace). Long words wrap at spaces. */
@@ -164,17 +226,125 @@ dialog.sheet::backdrop { background: rgb(26 34 51 / 0.45); }
 
 .skeleton {
   border-radius: var(--radius);
-  background: linear-gradient(90deg, var(--surface-2) 25%, #f6f8fb 50%, var(--surface-2) 75%);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--skeleton-hi) 50%, var(--surface-2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite linear;
 }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
+/* Theme toggle: a small sliding switch. Thumb position and icon (sun/moon) are pure CSS — driven by data-theme /
+   prefers-color-scheme — so the correct state shows before any JS runs, and the slide/rotate is just a transition. */
+.theme-toggle-track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 2.75rem;
+  height: 1.5rem;
+  padding: 0.1875rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.theme-toggle-thumb {
+  position: relative;
+  display: inline-flex;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  transform: translateX(0) scale(1);
+  transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms ease, box-shadow 200ms ease;
+}
+.theme-toggle-thumb svg {
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  transition: opacity 200ms ease, transform 300ms ease;
+}
+.theme-toggle-thumb .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+.theme-toggle-thumb .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+
+/* Hover: the thumb lifts with a glow — scale and shadow combined with the current slide position so the two don't fight. */
+.theme-toggle:hover .theme-toggle-thumb {
+  transform: translateX(0) scale(1.15);
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 0 10px 1px var(--accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle-thumb { transform: translateX(1.25rem) scale(1); }
+  :root:not([data-theme="light"]) .theme-toggle:hover .theme-toggle-thumb { transform: translateX(1.25rem) scale(1.15); }
+  :root:not([data-theme="light"]) .theme-toggle-thumb .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
+  :root:not([data-theme="light"]) .theme-toggle-thumb .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+:root[data-theme="dark"] .theme-toggle-thumb { transform: translateX(1.25rem) scale(1); }
+:root[data-theme="dark"] .theme-toggle:hover .theme-toggle-thumb { transform: translateX(1.25rem) scale(1.15); }
+:root[data-theme="dark"] .theme-toggle-thumb .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
+:root[data-theme="dark"] .theme-toggle-thumb .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+
+/* Logo (components/ui/Logo.js): navy "Full" on light headers, white "Full" on dark ones — same
+   data-theme/prefers-color-scheme switch as the theme toggle's icons above, for the same FOUC-free reason. */
+.logo-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-light { display: none; }
+  :root:not([data-theme="light"]) .logo-dark { display: inline; }
+}
+:root[data-theme="dark"] .logo-light { display: none; }
+:root[data-theme="dark"] .logo-dark { display: inline; }
+
 .toast-enter { animation: toast-in 180ms ease-out; }
 @keyframes toast-in { from { transform: translateY(0.5rem); opacity: 0; } }
 
+/* Entrance animation for primary cards / landing sections: a quick fade + slight rise, never a bounce.
+   animation-fill-mode "both" holds the 0% state until it starts and the 100% state after — no flash either side. */
+.enter { animation: enter-up 480ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.enter-d1 { animation-delay: 60ms; }
+.enter-d2 { animation-delay: 120ms; }
+.enter-d3 { animation-delay: 180ms; }
+.enter-d4 { animation-delay: 240ms; }
+.enter-d5 { animation-delay: 300ms; }
+@keyframes enter-up { from { opacity: 0; transform: translateY(0.75rem); } to { opacity: 1; transform: translateY(0); } }
+
+/* Shared hover lift: Button and InvoiceRow use this, so every button and every invoice/list row across the
+   site gets it from one place rather than from touching each page. Transform + shadow only (no width/height/
+   margin), so it's compositor-only and stays smooth. Never put this on a non-interactive/static card. */
+.hover-lift {
+  /* Same background-color/border-color/color durations as the sitewide theme-fade rule above (it would otherwise
+     be fully overridden here, since this class selector is more specific than that universal one). */
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: var(--elev-shadow);
+}
+.hover-lift:active {
+  transform: translateY(-1px) scale(1.005);
+}
+
+/* Scroll-triggered reveal (see components/ui/SlideIn.js): opacity + transform only, IntersectionObserver-driven.
+   Server-rendered markup starts in the "hidden" state below; the <noscript> rule in app/layout.js is the
+   no-JS fallback so content is never permanently invisible if the observer never runs. */
+.slide-in {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  /* Same background-color/border-color/color durations as the sitewide theme-fade rule above, for the same
+     reason as .hover-lift: this class selector would otherwise fully override that universal rule. */
+  transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1), transform 500ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+  will-change: opacity, transform;
+}
+.slide-in-left { transform: translateX(-1.25rem); }
+.slide-in-right { transform: translateX(1.25rem); }
+.slide-in-visible { opacity: 1; transform: translateY(0) translateX(0); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  /* Reduced motion removes the movement itself, not just its easing: show final state immediately, no transform. */
+  .hover-lift:hover, .hover-lift:active { transform: none; }
+  .slide-in, .slide-in-left, .slide-in-right { opacity: 1; transform: none; }
 }
 
 @media print {

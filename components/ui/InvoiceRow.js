@@ -20,7 +20,7 @@ export function InvoiceRow({ inv, T, asOf, rank, reason, href, showCustomer = tr
     <li>
       <Link
         href={href ?? `/invoices/${inv.id}`}
-        className="flex min-h-12 items-start gap-3 rounded-xl border border-line bg-surface p-4 text-ink no-underline hover:border-accent focus-visible:border-accent"
+        className="hover-lift flex min-h-12 items-start gap-3 rounded-xl border border-line bg-surface p-4 text-ink no-underline hover:border-accent focus-visible:border-accent"
       >
         {rank != null && (
           <span aria-hidden="true" className="tnum flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold text-accent">

@@ -58,6 +58,9 @@ const click = (text) => js(`(() => { const b = [...document.querySelectorAll("bu
 async function shot(name, { full = false } = {}) {
   let clip;
   if (full) {
+    // Sections that fade in on scroll (components/ui/SlideIn.js) only appear once seen: scroll through the page first.
+    await js(`(async () => { for (let y = 0; y < document.body.scrollHeight; y += 400) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); } scrollTo(0, 0); })()`);
+    await wait(400);
     const m = await send("Page.getLayoutMetrics");
     const vw = m.cssVisualViewport.clientWidth;
     clip = { x: 0, y: 0, width: vw, height: Math.min(m.cssContentSize.height, 2600), scale: 1 };

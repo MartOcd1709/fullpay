@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Shell from "@/components/public/Shell";
 import Icon from "@/components/public/Icon";
+import FauxThreeD from "@/components/public/FauxThreeD";
+import SlideIn from "@/components/ui/SlideIn";
 import { getLang, tr, inr, lakh, day } from "@/components/public/lang";
 import { run } from "@/lib/services/context";
 import { demoLinks } from "@/lib/services/letters";
@@ -32,7 +34,7 @@ export default async function Landing() {
   const links = demo?.links;
   return (
     <Shell lang={lang} wide brandHref={null} footer={<p>{t("public.landing.honest")}</p>}>
-      <section className="py-4 sm:py-10">
+      <section className="enter py-4 sm:py-10">
         <p className="font-semibold text-accent">{t("public.landing.kicker")}</p>
         <h1 className="mt-2 max-w-3xl text-3xl font-bold leading-tight sm:text-4xl">{t("public.landing.h1")}</h1>
         <p className="mt-4 max-w-2xl text-lg text-ink-muted">{t("public.landing.problem")}</p>
@@ -60,25 +62,37 @@ export default async function Landing() {
         {demo && <p className="mt-3 text-ink-muted">{t("public.landing.demo_note")}</p>}
       </section>
 
-      <section aria-labelledby="diff" className="py-6">
+      <SlideIn as="section" aria-labelledby="flow" className="py-6">
+        <div className="grid gap-8 sm:grid-cols-2 sm:items-center">
+          <div>
+            <h2 id="flow" className="text-2xl font-bold">{t("public.landing.flow_title")}</h2>
+            <p className="mt-3 max-w-prose text-ink-muted">{t("public.landing.flow_body")}</p>
+          </div>
+          <FauxThreeD t={t} />
+        </div>
+      </SlideIn>
+
+      <SlideIn as="section" aria-labelledby="diff" className="py-6">
         <h2 id="diff" className="text-2xl font-bold">{t("public.landing.diff_title")}</h2>
         <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-          {DIFFS.map((d) => (
-            <li key={d.key} className="rounded-xl border border-line bg-surface p-5">
-              <div className="flex items-start gap-3">
-                <span className="rounded-xl bg-accent-soft p-2 text-accent"><Icon name={d.icon} className="h-6 w-6" /></span>
-                <div className="min-w-0">
-                  <h3 className="text-lg font-semibold leading-snug">{t(`public.landing.d_${d.key}`)}</h3>
-                  <p className="mt-1 text-ink-muted">{t(`public.landing.d_${d.key}_body`)}</p>
+          {DIFFS.map((d, i) => (
+            <li key={d.key}>
+              <SlideIn delay={i * 80} className="rounded-xl border border-line bg-surface p-5">
+                <div className="flex items-start gap-3">
+                  <span className="rounded-xl bg-accent-soft p-2 text-accent"><Icon name={d.icon} className="h-6 w-6" /></span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold leading-snug">{t(`public.landing.d_${d.key}`)}</h3>
+                    <p className="mt-1 text-ink-muted">{t(`public.landing.d_${d.key}_body`)}</p>
+                  </div>
                 </div>
-              </div>
+              </SlideIn>
             </li>
           ))}
         </ul>
-      </section>
+      </SlideIn>
 
       {demo && !demo.failed && (
-        <section aria-labelledby="demo" className="py-6">
+        <SlideIn as="section" aria-labelledby="demo" className="py-6">
           <h2 id="demo" className="text-2xl font-bold">{t("public.landing.demo_title")}</h2>
           <div className="mt-4 rounded-xl border border-line bg-surface p-5">
             <p className="text-lg font-semibold">{demo.business.name}</p>
@@ -97,7 +111,7 @@ export default async function Landing() {
             </dl>
             <p className="mt-4 text-ink-muted">{t("public.landing.demo_story")}</p>
           </div>
-        </section>
+        </SlideIn>
       )}
       {demo?.failed && (
         <p role="status" className="my-6 rounded-xl bg-warning-soft px-4 py-3 font-medium text-warning">{t("public.landing.demo_unavailable")}</p>
