@@ -26,6 +26,7 @@ function detail(e, t) {
     case "plan_proposed":
     case "plan_approved": return (p.parts ?? []).map((x) => `${day(x.date)} ${inr(x.amount_paise)}`).join(" · ");
     case "plan_declined": return p.reply ? `“${p.reply}”` : "";
+    case "call_placed": return p.script ? `“${p.script}”` : "";
     case "invoice_adjusted": return t("public.bundle.d_credit", { number: p.credit_note_no ?? "—", amount: inr(p.amount_paise ?? 0) });
     case "balance_confirmed": return t("public.bundle.d_balance", { amount: inr(p.amount_paise ?? 0), date: day(p.on) });
     case "early_offer_made": return t("public.bundle.d_offer", { amount: inr(p.discount_paise ?? 0), date: day(p.pay_by) });
@@ -188,7 +189,7 @@ export default async function BundlePrint({ params }) {
           {inv.timeline.map((e) => (
             <tr key={e.id}>
               <td style={{ whiteSpace: "nowrap" }}>{stamp(e.ts)}</td>
-              <td><strong>{eventName(t, e.type)}</strong>{detail(e, t) && <span className="block">{detail(e, t)}</span>}</td>
+              <td><strong>{eventName(t, e.type)}</strong>{detail(e, t) && <span className="block" lang={e.type === "call_placed" ? e.payload?.lang : undefined}>{detail(e, t)}</span>}</td>
               <td>{t(`public.actor.${e.actor}`)}</td>
               <td className="pf-mono">{e.entry_hash.slice(0, 12)}</td>
             </tr>

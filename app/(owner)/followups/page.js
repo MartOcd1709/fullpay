@@ -13,6 +13,8 @@ import { getSessionFromCookies } from "@/lib/auth";
 
 import { t } from "@/lib/i18n";
 import { mailSetup } from "@/lib/mail";
+import * as callsSvc from "@/lib/services/calls";
+import CallPlayer from "@/components/collect/CallPlayer";
 
 export async function generateMetadata() {
   return { title: t("collect.fu.title", await getLang()) };
@@ -25,6 +27,7 @@ export default async function FollowupsPage() {
   const T = tr(lang);
   const { data, error } = await load((c, ctx) => fu.listToday(c, ctx));
   const festival = (await load((c, ctx) => festivalSvc.driveView(c, ctx))).data;
+  const autoCalls = (await load((c, ctx) => callsSvc.today(c, ctx))).data ?? [];
   const role = getSessionFromCookies(await cookies())?.role ?? "owner";
   if (error) {
     return (
@@ -67,6 +70,32 @@ export default async function FollowupsPage() {
             {ready.length > CAP && <p className="text-ink-muted">{T("pages.cap.first", { n: CAP, of: ready.length })}</p>}
             {ready.slice(0, CAP).map((r) => (
               <FollowupCard key={r.id} row={r} {...common} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {autoCalls.length > 0 && (
+        <section aria-labelledby="sec-autocalls">
+          <SectionTitle id="sec-autocalls" count={autoCalls.length}>
+            {T("collect.autocall.section")}
+          </SectionTitle>
+          <p className="-mt-1 mb-3 max-w-prose text-ink-muted">{T("collect.autocall.intro")}</p>
+          <div className="grid gap-4 xl:grid-cols-2">
+            {autoCalls.slice(0, CAP).map((c) => (
+              <article key={c.call_id} className="rounded-xl border border-line bg-surface p-4 sm:p-5" aria-labelledby={`ac-${c.call_id}`}>
+                <header className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 id={`ac-${c.call_id}`} className="text-lg font-semibold leading-snug">{c.customer_name}</h3>
+                    <p className="text-ink-muted">{c.numbers.join(", ")} · {T(`collect.autocall.${c.days < 0 ? "before" : "after"}${Math.abs(c.days) === 1 ? "_1" : ""}`, { n: Math.abs(c.days) })} · {c.to}</p>
+                  </div>
+                  <StatusPill status="info" label={T("collect.autocall.simulated")} />
+                </header>
+                <p lang={c.lang} className="mt-3 whitespace-pre-wrap rounded-lg bg-surface-2 p-3">{c.script}</p>
+                <div className="mt-3">
+                  <CallPlayer text={c.script} lang={c.lang} labels={{ play: T("collect.autocall.play"), stop: T("collect.autocall.stop"), unsupported: T("collect.autocall.unsupported") }} />
+                </div>
+              </article>
             ))}
           </div>
         </section>

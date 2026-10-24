@@ -67,7 +67,7 @@ export function Timeline({ model }) {
                   <span className="rounded-full bg-surface-2 px-2 py-0.5 text-sm font-semibold">{e.actor}</span> {e.when}
                 </p>
               </div>
-              {e.detail && <p className="mt-0.5 text-ink-muted">{e.detail}</p>}
+              {e.detail && <p className="mt-0.5 text-ink-muted" lang={e.detailLang}>{e.detail}</p>}
               <button
                 type="button"
                 onClick={() => setOpen(e)}
