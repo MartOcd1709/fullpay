@@ -1,0 +1,159 @@
+{
+  "name": "FullPay: collections register + owner alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fullpay",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "6b1f0b8e-0001-4b6a-9a10-000000000001",
+      "name": "FullPay webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "fullpay-events",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "FullPay token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// One row in the collections register per FullPay notice (the morning digest is not a bill, so it is skipped here).\nconst e = $input.first().json.body ?? {};\nconst d = e.details ?? {};\nconst words = {\n  \"test\": \"Test from FullPay\",\n  \"bill.sent\": \"Bill sent\",\n  \"payment.confirmed\": \"Payment received\",\n  \"customer.claimed_paid\": \"Customer says already paid\",\n  \"customer.disputed\": \"Customer says something is wrong\",\n  \"customer.promised\": \"Customer promised a date\",\n  \"customer.plan_offered\": \"Customer offers to pay in parts\",\n  \"customer.balance_confirmed\": \"Customer confirmed the balance\",\n  \"promise.broken\": \"Promised date missed\",\n  \"plan.broken\": \"Plan part missed\",\n  \"letter.ready\": \"Payment Demand Letter ready\",\n};\nif (!words[e.type]) return [];\nconst note =\n  d.receipt_no ? \"Receipt \" + d.receipt_no :\n  d.reason ? d.reason :\n  d.reference ? \"Ref \" + d.reference :\n  d.parts ? d.parts.map((p) => p.date + \" ₹\" + p.amount).join(\" · \") :\n  d.date ? \"Date \" + d.date :\n  d.message ?? \"\";\nreturn [{ json: {\n  \"Date\": String(e.at ?? \"\").slice(0, 16).replace(\"T\", \" \"),\n  \"Event\": words[e.type],\n  \"Customer\": e.customer?.name ?? \"\",\n  \"Bill\": e.invoice?.number ?? \"\",\n  \"Amount (₹)\": d.amount ?? e.invoice?.total ?? \"\",\n  \"Still owed (₹)\": e.invoice?.outstanding ?? \"\",\n  \"Note\": note,\n  \"Record\": e.links?.verify ?? \"\",\n} }];"
+      },
+      "id": "6b1f0b8e-0002-4b6a-9a10-000000000002",
+      "name": "Row for the register",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Register"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "6b1f0b8e-0003-4b6a-9a10-000000000003",
+      "name": "Append to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        180
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// One short line for the owner's phone, only for what needs attention (bills sent and confirmed balances stay in the sheet).\nconst e = $input.first().json.body ?? {};\nconst d = e.details ?? {};\nconst inr = (n) => (n == null ? \"\" : \"₹\" + Number(n).toLocaleString(\"en-IN\", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));\nconst who = e.customer?.name ?? \"\";\nconst bill = e.invoice?.number ?? \"\";\nlet text = null;\nswitch (e.type) {\n  case \"test\": text = \"FullPay is connected to n8n.\"; break;\n  case \"payment.confirmed\": text = \"Payment received: \" + who + \" paid \" + inr(d.amount) + \" for \" + bill + (d.receipt_no ? \" (receipt \" + d.receipt_no + \")\" : \"\"); break;\n  case \"customer.claimed_paid\": text = who + \" says \" + bill + \" is already paid: \" + inr(d.amount) + \", ref \" + (d.reference ?? \"\") + \". Check your bank.\"; break;\n  case \"customer.disputed\": text = who + \" says \" + bill + \" is wrong: \\\"\" + (d.reason ?? \"\") + \"\\\"\"; break;\n  case \"customer.promised\": text = who + \" promised to pay \" + bill + \" by \" + d.date; break;\n  case \"customer.plan_offered\": text = who + \" offers to pay \" + bill + \" in \" + (d.parts ?? []).length + \" parts. Answer in your Inbox.\"; break;\n  case \"promise.broken\":\n  case \"plan.broken\": text = who + \" missed the promised date for \" + bill + \". Reminders have restarted: time to call.\"; break;\n  case \"letter.ready\": text = \"Payment Demand Letter ready for \" + bill + \" (\" + who + \"). Decide whether to send it.\"; break;\n  case \"daily_run\": {\n    const n = (k, one, many) => k + \" \" + (k === 1 ? one : many);\n    const cash = d.cash?.first_short_week ? \"; cash drops below your buffer in week \" + d.cash.first_short_week : \"\";\n    text = \"FullPay today (\" + d.as_of + \"): \" + n(d.reminders_ready, \"reminder\", \"reminders\") + \", \" + n(d.calls, \"call\", \"calls\") + \", \" + n(d.letters, \"letter\", \"letters\") + \" ready\" + cash + \".\";\n    break;\n  }\n}\nconst link = e.links?.invoice ?? e.links?.followups ?? \"\";\nreturn text ? [{ json: { text: link ? text + \"\\n\" + link : text } }] : [];"
+      },
+      "id": "6b1f0b8e-0004-4b6a-9a10-000000000004",
+      "name": "Alert text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "6b1f0b8e-0005-4b6a-9a10-000000000005",
+      "name": "Telegram to the owner",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        420
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": "Telegram bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "FullPay webhook": {
+      "main": [
+        [
+          {
+            "node": "Row for the register",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Row for the register": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert text": {
+      "main": [
+        [
+          {
+            "node": "Telegram to the owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {}
+}
