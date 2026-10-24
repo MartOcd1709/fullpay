@@ -15,6 +15,7 @@ import * as festivalSvc from "@/lib/services/festival";
 import * as setup from "@/lib/services/setup";
 import SetupChecklist from "@/components/pages/SetupChecklist";
 import Card from "@/components/ui/Card";
+import SlideIn from "@/components/ui/SlideIn";
 import { cookies } from "next/headers";
 import { getSessionFromCookies } from "@/lib/auth";
 
@@ -115,6 +116,7 @@ export default async function DashboardPage() {
           lakh={T.lakh(d.to_collect_paise)}
           sub={T("core.dash.bills_n", { n: unpaid.length })}
           icon="rupee"
+          className="enter enter-d1"
         />
         <AmountHero
           term={T.term("core.dash.overdue")}
@@ -123,11 +125,12 @@ export default async function DashboardPage() {
           sub={T("core.dash.overdue_sub", { n: overdue.length, days: oldest })}
           tone={d.overdue_paise > 0 ? "error" : "neutral"}
           icon="alert"
+          className="enter enter-d2"
         />
       </div>
 
       {week ? (
-        <Link href="/forecast" className="mt-3 flex items-start gap-3 rounded-xl border border-warning/40 bg-warning-soft p-4 text-ink no-underline hover:border-warning">
+        <Link href="/forecast" className="enter enter-d3 mt-3 flex items-start gap-3 rounded-xl border border-warning/40 bg-warning-soft p-4 text-ink no-underline hover:border-warning">
           <Icon name="alert" className="mt-0.5 h-6 w-6 text-warning" />
           <span className="min-w-0 flex-1">
             <span className="block font-semibold">
@@ -141,14 +144,14 @@ export default async function DashboardPage() {
           </span>
         </Link>
       ) : (
-        <p className="mt-3 flex items-start gap-3 rounded-xl border border-success/30 bg-success-soft p-4 font-semibold text-success">
+        <p className="enter enter-d3 mt-3 flex items-start gap-3 rounded-xl border border-success/30 bg-success-soft p-4 font-semibold text-success">
           <Icon name="check" className="mt-0.5 h-6 w-6" />
           {T("core.dash.no_breach", { buffer: T.money(fc.buffer_paise), weeks: fc.weeks.length })}
         </p>
       )}
 
       {interest && (
-        <section className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-accent/30 bg-accent-soft p-4">
+        <section className="enter enter-d4 mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-accent/30 bg-accent-soft p-4">
           <div className="min-w-0 flex-1 basis-64">
             <h2 className="flex items-start gap-2 text-lg font-semibold">
               <Icon name="scale" className="mt-1 h-5 w-5 text-accent" />
@@ -162,7 +165,7 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <section className="mt-8" aria-labelledby="chase-h">
+      <section className="enter enter-d5 mt-8" aria-labelledby="chase-h">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 id="chase-h" className="text-xl font-semibold">
             <Term {...T.term("core.dash.chase")} />
@@ -183,7 +186,7 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <section className="mt-8 rounded-xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="age-h">
+      <SlideIn as="section" className="mt-8 rounded-xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="age-h">
         <h2 id="age-h" className="text-xl font-semibold">
           <Term {...T.term("core.dash.ageing")} />
         </h2>
@@ -205,9 +208,9 @@ export default async function DashboardPage() {
             </li>
           ))}
         </ul>
-      </section>
+      </SlideIn>
 
-      <section className="mt-8" aria-label={T("core.dash.more_numbers")}>
+      <SlideIn as="section" className="mt-8" aria-label={T("core.dash.more_numbers")}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard term={T.term("core.dash.expected_week")} paise={d.expected_this_week_paise} icon="trend" />
           <StatCard term={T.term("core.dash.expected_month")} paise={d.expected_this_month_paise} icon="calendar" />
@@ -221,7 +224,7 @@ export default async function DashboardPage() {
             icon="trend"
           />
         </div>
-      </section>
+      </SlideIn>
     </>
   );
 }

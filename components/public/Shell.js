@@ -1,5 +1,7 @@
 import Link from "next/link";
 import LangToggle from "./LangToggle";
+import ThemeToggle from "@/components/ui/ThemeToggle";
+import Logo from "@/components/ui/Logo";
 import { tr } from "./lang";
 
 // Public page frame: brand, language switch, one centred column, honest footer. No owner navigation, no third-party scripts.
@@ -10,11 +12,16 @@ export default function Shell({ lang, children, wide = false, brandHref = "/", f
       <header className="border-b border-line bg-surface">
         <div className={`mx-auto flex w-full items-center justify-between gap-3 px-4 py-2 ${wide ? "max-w-5xl" : "max-w-2xl"}`}>
           {brandHref ? (
-            <Link href={brandHref} className="inline-flex min-h-12 items-center text-xl font-bold text-accent no-underline">{t("app.name")}</Link>
+            <Link href={brandHref} className="inline-flex min-h-12 items-center no-underline">
+              <Logo className="h-7 w-auto sm:h-8" alt={t("app.name")} />
+            </Link>
           ) : (
-            <span className="text-xl font-bold text-accent">{t("app.name")}</span>
+            <Logo className="h-7 w-auto sm:h-8" alt={t("app.name")} />
           )}
-          <LangToggle lang={lang} label={t("public.lang_label")} />
+          <div className="flex items-center gap-2">
+            <ThemeToggle label={t("settings.theme")} />
+            <LangToggle lang={lang} label={t("public.lang_label")} />
+          </div>
         </div>
       </header>
       <main id="main" className={`mx-auto w-full flex-1 px-4 py-6 ${wide ? "max-w-5xl" : "max-w-2xl"}`}>{children}</main>

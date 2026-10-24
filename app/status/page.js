@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import StatusPill from "@/components/ui/StatusPill";
+import Logo from "@/components/ui/Logo";
 import Term from "@/components/ui/Term";
 import { t, tHint } from "@/lib/i18n";
 import { formatDate } from "@/lib/time";
@@ -88,9 +89,8 @@ export default async function StatusPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-10">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Link href="/" className="inline-flex min-h-12 items-center gap-2 text-xl font-bold text-ink no-underline">
-          <span aria-hidden="true" className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-on-accent">₹</span>
-          FullPay
+        <Link href="/" className="inline-flex min-h-12 items-center no-underline">
+          <Logo className="h-7 w-auto" alt="FullPay" />
         </Link>
         <Link href="/" className="inline-flex min-h-12 items-center rounded-xl border border-line bg-surface px-4 font-semibold text-ink no-underline hover:bg-surface-2">
           {t("ops.status.back", lang)}

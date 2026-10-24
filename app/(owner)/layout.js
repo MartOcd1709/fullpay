@@ -2,10 +2,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Icon from "@/components/ui/Icon";
+import Logo from "@/components/ui/Logo";
 import DemoBanner from "@/components/ui/DemoBanner";
 import DemoTour, { TourButton } from "@/components/ui/DemoTour";
 import { demoLinks } from "@/lib/services/letters";
 import LangSwitch from "@/components/ui/LangSwitch";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { ToastRegion } from "@/components/ui/Toast";
 import { getSessionFromCookies } from "@/lib/auth";
 import { run } from "@/lib/services/context";
@@ -68,9 +70,9 @@ export default async function OwnerLayout({ children }) {
       <div className="lg:pl-64">
         <header className="border-b border-line bg-surface print:hidden">
           <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-1.5 sm:px-6">
-            <p className="min-w-0 flex-1 truncate font-semibold">
-              <span className="text-accent lg:hidden">FullPay · </span>
-              <span>{business ?? ""}</span>
+            <p className="flex min-w-0 flex-1 items-center gap-1.5 truncate font-semibold">
+              <Logo variant="mark" className="h-5 w-5 shrink-0 lg:hidden" alt="FullPay" />
+              <span className="truncate">{business ?? ""}</span>
             </p>
             {/* A text box when the header has room; the demo's extra controls leave room only for the icon. */}
             {!demo && (
@@ -123,6 +125,7 @@ export default async function OwnerLayout({ children }) {
                 </div>
               </>
             )}
+            <ThemeToggle label={T("settings.theme")} />
             <LangSwitch lang={lang} label={T("settings.language")} />
           </div>
         </header>

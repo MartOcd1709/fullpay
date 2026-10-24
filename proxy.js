@@ -18,4 +18,6 @@ export function proxy(request) {
   return NextResponse.redirect(login);
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"] };
+// Also skips static files served straight from public/ (images, icons, fonts) — they were never protected
+// routes, and without this the auth redirect below intercepts them (e.g. a logo <img src> on a public page).
+export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpe?g|gif|svg|ico|webp|avif|css|js|map|woff2?|ttf)$).*)"] };

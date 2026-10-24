@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Logo from "@/components/ui/Logo";
 
 const ICONS = {
   dashboard: "M3 11l9-8 9 8M5 10v10h14V10",
@@ -45,8 +46,8 @@ function NavLink({ item, active, compact = false }) {
     : "flex min-h-11 items-center gap-3 rounded-xl px-3 py-1.5 font-medium no-underline";
   const tone = active ? (compact ? "text-accent" : "bg-accent-soft text-accent") : "text-ink hover:bg-surface-2";
   return (
-    <Link href={item.href} aria-current={active ? "page" : undefined} className={`${base} ${tone}`}>
-      <Icon name={item.icon} className={compact ? "h-6 w-6" : "h-5 w-5"} />
+    <Link href={item.href} aria-current={active ? "page" : undefined} className={`group ${base} ${tone}`}>
+      <Icon name={item.icon} className={`${compact ? "h-6 w-6" : "h-5 w-5"} transition-transform group-hover:translate-x-0.5`} />
       <span>{compact ? item.short ?? item.label : item.label}</span>
     </Link>
   );
@@ -73,7 +74,9 @@ export function Nav({ items, brand = "FullPay", labels = {} }) {
   return (
     <>
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-line bg-surface lg:flex print:hidden">
-        <Link href="/dashboard" className="px-5 py-5 text-xl font-bold text-accent no-underline">{brand}</Link>
+        <Link href="/dashboard" className="flex items-center px-5 py-5 no-underline">
+          <Logo className="h-7 w-auto" alt={brand} />
+        </Link>
         <nav aria-label={nav} className="flex-1 overflow-y-auto px-3">
           <ul className="space-y-0.5">
             {items.map((item) => (
