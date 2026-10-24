@@ -21,7 +21,7 @@ export const GET = route(async ({ params, client, ctx }) => {
 }, { owner: false });
 
 export const POST = route(async ({ params, body, client, ctx }) => {
-  const action = v.oneOf(body, "action", ["claim", "dispute", "promise", "simulate", "confirm_balance"]);
+  const action = v.oneOf(body, "action", ["claim", "dispute", "promise", "plan", "simulate", "confirm_balance"]);
   if (action === "confirm_balance") return pub.confirmBalance(client, ctx, params.token);
   const token = params.token;
   if (action === "claim") {
@@ -33,6 +33,13 @@ export const POST = route(async ({ params, body, client, ctx }) => {
     const details = v.str(body, "details", { max: 900, optional: true });
     if (code === "other" && !details) throw badRequest("reason_required", "Tell the seller what is wrong");
     return pub.dispute(client, ctx, token, { reason: details ? `${REASONS[code]}: ${details}` : REASONS[code] });
+  }
+  if (action === "plan") {
+    // parts: [{ date: "YYYY-MM-DD", amount: "59,000" }], 2 or 3 of them; the rules live in lib/plans.js.
+    const raw = Array.isArray(body?.parts) ? body.parts.slice(0, 4) : [];
+    const parts = raw.map((p) => ({ date: v.date(p, "date"), amount_paise: rupeesToPaise(v.str(p, "amount", { max: 40 })) }));
+    const plan = await pub.plan(client, ctx, token, { parts });
+    return { status: plan.status, parts: plan.parts };
   }
   if (action === "promise") {
     const p = await pub.promise(client, ctx, token, { date: v.date(body, "date") });

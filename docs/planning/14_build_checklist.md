@@ -1,4 +1,4 @@
-**Updated:** Sat 24 Oct 2026, 12:45 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
+**Updated:** Sat 24 Oct 2026, 14:35 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
 
 This is the single tracking document. Every work item has an ID, an owner, a schedule slot, a status and a "done when" test. Statuses: **TODO** · **DOING** · **DONE** · **BLOCKED** · **CUT**. Owners: **A** = Dev A (engine track), **B** = Dev B (product track), **V** = Ved (accounts, DNS, decisions), **C** = Claude. Claude pairs on every A and B row. Source plan: `10_build_plan.md` (Rev F.1); specs: `lld.html`; research: `13_reference_library.md`.
 
@@ -224,8 +224,10 @@ This is the single tracking document. Every work item has an ID, an owner, a sch
 | N10 | Invoice from a photo (OCR) | C | TODO | Optional; needs an AI key and a team decision |
 | N11 | Fix: Settings "Save changes" and quiet days were refused (HTTP 400) on the live site since N1/N2 | C | DONE | Live on main; one shared check for the API and the save; services test sends the form's own payloads |
 | N12 | Fix: an icon given only a colour class drew page-wide (New invoice "Due on" line, also live) | C | DONE | Live on main (merge a394680); icons stay 20 px unless the caller sets a size |
-| N13 | Payment receipt to the customer on every confirmed payment (amount, date, reference, bills, balance, RCPT number); email at once, else one-tap WhatsApp in Today's follow-ups | C | DOING | Branch `feat/payment-receipt`; tests/receipt.test.js; live once its PR is merged |
+| N13 | Payment receipt to the customer on every confirmed payment (amount, date, reference, bills, balance, RCPT number); email at once, else one-tap WhatsApp in Today's follow-ups | C | DONE | Live on main (PR #2, 24 Oct 12:58 IST); tests/receipt.test.js |
 | N14 | n8n hook for the sponsor (events → Google Sheet / Telegram / email) | C | TODO | Waiting for the team: build it? voucher claimed? where should alerts go? |
+| N15 | No-email mode: with no Resend key, automatic messages wait as one-tap messages instead of failing | C | DONE | Live on main (PR #3, 24 Oct); Follow-ups explains it; tick and receipt tests cover both paths |
+| N16 | Instalment plans: the customer offers 2–3 dated parts on `/pay`, the owner approves or declines in the Inbox, each paid part moves the promise on, the forecast expects each part, a missed part restarts reminders | C | DOING | Branch `feat/instalment-plans`; tests/plans.test.js + tests/plan-flow.test.js; screenshots 29–31; live once its PR is merged |
 
 ## Acceptance suite (ticked during P7; every item on the deployed app)
 

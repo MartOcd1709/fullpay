@@ -21,7 +21,11 @@ function detail(e, t) {
     case "claim_submitted": return t("public.bundle.d_claim", { amount: inr(p.amount ?? 0), ref: p.ref ?? "—", date: day(p.date) });
     case "dispute_opened": return `“${p.reason ?? ""}”`;
     case "promise_made":
-    case "promise_broken": return day(p.date);
+    case "promise_broken":
+    case "plan_broken": return day(p.date);
+    case "plan_proposed":
+    case "plan_approved": return (p.parts ?? []).map((x) => `${day(x.date)} ${inr(x.amount_paise)}`).join(" · ");
+    case "plan_declined": return p.reply ? `“${p.reply}”` : "";
     case "invoice_adjusted": return t("public.bundle.d_credit", { number: p.credit_note_no ?? "—", amount: inr(p.amount_paise ?? 0) });
     case "balance_confirmed": return t("public.bundle.d_balance", { amount: inr(p.amount_paise ?? 0), date: day(p.on) });
     case "early_offer_made": return t("public.bundle.d_offer", { amount: inr(p.discount_paise ?? 0), date: day(p.pay_by) });

@@ -19,7 +19,10 @@ const ACTION_KEYS = [
   "public.pay.r_wrong_amount", "public.pay.r_wrong_quantity", "public.pay.r_returned", "public.pay.r_already_paid", "public.pay.r_other",
   "public.pay.reason_legend", "public.pay.sending", "public.pay.sim_title", "public.pay.sim_body", "public.pay.sim_full", "public.pay.sim_tds",
   "public.pay.sim_done", "public.pay.pauses",
-  ...["invalid_amount", "invalid_date", "claim_open", "not_open", "promise_open", "promise_broken_before", "date_past", "date_too_far", "already_simulated", "reason_required", "validation", "link_expired", "not_found"].map((c) => `public.pay.err_${c}`),
+  "public.pay.plan_title", "public.pay.plan_intro", "public.pay.plan_how_many", "public.pay.plan_n2", "public.pay.plan_n3", "public.pay.plan_part",
+  "public.pay.plan_date", "public.pay.plan_amount", "public.pay.plan_total", "public.pay.plan_mismatch", "public.pay.plan_rules", "public.pay.plan_done",
+  ...["invalid_amount", "invalid_date", "claim_open", "not_open", "promise_open", "promise_broken_before", "date_past", "date_too_far", "already_simulated", "reason_required", "validation", "link_expired", "not_found",
+    "plan_parts", "plan_date_order", "plan_part_small", "plan_first_far", "plan_too_far", "plan_sum", "plan_open", "plan_blocked"].map((c) => `public.pay.err_${c}`),
 ];
 
 export default async function PayPage({ params }) {
@@ -58,7 +61,10 @@ export default async function PayPage({ params }) {
   const sub = lakh(owed, lang);
   const s = Object.fromEntries(ACTION_KEYS.map((k) => [k, t(k, { business: b.name })]));
   s["public.pay.sim_tds"] = t("public.pay.sim_tds", { amount: inr(owed - view.tds_paise) });
-  const ask = view.offer?.pay_amount_paise ?? owed;
+  const plan = view.plan;
+  const planLive = plan && ["proposed", "active"].includes(plan.status);
+  const next = !view.offer && plan?.status === "active" ? plan.next : null; // with an agreed plan, pay the part now due
+  const ask = view.offer?.pay_amount_paise ?? next?.amount_paise ?? owed;
   s["public.pay.sim_full"] = t("public.pay.sim_full", { amount: inr(ask) });
   const taxed = inv.doc_type === "tax_invoice";
   const verifyHref = view.record_hash ? `/v/${view.record_hash.slice(0, 16)}` : null;
@@ -94,7 +100,29 @@ export default async function PayPage({ params }) {
       {settled && <Notice tone="success" icon="check">{t("pay.paid")}</Notice>}
       {open.dispute && <Notice tone="info" icon="pause">{t("public.pay.state_dispute", { business: b.name })}</Notice>}
       {open.claim && <Notice tone="info" icon="pause">{t("public.pay.state_claim", { business: b.name })}</Notice>}
-      {open.promise_date && <Notice tone="info" icon="clock">{t("public.pay.state_promise", { date: day(open.promise_date, lang) })}</Notice>}
+      {open.promise_date && plan?.status !== "active" && <Notice tone="info" icon="clock">{t("public.pay.state_promise", { date: day(open.promise_date, lang) })}</Notice>}
+      {plan?.status === "proposed" && <Notice tone="info" icon="pause">{t("public.pay.state_plan_proposed", { n: plan.parts.length, business: b.name })}</Notice>}
+      {plan?.status === "declined" && !settled && (
+        <Notice tone="info" icon="alert">{t(plan.reply ? "public.pay.state_plan_declined_reply" : "public.pay.state_plan_declined", { business: b.name, reply: plan.reply ?? "" })}</Notice>
+      )}
+      {plan?.status === "broken" && !settled && <Notice tone="info" icon="alert">{t("public.pay.state_plan_broken")}</Notice>}
+      {plan?.status === "active" && (
+        <section aria-labelledby="plan-h" className="mt-4 rounded-xl border border-line bg-surface p-5">
+          <h2 id="plan-h" className="text-lg font-semibold">{t("public.pay.plan_agreed", { n: plan.parts.length })}</h2>
+          <ol className="mt-3 divide-y divide-line">
+            {plan.parts.map((p, i) => (
+              <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span>{t("public.pay.plan_part_line", { n: i + 1, date: day(p.date, lang) })}</span>
+                <span className="flex items-center gap-2">
+                  <span className="tnum font-semibold">{inr(p.amount_paise)}</span>
+                  {p.paid ? <Chip status="paid">{t("public.pay.plan_paid")}</Chip> : next?.number === i + 1 ? <Chip status="due_soon">{t("public.pay.plan_next")}</Chip> : null}
+                </span>
+              </li>
+            ))}
+          </ol>
+          {next && <p className="mt-2 text-ink-muted">{t("public.pay.plan_keep", { date: day(next.date, lang) })}</p>}
+        </section>
+      )}
       {view.sim_pending && <Notice tone="info" icon="clock">{t("public.pay.state_sim", { business: b.name })}</Notice>}
 
       {!settled && view.upi && !open.dispute && (
@@ -109,7 +137,7 @@ export default async function PayPage({ params }) {
             <div className="flex-1">
               <a href={view.upi} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2 text-lg font-semibold text-on-accent no-underline hover:bg-accent-strong md:w-auto">
                 <Icon name="qr" />
-                {t("public.pay.pay_amount", { amount: inr(ask) })}
+                {next ? t("public.pay.plan_pay_part", { n: next.number, of: next.of, amount: inr(ask) }) : t("public.pay.pay_amount", { amount: inr(ask) })}
               </a>
               <p className="mt-2 text-ink-muted">{t("pay.scan")}</p>
               <p className="mt-1 text-ink-muted">{t("public.pay.upi_to", { vpa: b.vpa })}</p>
@@ -144,11 +172,12 @@ export default async function PayPage({ params }) {
           token={token}
           s={s}
           lang={lang}
-          defaults={{ amount: (owed / 100).toFixed(2), asOf: view.as_of, promiseMax: view.promise_max }}
+          defaults={{ amount: (ask / 100).toFixed(2), asOf: view.as_of, promiseMax: view.promise_max, plan: view.plan_offer, owed_paise: owed }}
           can={{
             claim: !open.claim && !open.dispute,
             dispute: !open.dispute,
-            promise: !open.promise_date && !open.dispute,
+            plan: Boolean(view.plan_offer) && !open.dispute && !open.claim,
+            promise: !open.promise_date && !open.dispute && !planLive,
             simulate: view.demo && !view.sim_pending && !open.dispute && Boolean(view.upi),
             tds: view.tds_paise > 0 && view.tds_paise < owed,
           }}

@@ -2,6 +2,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import StatusPill from "@/components/ui/StatusPill";
 import InboxCard from "@/components/collect/InboxCard";
+import PlanCard from "@/components/collect/PlanCard";
 import { ErrorState, SectionTitle, date, inr, tr } from "@/components/collect/kit";
 import { getLang, load } from "@/components/collect/server";
 import * as fu from "@/lib/services/followups";
@@ -11,7 +12,8 @@ export async function generateMetadata() {
   return { title: t("collect.ib.title", await getLang()) };
 }
 
-const RESOLUTION_TONE = { accept_credit_note: "success", mark_paid: "success", edit: "success", reject: "neutral" };
+const RESOLUTION_TONE = { accept_credit_note: "success", mark_paid: "success", edit: "success", reject: "neutral", approve_plan: "success" };
+const KIND = { claim: "collect.ib.claim", dispute: "collect.ib.dispute", plan: "collect.ib.plan" };
 
 export default async function InboxPage() {
   const lang = await getLang();
@@ -27,10 +29,25 @@ export default async function InboxPage() {
   }
   const disputes = data.open.filter((i) => i.kind === "dispute");
   const claims = data.open.filter((i) => i.kind === "claim");
+  const planOffers = data.open.filter((i) => i.kind === "plan");
+  const subtitle = [T("collect.ib.subtitle", { d: disputes.length, c: claims.length }), planOffers.length ? T("collect.ib.sub_plans", { n: planOffers.length }) : null].filter(Boolean).join(" · ");
   return (
     <>
-      <PageHeader title={T("collect.ib.title")} subtitle={T("collect.ib.subtitle", { d: disputes.length, c: claims.length })} />
+      <PageHeader title={T("collect.ib.title")} subtitle={subtitle} />
       {data.open.length === 0 && <EmptyState title={T("collect.ib.empty")} description={T("collect.ib.empty_body")} />}
+
+      {planOffers.length > 0 && (
+        <section aria-labelledby="sec-plans">
+          <SectionTitle id="sec-plans" count={planOffers.length}>
+            {T("collect.ib.plans")}
+          </SectionTitle>
+          <div className="grid gap-4 xl:grid-cols-2">
+            {planOffers.map((i) => (
+              <PlanCard key={i.id} item={i} lang={lang} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {disputes.length > 0 && (
         <section aria-labelledby="sec-disputes">
@@ -70,7 +87,7 @@ export default async function InboxPage() {
                   <StatusPill status={RESOLUTION_TONE[i.resolution] ?? "neutral"} label={T(`collect.ib.res_${i.resolution}`)} />
                 </div>
                 <p className="mt-1 text-ink-muted">
-                  {T(i.kind === "claim" ? "collect.ib.claim" : "collect.ib.dispute")} · {date(i.opened_on, lang)} → {date(i.resolved_on, lang)} · {T("collect.ib.still_owed")} <span className="tnum">{inr(i.outstanding_paise)}</span>
+                  {T(KIND[i.kind] ?? "collect.ib.dispute")} · {date(i.opened_on, lang)} → {date(i.resolved_on, lang)} · {T("collect.ib.still_owed")} <span className="tnum">{inr(i.outstanding_paise)}</span>
                 </p>
                 {i.resolution === "accept_credit_note" && i.credit_notes && <p className="mt-1">{T("collect.ib.cn_issued", { cn: i.credit_notes, date: date(i.opened_on, lang) })}</p>}
                 {i.accepted && i.kind === "dispute" && i.resolution !== "accept_credit_note" && <p className="mt-1">{T("collect.ib.interest_span", { from: date(i.opened_on, lang), to: date(i.resolved_on, lang) })}</p>}
