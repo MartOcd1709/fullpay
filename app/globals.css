@@ -345,7 +345,10 @@ dialog.sheet::backdrop { background: rgb(26 34 51 / 0.45); }
 
 /* Landing hero: ambient glow behind the brand mark, theme-aware via --accent-glow (set per theme above) so
    it reads as a soft accent halo in light mode and a brighter dark-hero glow without any separate dark CSS.
-   Centering uses top + negative margin, not transform, because transform is also what the ambient-shift
+   JSX gives this `hidden lg:block`: the 2-column grid (and the right-hand box this glow decorates) only
+   exists at lg+, so below that the hero is a single stacked column and this absolutely-positioned circle
+   would otherwise sit behind — and visibly peek out around — the full-width text instead of the mark.
+   Centered via top + negative margin, not transform, because transform is also what the ambient-shift
    animation below drives — an animated property always overrides a plain declaration of the same property
    on the same element (animations sit above normal rules in the cascade), so a `transform: translateY(-50%)`
    base rule would just get discarded the instant the animation starts. Reduced motion then cancels the

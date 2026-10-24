@@ -36,14 +36,14 @@ export default async function Landing() {
   const links = demo?.links;
   return (
     <Shell lang={lang} wide brandHref={null} footer={<p>{t("public.landing.honest")}</p>}>
-      <MoneyRain />
       <section className="enter relative overflow-hidden py-3 sm:py-6 lg:py-8">
-        <div className="hero-glow" aria-hidden="true" />
-        <div className="relative grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div className="self-center space-y-2">
+        <MoneyRain />
+        <div className="hero-glow hidden lg:block" aria-hidden="true" />
+        <div className="relative grid grid-cols-1 items-center gap-5 lg:grid-cols-12">
+          <div className="self-center space-y-2 lg:col-span-7">
             <p className="font-semibold text-accent">{t("public.landing.kicker")}</p>
             <h1 className="max-w-xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">{t("public.landing.h1")}</h1>
-            <p className="max-w-xl leading-snug text-ink-muted sm:text-lg">{t("public.landing.problem")}</p>
+            <p className="max-w-xl text-base leading-snug text-ink-muted">{t("public.landing.problem")}</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {demo ? (
                 <form method="post" action="/api/auth/demo">
@@ -72,7 +72,7 @@ export default async function Landing() {
             )}
             {demo && <p className="text-ink-muted">{t("public.landing.demo_note")}</p>}
           </div>
-          <HeroVisual className="self-center" />
+          <HeroVisual className="self-center lg:col-span-5" />
         </div>
       </section>
 

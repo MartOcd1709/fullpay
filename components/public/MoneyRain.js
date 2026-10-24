@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-// Ambient ₹ particles behind the landing hero: real 3D meshes (thin extruded planes, lit, continuously
-// rotating) rendered with react-three-fiber, not a 2D sprite trick. Fixed + pointer-events-none + negative
-// z-index so it never intercepts clicks or taps and always paints behind normal-flow page content (a fixed,
-// negative-z-index element still sits above the page's own background per the CSS stacking order — see the
-// z-10 note below) while reacting to scroll for the "falling/accelerating" feel.
-const DESKTOP_COUNT = 16;
-const MOBILE_COUNT = 7;
+// Ambient ₹ particles behind the landing hero: real 3D meshes (thin planes, lit, continuously rotating)
+// rendered with react-three-fiber, not a 2D sprite trick. This renders as an `absolute inset-0` child of the
+// hero <section> (which is `position:relative overflow-hidden`) rather than a viewport-wide fixed layer, so
+// the symbols are clipped to the hero's own box instead of drifting across unrelated content further down
+// the page. pointer-events-none keeps it non-interactive; it's also placed before the text/CTA sibling in
+// the DOM so it paints behind that content regardless of z-index specifics.
+const DESKTOP_COUNT = 10;
+const MOBILE_COUNT = 5;
 
 function rupeeTexture(color) {
   const size = 256;
@@ -37,14 +38,17 @@ function Symbols({ count, scrollRef }) {
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
 
+  // Spawn volume tuned to the hero's own short box rather than a full-viewport scene: camera z=8, fov=50
+  // gives a visible height of roughly 7.5 world units at z=0, so particles are kept within +-4 vertically
+  // (wrapping there) instead of ranging across +-8 like a tall, full-page layer would need.
   const items = useMemo(
     () =>
       Array.from({ length: count }, () => ({
-        start: [(Math.random() - 0.5) * 16, Math.random() * 14 - 4, (Math.random() - 0.5) * 6 - 2],
-        fallSpeed: 0.25 + Math.random() * 0.4,
+        start: [(Math.random() - 0.5) * 16, Math.random() * 8 - 4, (Math.random() - 0.5) * 6 - 2],
+        fallSpeed: 0.18 + Math.random() * 0.3,
         drift: (Math.random() - 0.5) * 0.3,
         spin: [(Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6],
-        scale: 0.5 + Math.random() * 0.7,
+        scale: 0.4 + Math.random() * 0.5,
       })),
     [count],
   );
@@ -57,7 +61,7 @@ function Symbols({ count, scrollRef }) {
       const item = items[i];
       mesh.position.y -= item.fallSpeed * scrollBoost * delta;
       mesh.position.x += Math.sin(state.clock.elapsedTime * 0.3 + i) * item.drift * delta;
-      if (mesh.position.y < -8) mesh.position.y = 8 + Math.random() * 2;
+      if (mesh.position.y < -4) mesh.position.y = 4 + Math.random();
       mesh.rotation.x += item.spin[0] * delta;
       mesh.rotation.y += item.spin[1] * delta;
       mesh.rotation.z += item.spin[2] * delta;
@@ -81,19 +85,16 @@ export default function MoneyRain() {
   const [enabled, setEnabled] = useState(false);
   const [count, setCount] = useState(DESKTOP_COUNT);
   const scrollRef = useRef(0);
-  const opacityRef = useRef(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     setEnabled(true);
     setCount(window.innerWidth < 640 ? MOBILE_COUNT : DESKTOP_COUNT);
 
+    // Scroll still drives the fall-speed boost and slight camera tilt while the hero is in view; the layer
+    // itself no longer needs a manual opacity fade on scroll since it scrolls away with its own section now.
     function onScroll() {
       scrollRef.current = Math.min(window.scrollY / (window.innerHeight * 1.1), 1.4);
-      if (opacityRef.current) {
-        const fade = Math.max(0, 1 - window.scrollY / (window.innerHeight * 1.6));
-        opacityRef.current.style.opacity = fade.toFixed(2);
-      }
     }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -103,7 +104,7 @@ export default function MoneyRain() {
   if (!enabled) return null;
 
   return (
-    <div ref={opacityRef} aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
       <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0, 8], fov: 50 }} gl={{ alpha: true, antialias: false }}>
         <ambientLight intensity={0.7} />
         <directionalLight position={[3, 4, 5]} intensity={0.8} />

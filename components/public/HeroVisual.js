@@ -50,10 +50,10 @@ export default function HeroVisual({ className = "" }) {
   }, []);
 
   return (
-    <div ref={wrapRef} className={`relative flex justify-center lg:justify-end ${className}`}>
+    <div ref={wrapRef} className={`relative flex items-center justify-center ${className}`}>
       <div className="hero-float">
         <div ref={markRef} className="will-change-transform">
-          <Logo variant="mark" className="hero-mark h-40 w-40 sm:h-48 sm:w-48 lg:h-56 lg:w-56" alt="" />
+          <Logo variant="mark" className="hero-mark h-48 w-48 sm:h-56 sm:w-56 lg:h-72 lg:w-72" alt="" />
         </div>
       </div>
     </div>
