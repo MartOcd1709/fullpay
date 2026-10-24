@@ -1297,6 +1297,8 @@
   "public.landing.verify_letter": "Check a demand letter's record",
   "public.landing.status": "See today's automatic run",
   "public.landing.demo_note": "The demo is shared: other visitors may be clicking around too. Use Reset any time.",
+  "public.landing.cta_hint_bold": "No signup, no card.",
+  "public.landing.cta_hint_rest": "Just open the live demo and see FullPay with realistic data.",
   "public.landing.diff_title": "What FullPay does that others don't",
   "public.landing.d_interest": "Interest worked out the way the law says",
   "public.landing.d_interest_body": "Compound interest at 3 × the RBI Bank Rate in force on each day, monthly rests, 0% while a dispute is accepted, part-payments to interest first, with the source of every rate.",
