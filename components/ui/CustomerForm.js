@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Field, Input, Select } from "./Field";
+import { Check, Field, Input, Select } from "./Field";
 import Term from "./Term";
 import { api } from "./api";
 import { makeT } from "./i18n";
@@ -21,6 +21,7 @@ export default function CustomerForm({ lang, initial, onSaved, onCancel, submitL
     phone: initial?.phone ?? "",
     credit_days: initial?.credit_days ?? "",
     preferred_lang: initial?.preferred_lang ?? "en",
+    treds_buyer: initial?.treds_buyer === true,
   });
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -53,6 +54,7 @@ export default function CustomerForm({ lang, initial, onSaved, onCancel, submitL
       phone: v.phone.trim() || null,
       credit_days: cd ? Number(cd) : null,
       preferred_lang: v.preferred_lang,
+      treds_buyer: v.treds_buyer,
     };
     try {
       const saved = await api(initial?.id ? `/api/customers/${initial.id}` : "/api/customers", { method: initial?.id ? "PATCH" : "POST", body });
@@ -106,6 +108,7 @@ export default function CustomerForm({ lang, initial, onSaved, onCancel, submitL
           <option value="hi">हिंदी</option>
         </Select>
       </Field>
+      <Check id="c-treds" label={T("pages.treds.flag")} hint={T("pages.treds.flag_hint")} checked={v.treds_buyer} onChange={(e) => setV((x) => ({ ...x, treds_buyer: e.target.checked }))} />
       {formError && <p role="alert" className="rounded-xl bg-error-soft px-3 py-2 font-medium text-error">{formError}</p>}
       <div className="flex flex-wrap gap-3">
         <button type="submit" disabled={busy} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-accent px-5 font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-60">

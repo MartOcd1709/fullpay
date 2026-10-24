@@ -47,6 +47,7 @@ export default async function CustomerPage({ params }) {
           <div className="flex flex-col gap-3">
             <Grade grade={c.grade} T={T} />
             <p>{gradeReason(c, T)}</p>
+            {c.treds_buyer && <span className="inline-flex w-fit rounded-full bg-info-soft px-2 py-0.5 text-sm font-semibold text-info">{T("pages.treds.chip")}</span>}
             <p className="mt-1 text-ink-muted"><strong>{T("pages.habit.label")}:</strong> {habitText(c, T) ?? T("pages.habit.none")}</p>
             <p className="text-ink-muted">
               {T("customers.total_owed")}: <Money paise={c.total_owed_paise ?? 0} className="font-bold text-ink" />

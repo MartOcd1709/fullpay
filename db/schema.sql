@@ -303,3 +303,6 @@ CREATE TABLE IF NOT EXISTS early_offers (
 CREATE UNIQUE INDEX IF NOT EXISTS early_offers_one_open ON early_offers (invoice_id) WHERE status = 'open';
 ALTER TABLE approvals DROP CONSTRAINT IF EXISTS approvals_kind_check;
 ALTER TABLE approvals ADD CONSTRAINT approvals_kind_check CHECK (kind IN ('payment_confirm','payment_reject','inbox_resolve','settings_save','tds_record','offer_make'));
+
+-- A large company, PSU or government buyer registered on TReDS (its invoices can be discounted there before the due date).
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS treds_buyer BOOLEAN NOT NULL DEFAULT false;

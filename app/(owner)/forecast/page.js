@@ -2,6 +2,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import StatusPill from "@/components/ui/StatusPill";
 import ForecastChart from "@/components/collect/ForecastChart";
 import { OfferButton } from "@/components/collect/OfferButton";
+import * as treds from "@/lib/services/treds";
 import { cookies } from "next/headers";
 import { getSessionFromCookies } from "@/lib/auth";
 import WhatIf from "@/components/collect/WhatIf";
@@ -23,6 +24,7 @@ export default async function ForecastPage({ searchParams }) {
   const role = getSessionFromCookies(await cookies())?.role ?? "owner";
   const sp = await searchParams;
   const { data, error } = await load((c, ctx) => fu.forecastView(c, ctx, fu.parseWhatIf(sp, ctx.cfg.forecast?.weeks ?? 13)));
+  const tr_ = (await load((c, ctx) => treds.view(c, ctx))).data;
   if (error) {
     return (
       <>
@@ -127,6 +129,44 @@ export default async function ForecastPage({ searchParams }) {
           ) : (
             <p className="mt-3 rounded-lg bg-warning-soft p-3">{T("collect.fc.nothing_covers", { amount: inr(data.gap_uncovered_paise || needWeek) })}</p>
           )}
+        </section>
+      )}
+
+      {tr_ && tr_.buyers > 0 && (
+        <section aria-labelledby="treds-h" className="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-5">
+          <h2 id="treds-h" className="text-lg font-bold">{T("pages.treds.title")}</h2>
+          <p className="mt-1 max-w-prose text-ink-muted">{T("pages.treds.intro")}</p>
+          <ul className="mt-3 grid gap-1 text-sm" aria-label={T("pages.treds.ready")}>
+            {[["udyam", tr_.seller.udyam], ["gstin", tr_.seller.gstin], ["buyers", tr_.buyers > 0], ["accept", null]].map(([k, ok]) => (
+              <li key={k} className="flex gap-2"><span aria-hidden="true" className={ok === false ? "text-error" : ok ? "text-success" : "text-ink-muted"}>{ok === false ? "✗" : ok ? "✓" : "•"}</span>
+                <span>{T(`pages.treds.req.${k}`, { n: tr_.buyers })}{ok === false ? ` (${T("pages.treds.missing")})` : ""}</span></li>
+            ))}
+          </ul>
+          {tr_.invoices.length === 0 ? <p className="mt-3 text-ink-muted">{T("pages.treds.none")}</p> : (
+            <>
+              <ul className="mt-3 divide-y divide-line rounded-lg border border-line">
+                {tr_.invoices.map((r) => (
+                  <li key={r.id} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2">
+                    <span className="min-w-0"><span className="font-semibold">{r.number}</span> · {r.customer_name}
+                      <span className="block text-sm text-ink-muted">{T("pages.treds.due_in", { date: date(r.due_date, lang), n: r.days })}</span></span>
+                    <span className="text-right"><span className="tnum font-semibold">{inr(r.cash_low_paise)}–{inr(r.cash_high_paise)}</span>
+                      <span className="block text-sm text-ink-muted">{T("pages.treds.of", { amount: inr(r.outstanding_paise) })}</span></span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 font-semibold">{T("pages.treds.total", { low: inr(tr_.cash_low_paise), high: inr(tr_.cash_high_paise), n: tr_.invoices.length })}</p>
+              {needWeek > 0 && (() => {
+                // Only money the forecast expects after the short week moves cash into it; the rest arrives in time anyway.
+                const weekOf = new Map();
+                weeks.forEach((w, i) => w.inflows.forEach((r) => r.invoice_id != null && weekOf.set(String(r.invoice_id), i)));
+                const late = tr_.invoices.filter((r) => (weekOf.get(String(r.id)) ?? 99) > fs);
+                const lateLow = late.reduce((a, r) => a + r.cash_low_paise, 0);
+                if (!late.length) return <p className="mt-1">{T("pages.treds.already", { n: fs + 1 })}</p>;
+                return <p className="mt-1">{lateLow >= needWeek ? T("pages.treds.covers", { n: fs + 1, k: late.length }) : T("pages.treds.helps", { amount: inr(needWeek - lateLow), n: fs + 1, k: late.length })}</p>;
+              })()}
+            </>
+          )}
+          <p className="mt-3 text-sm text-ink-muted">{T("pages.treds.note", { low: tr_.low_bps / 100, high: tr_.high_bps / 100 })}</p>
         </section>
       )}
 

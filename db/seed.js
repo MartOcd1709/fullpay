@@ -191,6 +191,7 @@ export async function seed(client, { anchor = SEED_ANCHOR } = {}) {
       phone: `+91 90000 000${pad(n)}`,
       credit_days: c.credit,
       preferred_lang: c.lang ?? "en", // four customers read their reminders in Hindi
+      treds_buyer: c.key === "c1" || c.key === "c6", // two large buyers registered on TReDS
     });
     cust[c.key] = row;
   }

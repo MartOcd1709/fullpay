@@ -92,6 +92,7 @@ await go("/activity"); await shot("08-activity-log", { full: true });
 await go("/invoices"); await click("Import from Tally"); await wait(400); await click("Try the Tally sample"); await wait(1500); await shot("09-import-tally-preview");
 await go("/customers"); await shot("10-customers", { full: true });
 await go("/forecast"); await shot("11-forecast", { full: true });
+await go("/forecast"); await js(`document.getElementById("treds-h")?.scrollIntoView({block:"start"})`); await wait(300); await shot("21-treds-cash-today");
 // A pay-early offer on the first invoice that would close the cash gap, then the customer's view of it.
 {
   const fc = await fetch(`${base}/api/forecast`, { headers: { cookie: ownerCookie } }).then((r) => r.json());

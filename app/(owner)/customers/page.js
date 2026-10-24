@@ -65,6 +65,7 @@ export default async function CustomersPage({ searchParams }) {
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <Grade grade={c.grade} T={T} />
                   <span className="text-ink-muted">{gradeReason(c, T)}</span>
+            {c.treds_buyer && <span className="inline-flex w-fit rounded-full bg-info-soft px-2 py-0.5 text-sm font-semibold text-info">{T("pages.treds.chip")}</span>}
                   {habitText(c, T) && <span className="text-sm text-ink-muted">{habitText(c, T)}</span>}
                 </span>
                 <span className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">
