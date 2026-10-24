@@ -7,7 +7,7 @@ import { InvoiceRow, InvoiceList } from "@/components/ui/InvoiceRow";
 import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
 import { EditCustomer, OptOutToggle, Anonymize } from "@/components/pages/CustomerActions";
-import { Grade, gradeReason } from "@/components/pages/Grade";
+import { Grade, gradeReason, habitText } from "@/components/pages/Grade";
 import { run } from "@/lib/services/context";
 import * as customers from "@/lib/services/customers";
 import * as invoices from "@/lib/services/invoices";
@@ -47,6 +47,7 @@ export default async function CustomerPage({ params }) {
           <div className="flex flex-col gap-3">
             <Grade grade={c.grade} T={T} />
             <p>{gradeReason(c, T)}</p>
+            <p className="mt-1 text-ink-muted"><strong>{T("pages.habit.label")}:</strong> {habitText(c, T) ?? T("pages.habit.none")}</p>
             <p className="text-ink-muted">
               {T("customers.total_owed")}: <Money paise={c.total_owed_paise ?? 0} className="font-bold text-ink" />
             </p>

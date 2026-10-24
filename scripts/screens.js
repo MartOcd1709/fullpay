@@ -48,8 +48,9 @@ async function go(path, { w = 1440, h = 900, mobile = false, tour = "off", wait:
   const l = loaded();
   await send("Page.navigate", { url: base + path });
   await l;
-  await send("Runtime.evaluate", { expression: `try{localStorage.setItem("fullpay.tour",${JSON.stringify(tour)})}catch{}` });
-  if (tour !== "off") { const l2 = loaded(); await send("Page.reload"); await l2; }
+  // The tour card reads its state when the page mounts: set it, then reload once if it changed.
+  const was = (await send("Runtime.evaluate", { expression: `(() => { try { const v = localStorage.getItem("fullpay.tour"); localStorage.setItem("fullpay.tour", ${JSON.stringify(tour)}); return v; } catch { return null; } })()`, returnByValue: true })).result.value;
+  if (was !== tour) { const l2 = loaded(); await send("Page.reload"); await l2; }
   await wait(ms);
 }
 const js = (expression) => send("Runtime.evaluate", { expression, awaitPromise: true });

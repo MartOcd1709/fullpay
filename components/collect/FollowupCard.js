@@ -5,6 +5,8 @@ import { formatDate } from "@/lib/time";
 import StatusPill from "@/components/ui/StatusPill";
 import { StatusLine, btn, tr, useAction } from "./client";
 import PromiseSheet from "./PromiseSheet";
+import { habitText } from "@/components/pages/Grade";
+import { makeT } from "@/components/ui/i18n";
 
 const waDigits = (phone) => {
   const d = String(phone ?? "").replace(/\D/g, "");
@@ -61,6 +63,7 @@ export default function FollowupCard({ row, lang, asOf, weeksN, expectedWeek, ma
             {row.customer_name}
           </h3>
           <p className="text-ink-muted">{T(row.rung === "invoice_sent" ? "collect.rung_invoice" : `rung.${row.rung}`)}</p>
+          {row.habit && <p className="mt-0.5 text-sm text-info">{habitText(row.habit, makeT(lang))}</p>}
         </div>
         <StatusPill status={failed ? "failed" : row.status} label={T(`collect.ob.${row.status}`)} />
       </header>

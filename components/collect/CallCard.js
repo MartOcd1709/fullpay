@@ -5,6 +5,8 @@ import { formatDate } from "@/lib/time";
 import StatusPill from "@/components/ui/StatusPill";
 import { Sheet, StatusLine, btn, errorText, tr, useAction } from "./client";
 import PromiseSheet from "./PromiseSheet";
+import { habitText } from "@/components/pages/Grade";
+import { makeT } from "@/components/ui/i18n";
 
 // The +15 rung: "Call the customer". A six-line script in the customer's language, a tel: link, and three outcomes,
 // each logged as a chained call_logged event plus the event of what it changes (K26).
@@ -38,6 +40,7 @@ export default function CallCard({ inv, lang, asOf, weeksN, expectedWeek, maxDay
           <p className="text-ink-muted">
             {inv.number} · <span className="tnum font-semibold text-ink">{vars.amount}</span> · <span className="text-error">{T("collect.days_overdue", { n: inv.days_overdue })}</span>
           </p>
+          {inv.habit && <p className="mt-0.5 text-sm text-info">{habitText(inv.habit, makeT(lang))}</p>}
         </div>
         <StatusPill status="warning" label={T("collect.call.chip")} />
       </header>

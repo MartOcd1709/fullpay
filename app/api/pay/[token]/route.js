@@ -21,7 +21,8 @@ export const GET = route(async ({ params, client, ctx }) => {
 }, { owner: false });
 
 export const POST = route(async ({ params, body, client, ctx }) => {
-  const action = v.oneOf(body, "action", ["claim", "dispute", "promise", "simulate"]);
+  const action = v.oneOf(body, "action", ["claim", "dispute", "promise", "simulate", "confirm_balance"]);
+  if (action === "confirm_balance") return pub.confirmBalance(client, ctx, params.token);
   const token = params.token;
   if (action === "claim") {
     const amount_paise = rupeesToPaise(v.str(body, "amount", { max: 40 }));

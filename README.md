@@ -63,7 +63,7 @@ Indian micro and small suppliers sell on credit and wait months to be paid; an e
 | Dashboard | Money to collect, overdue, expected this week and month, bills due in 30 days, cash in the bank, lowest forecast point, §16 interest owed, ageing bar, top 5 to chase |
 | Invoices | All invoices with the brief's seven statuses, filters (customer, status, due date, days late) and search, 100 per page; each invoice opens on its full record. **Import from Tally / Vyapar / Excel**: the header row is found under Tally's title block, columns are matched by name, every line is checked and previewed before anything is saved, and re-importing adds nothing twice |
 | New invoice | Customer with GSTIN validated and state taken from it; items with HSN/SAC, quantity, unit, rate, discount and GST rate; live CGST + SGST or IGST; round-off; due date from credit days |
-| Customers | Credit days, contacts, total owed, average days late, % paid on time, reliability grade A/B/C with the reason in words; opt-out and remove personal details |
+| Customers | Credit days, contacts, total owed, average days late, % paid on time, reliability grade A/B/C with the reason in words; **payment habit** learned from their own history ("usually pays on Mondays", "between the 3rd and 6th of the month") and the best day to remind, also shown on the follow-up and call cards; opt-out and remove personal details |
 | Today's follow-ups | Every reminder due today with the message ready; one tap to WhatsApp, email or SMS; mark as sent; snooze; record a promise to pay; a call script at the final-reminder stage |
 | Inbox | Disputes and "already paid" claims from the customer link: issue a credit note, mark paid, reject with a reply, or edit the terms |
 | Payments | Import a bank CSV, load the sample statement or add a payment by hand; matches with confidence and reasons; flags for part payment, several invoices, overpayment, unknown deposit and possible TDS; confirm one by one, or **confirm all exact matches** in one action |
@@ -76,7 +76,7 @@ Indian micro and small suppliers sell on credit and wait months to be paid; an e
 | Chase these first | Overdue invoices ranked by amount, days late, the customer's habits and how much they help the cash gap, with the reason in words |
 | Documents | Every sent invoice with its record, print invoice, demand letter and evidence pack |
 | Settings | Business profile, bank and UPI, reminder ladder and which steps go out automatically, safety buffer, language and text size, demo date, reset, privacy card |
-| Customer link `/pay/…` | The bill, pay by UPI, "I've already paid", "Something's wrong", promise a date — any of these pauses the reminders |
+| Customer link `/pay/…` | The bill, pay by UPI, "I've already paid", "Something's wrong", promise a date — any of these pauses the reminders; **"Yes, this amount is right"** seals the customer's confirmation of the balance into the record and the evidence pack; any open pay-early offer; "Why pay by this date?" (Income-tax Act 2025 s.37(2)(g)) |
 | Record check `/verify/…`, `/v/…` | Anyone can check that a printed invoice, letter or pack matches the record, and see where to pay |
 | Status `/status` | The last automatic runs, what they sent, and whether the record checks out |
 | Print pages | A4 Tax Invoice / Bill of Supply / plain invoice, Payment Demand Letter, and the ODR evidence pack; print to PDF from the browser |

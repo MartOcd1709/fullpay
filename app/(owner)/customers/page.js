@@ -7,7 +7,7 @@ import Term from "@/components/ui/Term";
 import { ErrorState } from "@/components/ui/States";
 import { getT } from "@/components/ui/server/lang";
 import { AddCustomer } from "@/components/pages/CustomerActions";
-import { Grade, gradeReason } from "@/components/pages/Grade";
+import { Grade, gradeReason, habitText } from "@/components/pages/Grade";
 import { run } from "@/lib/services/context";
 import * as customers from "@/lib/services/customers";
 import { stateName } from "@/lib/gst";
@@ -65,6 +65,7 @@ export default async function CustomersPage({ searchParams }) {
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
                   <Grade grade={c.grade} T={T} />
                   <span className="text-ink-muted">{gradeReason(c, T)}</span>
+                  {habitText(c, T) && <span className="text-sm text-ink-muted">{habitText(c, T)}</span>}
                 </span>
                 <span className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-muted">
                   <span>{c.credit_days != null ? T("pages.cust.credit_days", { n: c.credit_days }) : T("pages.cust.credit_default")}</span>

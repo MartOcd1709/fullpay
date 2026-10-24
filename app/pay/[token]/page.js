@@ -3,6 +3,7 @@ import Shell from "@/components/public/Shell";
 import Icon from "@/components/public/Icon";
 import Chip from "@/components/public/Chip";
 import Qr from "@/components/public/Qr";
+import BalanceConfirm from "@/components/public/BalanceConfirm";
 import PayActions from "@/components/public/PayActions";
 import { getLang, tr, inr, lakh, day } from "@/components/public/lang";
 import { run } from "@/lib/services/context";
@@ -125,6 +126,17 @@ export default async function PayPage({ params }) {
             </p>
           )}
         </section>
+      )}
+
+      {!settled && !open.dispute && !open.claim && (
+        <BalanceConfirm token={token} confirmed={!!view.balance_confirmed} s={{
+          title: t("public.pay.confirm_h"),
+          body: t("public.pay.confirm_body", { amount: inr(owed) }),
+          yes: t("public.pay.confirm_yes", { amount: inr(owed) }),
+          no: t("public.pay.confirm_no", { button: t("pay.something_wrong") }),
+          done: t("public.pay.confirmed", { amount: inr(view.balance_confirmed?.amount_paise ?? owed), date: day(view.balance_confirmed?.on ?? view.as_of, lang) }),
+          error: t("error.generic"),
+        }} />
       )}
 
       {!settled && (

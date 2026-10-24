@@ -44,6 +44,15 @@ function eventText(T, e) {
     case "invoice_adjusted":
       detail = T("core.evd.adjusted", { no: p.credit_note_no ?? "—", amount: money(p.amount_paise) });
       break;
+    case "balance_confirmed":
+      detail = T("core.evd.balance", { amount: money(p.amount_paise), date: T.date(p.on) });
+      break;
+    case "early_offer_made":
+      detail = T("core.evd.offer", { amount: money(p.discount_paise), date: T.date(p.pay_by), pay: money(p.pay_amount_paise) });
+      break;
+    case "early_offer_taken":
+      detail = T("core.evd.offer_taken", { amount: money(p.discount_paise), no: p.credit_note_no ?? "—" });
+      break;
     case "message_failed":
       detail = p.error ? String(p.error) : "";
       break;
