@@ -331,3 +331,13 @@ ALTER TABLE inbox_items DROP CONSTRAINT IF EXISTS inbox_items_resolution_check;
 ALTER TABLE inbox_items ADD CONSTRAINT inbox_items_resolution_check CHECK (resolution IN ('accept_credit_note','mark_paid','reject','edit','approve_plan'));
 ALTER TABLE invoices DROP CONSTRAINT IF EXISTS invoices_paused_by_check;
 ALTER TABLE invoices ADD CONSTRAINT invoices_paused_by_check CHECK (paused_by IN ('dispute','promise','claim','plan'));
+
+-- n8n: the last deliveries of FullPay's signed event notices (type, result), shown in Settings. Pruned to 200 rows.
+CREATE TABLE IF NOT EXISTS webhook_deliveries (
+  id           BIGSERIAL PRIMARY KEY,
+  event_type   TEXT NOT NULL,
+  status       TEXT NOT NULL CHECK (status IN ('sent','failed')),
+  http_status  INT,
+  error        TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);

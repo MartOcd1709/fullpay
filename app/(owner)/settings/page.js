@@ -8,6 +8,8 @@ import SettingsForm, { DemoControls } from "@/components/pages/SettingsForm";
 import QuietDays from "@/components/pages/QuietDays";
 import SetupChecklist from "@/components/pages/SetupChecklist";
 import * as setup from "@/lib/services/setup";
+import { webhookSetup, recent as recentDeliveries } from "@/lib/services/webhooks";
+import N8nTest from "@/components/pages/N8nTest";
 import { run } from "@/lib/services/context";
 import { STATE_CODES, stateName } from "@/lib/gst";
 import { demoMode } from "@/lib/services/tick";
@@ -27,7 +29,8 @@ export default async function SettingsPage() {
                 (SELECT count(*) FROM escalation_events WHERE type = 'notice_shown')::int AS notices,
                 (SELECT max(ts) FROM escalation_events WHERE type = 'notice_shown') AS last_notice`,
       );
-      return { cfg: ctx.cfg, asOf: ctx.asOf, steps: await setup.steps(c, ctx), ...rows[0] };
+      const hook = webhookSetup();
+      return { cfg: ctx.cfg, asOf: ctx.asOf, steps: await setup.steps(c, ctx), n8n: { host: hook.host, recent: await recentDeliveries(c) }, ...rows[0] };
     });
   } catch (err) {
     console.error("[settings]", err);
@@ -38,7 +41,7 @@ export default async function SettingsPage() {
       </>
     );
   }
-  const { cfg, asOf, steps, optouts, notices, last_notice } = data;
+  const { cfg, asOf, steps, n8n, optouts, notices, last_notice } = data;
   const states = Object.keys(STATE_CODES).map((code) => [code, stateName(code, T.lang)]).sort((a, b) => a[1].localeCompare(b[1], T.lang));
   return (
     <>
@@ -53,6 +56,40 @@ export default async function SettingsPage() {
         <SettingsForm lang={T.lang} cfg={cfg} states={states} />
         <Card title={T("pages.quiet.title")}>
           <QuietDays lang={T.lang} festivals={cfg.calendar?.festivals ?? []} quietDays={cfg.calendar?.quiet_days ?? []} />
+        </Card>
+        <Card title={T("pages.n8n.title")}>
+          <div className="grid gap-3">
+            <p>{T("pages.n8n.intro")}</p>
+            <ul className="list-disc pl-5 text-ink-muted">
+              <li>{T("pages.n8n.sends_sheet")}</li>
+              <li>{T("pages.n8n.sends_alerts")}</li>
+              <li>{T("pages.n8n.sends_digest")}</li>
+            </ul>
+            {n8n.host ? (
+              <p className="rounded-lg bg-success-soft p-3 font-semibold text-success">{T("pages.n8n.connected", { host: n8n.host })}</p>
+            ) : (
+              <p className="rounded-lg bg-surface-2 p-3">{T("pages.n8n.not_connected")}</p>
+            )}
+            {n8n.host && (
+              <N8nTest labels={{ button: T("pages.n8n.test"), sending: T("pages.n8n.sending"), sent: T("pages.n8n.test_sent"), failed: T("pages.n8n.test_failed"), too_soon: T("pages.n8n.too_soon"), not_configured: T("pages.n8n.not_connected") }} />
+            )}
+            {n8n.recent.length > 0 && (
+              <div>
+                <h3 className="font-semibold">{T("pages.n8n.recent")}</h3>
+                <ul className="mt-1 divide-y divide-line rounded-lg border border-line">
+                  {n8n.recent.map((d, i) => (
+                    <li key={i} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+                      <span className="mono" translate="no">{d.event_type}</span>
+                      <span className={d.status === "sent" ? "text-success" : "text-error"}>
+                        {T(d.status === "sent" ? "pages.n8n.ok" : "pages.n8n.fail", { code: d.http_status ?? d.error ?? "" })} · {d.at}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className="text-sm text-ink-muted">{T("pages.n8n.privacy")}</p>
+          </div>
         </Card>
         <Card title={T("settings.demo_date")}>
           <DemoControls lang={T.lang} enabled={demoMode()} date={asOf} />

@@ -2155,5 +2155,21 @@
   "core.ev.call_placed": "Automatic reminder call (simulated)",
   "public.event.call_placed": "Automatic reminder call (simulated)",
   "collect.autocall.before_1": "1 day before the due date",
-  "collect.autocall.after_1": "1 day after the due date"
+  "collect.autocall.after_1": "1 day after the due date",
+  "pages.n8n.title": "Integrations: n8n",
+  "pages.n8n.intro": "FullPay can tell n8n the moment something happens, so it reaches the tools you and your CA already use. Nothing is sent to customers.",
+  "pages.n8n.sends_sheet": "A live collections register in Google Sheets: every bill sent, payment received, dispute, promise and plan offer.",
+  "pages.n8n.sends_alerts": "A phone alert (Telegram) when a customer pays, disputes, says they already paid, promises a date or offers to pay in parts.",
+  "pages.n8n.sends_digest": "One morning digest after the 10:00 run: reminders, calls, letters ready and the first short week of cash.",
+  "pages.n8n.connected": "Connected to {host}. Each notice is signed and sent after the change is saved.",
+  "pages.n8n.not_connected": "Not connected. Whoever runs this FullPay server adds the n8n webhook address and a secret to its settings (N8N_WEBHOOK_URL, N8N_WEBHOOK_SECRET); the setup guide is in integrations/n8n in the code.",
+  "pages.n8n.test": "Send a test event",
+  "pages.n8n.sending": "Sending…",
+  "pages.n8n.test_sent": "Test sent. Check your sheet and your phone.",
+  "pages.n8n.test_failed": "n8n did not accept the test. Check the workflow is active and the token matches.",
+  "pages.n8n.too_soon": "One test a minute. Try again shortly.",
+  "pages.n8n.recent": "Last deliveries",
+  "pages.n8n.ok": "Delivered ({code})",
+  "pages.n8n.fail": "Not delivered ({code})",
+  "pages.n8n.privacy": "Only the bill number, customer name, amounts, dates and links go to n8n: never phone numbers, email addresses or bank details."
 }
