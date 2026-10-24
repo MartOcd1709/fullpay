@@ -90,7 +90,7 @@ export default async function CustomerPage({ params }) {
       {stmtUrl && (
         <Card title={T("pages.stmt.title")} className="mt-4">
           <p className="text-ink-muted">{T("pages.stmt.body")}</p>
-          <p className="mt-2 break-all select-all rounded-lg bg-surface-2 px-3 py-2 font-mono text-sm" data-testid="statement-url">{stmtUrl}</p>
+          <p className="mt-2 break-all select-all rounded-lg bg-surface-2 px-3 py-2 font-mono text-sm" data-testid="statement-url" translate="no">{stmtUrl}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <CopyButton text={stmtUrl} label={T("pages.stmt.copy")} done={T("pages.stmt.copied")} />
             {wa && <Button variant="secondary" href={`https://wa.me/${wa}?text=${encodeURIComponent(T("pages.stmt.message", { name: c.name, business, url: stmtUrl }))}`} target="_blank" rel="noopener noreferrer">{T("pages.stmt.whatsapp")}</Button>}

@@ -2071,5 +2071,15 @@
   "pages.setup.bank": "बैंक स्टेटमेंट इम्पोर्ट करें",
   "pages.setup.bank_why": "FullPay हर भुगतान को सही बिल से मिलाता है, आप बस पुष्टि करें।",
   "pages.setup.email": "ईमेल भेजना चालू करें",
-  "pages.setup.email_why": "जो आपका FullPay सर्वर चलाते हैं, उनसे ईमेल की चाबी जुड़वाएँ। तब तक WhatsApp या SMS से याद दिलाएँ।"
+  "pages.setup.email_why": "जो आपका FullPay सर्वर चलाते हैं, उनसे ईमेल की चाबी जुड़वाएँ। तब तक WhatsApp या SMS से याद दिलाएँ।",
+  "rung.payment_received": "भुगतान रसीद",
+  "core.rung.payment_received": "भुगतान रसीद",
+  "core.ev.receipt_sent": "{rung} {channel} से भेजी गई",
+  "public.event.receipt_sent": "भुगतान रसीद भेजी गई",
+  "collect.fu.receipt_note": "{numbers} के लिए आपने जो भुगतान पक्का किया, उसकी धन्यवाद रसीद। इसे भेजें ताकि ग्राहक को पता रहे कि पैसा आप तक पहुँच गया है।",
+  "receipt.ref": " (संदर्भ {ref})",
+  "receipt.balance_due": "अभी बाकी: {amount}।",
+  "receipt.paid_one": "आपका बिल अब पूरा चुकता हो गया है।",
+  "receipt.paid_all": "ये सभी बिल अब पूरे चुकता हो गए हैं।",
+  "core.rung.festival": "त्योहार से पहले हिसाब का अनुरोध"
 }

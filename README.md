@@ -66,7 +66,7 @@ Indian micro and small suppliers sell on credit and wait months to be paid; an e
 | Customers | Credit days, contacts, total owed, average days late, % paid on time, reliability grade A/B/C with the reason in words; **payment habit** learned from their own history ("usually pays on Mondays", "between the 3rd and 6th of the month") and the best day to remind, also shown on the follow-up and call cards; opt-out and remove personal details. **Statement link** `/s/…`: one link per customer with every open bill, the total and a single UPI QR for all of it (disputed bills left out); copy it or share it on WhatsApp |
 | Today's follow-ups | Every reminder due today with the message ready; one tap to WhatsApp, email or SMS; mark as sent; snooze; record a promise to pay; a call script at the final-reminder stage |
 | Inbox | Disputes and "already paid" claims from the customer link: issue a credit note, mark paid, reject with a reply, or edit the terms |
-| Payments | Import a bank CSV, load the sample statement or add a payment by hand; matches with confidence and reasons; flags for part payment, several invoices, overpayment, unknown deposit and possible TDS; confirm one by one, or **confirm all exact matches** in one action |
+| Payments | Import a bank CSV, load the sample statement or add a payment by hand; matches with confidence and reasons; flags for part payment, several invoices, overpayment, unknown deposit and possible TDS; confirm one by one, or **confirm all exact matches** in one action. **Every confirmed payment sends the customer a receipt**: amount, date, bank reference, the bills it paid, the balance left and a receipt number (RCPT-000123) both sides can note in their books. It is emailed at once when the customer has an address and has not stopped automatic messages; otherwise it waits in Today's follow-ups as a one-tap WhatsApp/SMS message. Bills imported as already paid and TDS entries get no receipt |
 | Approvals | Maker-checker: what the accountant prepared (payment confirmations, rejections, TDS, inbox decisions, settings) waits for the owner; approve one or many; nobody approves their own work |
 | Team | Owner, accountant and view-only (for the CA); add people, change roles, remove access; at least one owner always stays |
 | Activity log | Every change, who made it and when; "waiting" marks what went for approval |
@@ -179,11 +179,11 @@ npm run dev                       # http://localhost:3000
 - The 45-day step points to the MSME ODR portal, which replaced Samadhaan for new filings on 15 October 2025.
 - The RBI Bank Rate is a dated series, not one number, so interest is right across rate changes (the rate rose to 5.75% on 7 October 2026).
 
-## The six WhatsApp Business templates we would submit
+## The seven WhatsApp Business templates we would submit
 
 Utility category, English and Hindi, no variable at the start or end, footer "We never ask for OTP/PIN or change bank details." Buttons: **Pay** (`/pay/{{1}}`) and **Check** (`/verify/{{1}}`).
 
-`invoice_sent` · `payment_due_soon` · `payment_due_today` · `payment_overdue` · `payment_overdue_final` · `festival_settlement` (the owner's settle-before-Dhanteras request, never sent by the daily run) — the exact bodies are in `lib/templates.js`.
+`invoice_sent` · `payment_due_soon` · `payment_due_today` · `payment_overdue` · `payment_overdue_final` · `festival_settlement` (the owner's settle-before-Dhanteras request, never sent by the daily run) · `payment_received` (the receipt when a payment is confirmed; no "reply STOP" line, since it asks for nothing) — the exact bodies are in `lib/templates.js`.
 
 ## Path to production
 
@@ -191,7 +191,7 @@ Utility category, English and Hindi, no variable at the start or end, footer "We
 |---|---|---|
 | Tenancy | One business per deployment | Organisations, roles and row-level security |
 | Data protection | Opt-outs, personal details removable, no personal data in logs | Field encryption, encrypted backups, consent manager (DPDP Rules from May 2027) |
-| Messaging | Email automatic; WhatsApp/SMS one tap | WhatsApp Business Platform with the five templates above |
+| Messaging | Email automatic; WhatsApp/SMS one tap | WhatsApp Business Platform with the seven templates above |
 | Daily run | One serial run under a database lock | A queue per business |
 | GST | E-invoice JSON export | IRN through a GSP |
 

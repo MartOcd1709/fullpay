@@ -115,7 +115,7 @@ if (BUILD) await time("build: payments (manual + confirm)", async () => {
         const ctx = await ctxAt(c, on);
         const part = rnd() < 0.05;
         const p = await payments.addManual(c, ctx, { invoice_id: inv.id, paid_on: on, amount_paise: part ? Math.round(inv.total / 2) : inv.total, reference: `NEFT S${inv.id}` });
-        await payments.confirm(c, ctx, p.id);
+        await payments.confirm(c, ctx, p.id, null, { receipt: false });
         paidCount++;
       }
     });

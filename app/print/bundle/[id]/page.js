@@ -26,7 +26,8 @@ function detail(e, t) {
     case "balance_confirmed": return t("public.bundle.d_balance", { amount: inr(p.amount_paise ?? 0), date: day(p.on) });
     case "early_offer_made": return t("public.bundle.d_offer", { amount: inr(p.discount_paise ?? 0), date: day(p.pay_by) });
     case "early_offer_taken": return t("public.bundle.d_offer_taken", { amount: inr(p.discount_paise ?? 0), number: p.credit_note_no ?? "—" });
-    case "reminder_sent": return [p.rung && t(`rung.${p.rung}`), p.channel].filter(Boolean).join(" · ");
+    case "reminder_sent":
+    case "receipt_sent": return [p.rung && t(`rung.${p.rung}`), p.channel].filter(Boolean).join(" · ");
     default: return "";
   }
 }
