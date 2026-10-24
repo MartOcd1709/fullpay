@@ -8,7 +8,7 @@ import { Sheet, StatusLine, Term, btn, errorText, toPaise, tr, useAction } from 
 const money = (p) => fmtINR(p, { paise: p % 100 !== 0 });
 const rupees = (p) => (p % 100 === 0 ? String(p / 100) : (p / 100).toFixed(2));
 
-const FLAG_TONE = { part: "warning", multi: "info", overpaid: "warning", unmatched: "error" };
+const FLAG_TONE = { early_discount: "success", part: "warning", multi: "info", overpaid: "warning", unmatched: "error" };
 export const confidenceWord = (c) => (c >= 90 ? "sure" : c >= 60 ? "likely" : "check");
 const CONF_TONE = { sure: "success", likely: "info", check: "warning" };
 

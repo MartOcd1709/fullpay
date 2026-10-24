@@ -15,6 +15,13 @@ const RUNGS = ["heads_up", "due_date", "overdue_gentle", "overdue_firm", "demand
 const AUTO_OK = new Set(["heads_up", "due_date"]);
 const rupees = (p) => (Number.isSafeInteger(p) ? String(p / 100) : "");
 
+// "14" or "14.5" (% a year) -> 1400 / 1450 basis points; outside 0..max -> throws (shown as an invalid amount).
+function pct(text, max) {
+  const n = Number(String(text).replace(",", ".").trim());
+  if (!Number.isFinite(n) || n < 0 || n > max) throw new Error("invalid percent");
+  return Math.round(n * 100);
+}
+
 export default function SettingsForm({ lang, cfg, states }) {
   const T = useMemo(() => makeT(lang), [lang]);
   const router = useRouter();
@@ -30,6 +37,8 @@ export default function SettingsForm({ lang, cfg, states }) {
   const [auto, setAuto] = useState(new Set(cfg.ladder?.auto_rungs ?? []));
   const [buffer, setBuffer] = useState(rupees(cfg.forecast?.buffer_paise));
   const [opening, setOpening] = useState(rupees(cfg.forecast?.opening_balance_paise));
+  const [borrow, setBorrow] = useState(String((cfg.finance?.borrow_rate_bps ?? 1400) / 100));
+  const [maxDisc, setMaxDisc] = useState(String((cfg.finance?.max_discount_bps ?? 200) / 100));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const set = (k) => (e) => setB({ ...b, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
@@ -49,6 +58,7 @@ export default function SettingsForm({ lang, cfg, states }) {
         },
         ladder: { offsets: Object.fromEntries(RUNGS.map((r) => [r, Number(offsets[r])])), auto_rungs: RUNGS.filter((r) => auto.has(r)) },
         forecast: { buffer_paise: rupeesToPaise(buffer || "0"), opening_balance_paise: rupeesToPaise(opening || "0") },
+        finance: { borrow_rate_bps: pct(borrow, 60), max_discount_bps: pct(maxDisc, 10) },
       };
     } catch {
       setError(T("core.act.amount_invalid"));
@@ -145,6 +155,8 @@ export default function SettingsForm({ lang, cfg, states }) {
             <Input id="s-buffer" inputMode="decimal" value={buffer} onChange={(e) => setBuffer(e.target.value)} />
           </Field>
           <Field id="s-open" label={T("settings.opening_balance")}><Input id="s-open" inputMode="decimal" value={opening} onChange={(e) => setOpening(e.target.value)} /></Field>
+          <Field id="s-borrow" label={T("pages.offer.borrow_rate")} hint={T("pages.offer.borrow_rate_hint")}><Input id="s-borrow" inputMode="decimal" value={borrow} onChange={(e) => setBorrow(e.target.value)} /></Field>
+          <Field id="s-maxdisc" label={T("pages.offer.max_discount")} hint={T("pages.offer.max_discount_hint")}><Input id="s-maxdisc" inputMode="decimal" value={maxDisc} onChange={(e) => setMaxDisc(e.target.value)} /></Field>
         </div>
       </Card>
 

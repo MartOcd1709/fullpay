@@ -19,6 +19,10 @@ import { interestEligible } from "@/lib/services/common";
 import { expectedInflowDate } from "@/lib/forecast";
 import { RUNGS } from "@/lib/ladder";
 import InvoiceActions from "./InvoiceActions";
+import { OfferButton } from "@/components/collect/OfferButton";
+import * as offers from "@/lib/services/offers";
+import { cookies } from "next/headers";
+import { getSessionFromCookies } from "@/lib/auth";
 
 export async function generateMetadata({ params }) {
   const T = await getT();
@@ -37,14 +41,16 @@ export default async function InvoicePage({ params }) {
       const inv = await invoices.get(c, ctx, id).catch((e) => (e.status === 404 ? null : Promise.reject(e)));
       if (!inv) return null;
       const customer = await customers.get(c, ctx, inv.customer_id);
-      return { inv, customer, chain: await chainFor(c, inv.timeline), cfg: ctx.cfg, asOf: ctx.asOf };
+      const offer = await offers.suggest(c, ctx, inv.id);
+      return { inv, customer, chain: await chainFor(c, inv.timeline), cfg: ctx.cfg, asOf: ctx.asOf, offer };
     });
   } catch (err) {
     console.error("[invoice]", err);
     return <ErrorState title={T("core.err.title")} message={T("core.err.load")} retryHref={`/invoices/${id}`} retryLabel={T("btn.retry")} />;
   }
   if (!data) notFound();
-  const { inv, customer, chain, cfg, asOf } = data;
+  const { inv, customer, chain, cfg, asOf, offer } = data;
+  const role = getSessionFromCookies(await cookies())?.role ?? "owner";
 
   const draft = inv.status === "draft";
   const received = inv.paid_paise + inv.credited_paise;
@@ -179,6 +185,13 @@ export default async function InvoicePage({ params }) {
                 payUrl={payUrl}
                 L={L}
               />
+            )}
+            {inv.status !== "paid" && (offer.open || offer.suggestion) && (
+              <div className="mt-4 border-t border-line pt-3">
+                <h3 className="font-semibold">{T("pages.offer.title")}</h3>
+                <OfferButton lang={T.lang} invoiceId={inv.id} suggestion={offer.suggestion}
+                  open={offer.open && { id: Number(offer.open.id), discount_paise: offer.open.discount_paise, pay_by: offer.open.pay_by }} role={role} />
+              </div>
             )}
           </section>
 

@@ -286,3 +286,20 @@ CREATE INDEX IF NOT EXISTS inbox_items_invoice_idx ON inbox_items (invoice_id);
 CREATE INDEX IF NOT EXISTS promises_invoice_idx ON promises (invoice_id);
 -- The match reason as translation keys + values (lib/i18n match.*), so it shows in the screen's language.
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS match_reason_parts JSONB;
+
+-- Pay-early offers: a discount for paying by a date, sized below what the owner would pay to borrow the same money.
+CREATE TABLE IF NOT EXISTS early_offers (
+  id              BIGSERIAL PRIMARY KEY,
+  invoice_id      BIGINT NOT NULL REFERENCES invoices(id),
+  discount_paise  BIGINT NOT NULL CHECK (discount_paise > 0),
+  pay_by          DATE NOT NULL,
+  rate_bps        INT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','taken','withdrawn')),
+  credit_note_id  BIGINT REFERENCES credit_notes(id),
+  created_by      BIGINT REFERENCES users(id),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at       TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS early_offers_one_open ON early_offers (invoice_id) WHERE status = 'open';
+ALTER TABLE approvals DROP CONSTRAINT IF EXISTS approvals_kind_check;
+ALTER TABLE approvals ADD CONSTRAINT approvals_kind_check CHECK (kind IN ('payment_confirm','payment_reject','inbox_resolve','settings_save','tds_record','offer_make'));

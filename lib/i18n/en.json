@@ -1927,5 +1927,20 @@
   "pages.quiet.to": "To (optional)",
   "pages.quiet.label": "Name",
   "pages.quiet.placeholder": "e.g. Gurpurab, shop closed",
-  "pages.quiet.add": "Add quiet days"
+  "pages.quiet.add": "Add quiet days",
+  "match.ref_offer": "; amount equals the outstanding less the {amount} pay-early discount you offered, paid in time",
+  "match.name_offer": "; amount equals the outstanding of {inv} less the {amount} pay-early discount you offered, paid in time",
+  "public.pay.offer": "Pay {pay} by {date} instead of {full}, and save {save}. After that date the full amount is due.",
+  "pages.offer.borrow_rate": "Your borrowing rate (% a year)",
+  "pages.offer.borrow_rate_hint": "What your overdraft or loan costs. Pay-early discounts are sized to stay below it.",
+  "pages.offer.max_discount": "Largest pay-early discount (% of the bill)",
+  "pages.offer.max_discount_hint": "FullPay never suggests more than this.",
+  "pages.offer.suggest": "Offer {amount} off if paid by {date}: getting it {days} days sooner saves you {cost} of borrowing at {rate}%.",
+  "pages.offer.make": "Make this offer",
+  "pages.offer.made": "Offer made: it now shows on the customer's payment link",
+  "pages.offer.open": "Offer open: {amount} off if paid by {date}",
+  "pages.offer.withdraw": "Withdraw",
+  "pages.offer.withdrawn": "Offer withdrawn",
+  "collect.pay.flag.early_discount": "Paid early, with your discount",
+  "pages.offer.title": "Pay-early offer"
 }

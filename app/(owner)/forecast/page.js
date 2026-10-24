@@ -1,6 +1,9 @@
 import PageHeader from "@/components/ui/PageHeader";
 import StatusPill from "@/components/ui/StatusPill";
 import ForecastChart from "@/components/collect/ForecastChart";
+import { OfferButton } from "@/components/collect/OfferButton";
+import { cookies } from "next/headers";
+import { getSessionFromCookies } from "@/lib/auth";
 import WhatIf from "@/components/collect/WhatIf";
 import { Term } from "@/components/collect/client";
 import { Amount, ErrorState, SectionTitle, date, inr, lateText, tr } from "@/components/collect/kit";
@@ -17,6 +20,7 @@ const range = (w, lang) => `${date(w.start, lang)} – ${date(w.end, lang)}`;
 export default async function ForecastPage({ searchParams }) {
   const lang = await getLang();
   const T = tr(lang);
+  const role = getSessionFromCookies(await cookies())?.role ?? "owner";
   const sp = await searchParams;
   const { data, error } = await load((c, ctx) => fu.forecastView(c, ctx, fu.parseWhatIf(sp, ctx.cfg.forecast?.weeks ?? 13)));
   if (error) {
@@ -108,6 +112,7 @@ export default async function ForecastPage({ searchParams }) {
                       </span>
                     </span>
                     <span className="tnum font-semibold">{inr(g.outstanding_paise)}</span>
+                    <div className="w-full"><OfferButton lang={lang} invoiceId={g.invoice_id} suggestion={g.offer_suggestion} open={g.open_offer} role={role} /></div>
                   </li>
                 ))}
               </ul>

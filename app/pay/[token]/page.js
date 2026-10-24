@@ -57,7 +57,8 @@ export default async function PayPage({ params }) {
   const sub = lakh(owed, lang);
   const s = Object.fromEntries(ACTION_KEYS.map((k) => [k, t(k, { business: b.name })]));
   s["public.pay.sim_tds"] = t("public.pay.sim_tds", { amount: inr(owed - view.tds_paise) });
-  s["public.pay.sim_full"] = t("public.pay.sim_full", { amount: inr(owed) });
+  const ask = view.offer?.pay_amount_paise ?? owed;
+  s["public.pay.sim_full"] = t("public.pay.sim_full", { amount: inr(ask) });
   const taxed = inv.doc_type === "tax_invoice";
   const verifyHref = view.record_hash ? `/v/${view.record_hash.slice(0, 16)}` : null;
 
@@ -98,18 +99,23 @@ export default async function PayPage({ params }) {
       {!settled && view.upi && !open.dispute && (
         <section aria-labelledby="upi" className="mt-4 rounded-xl border border-line bg-surface p-5">
           <h2 id="upi" className="text-lg font-semibold">{t("pay.pay_upi")}</h2>
+          {view.offer && (
+            <p className="mt-2 rounded-xl border border-success/40 bg-success-soft px-3 py-2 font-semibold text-success">
+              {t("public.pay.offer", { pay: inr(view.offer.pay_amount_paise), date: day(view.offer.pay_by, lang), save: inr(view.offer.discount_paise), full: inr(owed) })}
+            </p>
+          )}
           <div className="mt-3 flex flex-col gap-5 md:flex-row-reverse md:items-center md:justify-end">
             <div className="flex-1">
               <a href={view.upi} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2 text-lg font-semibold text-on-accent no-underline hover:bg-accent-strong md:w-auto">
                 <Icon name="qr" />
-                {t("public.pay.pay_amount", { amount: inr(owed) })}
+                {t("public.pay.pay_amount", { amount: inr(ask) })}
               </a>
               <p className="mt-2 text-ink-muted">{t("pay.scan")}</p>
               <p className="mt-1 text-ink-muted">{t("public.pay.upi_to", { vpa: b.vpa })}</p>
             </div>
             <figure className="self-center rounded-xl border border-line p-2 md:self-auto">
-              <Qr text={view.upi} size="12rem" label={t("public.pay.qr_label", { amount: inr(owed) })} />
-              <figcaption className="mt-1 text-center font-semibold">{inr(owed)}</figcaption>
+              <Qr text={view.upi} size="12rem" label={t("public.pay.qr_label", { amount: inr(ask) })} />
+              <figcaption className="mt-1 text-center font-semibold">{inr(ask)}</figcaption>
             </figure>
           </div>
           {view.demo && (

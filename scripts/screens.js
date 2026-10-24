@@ -91,6 +91,19 @@ await go("/activity"); await shot("08-activity-log", { full: true });
 await go("/invoices"); await click("Import from Tally"); await wait(400); await click("Try the Tally sample"); await wait(1500); await shot("09-import-tally-preview");
 await go("/customers"); await shot("10-customers", { full: true });
 await go("/forecast"); await shot("11-forecast", { full: true });
+// A pay-early offer on the first invoice that would close the cash gap, then the customer's view of it.
+{
+  const fc = await fetch(`${base}/api/forecast`, { headers: { cookie: ownerCookie } }).then((r) => r.json());
+  const g = (fc.cover_gap ?? []).find((x) => x.offer_suggestion || x.open_offer);
+  if (g) {
+    if (!g.open_offer) await fetch(`${base}/api/invoices/${g.invoice_id}/offer`, { method: "POST", headers: { cookie: ownerCookie, "content-type": "application/json" }, body: JSON.stringify({ discount_paise: g.offer_suggestion.discount_paise, pay_by: g.offer_suggestion.pay_by }) });
+    // The API never returns pay tokens; the owner's invoice page shows the customer's link.
+    const html = await fetch(`${base}/invoices/${g.invoice_id}`, { headers: { cookie: ownerCookie } }).then((r) => r.text());
+    const inv = { pay_token: (html.match(/\/pay\/([A-Za-z0-9_-]{20,})/) ?? [])[1] };
+    await go("/forecast"); await js(`[...document.querySelectorAll("h3")].find((h) => /cover|पूरा/.test(h.textContent))?.scrollIntoView({block:"start"})`); await wait(300); await shot("19-forecast-offers");
+    await go(`/pay/${inv.pay_token}`, { w: 390, h: 844, mobile: true }); await shot("20-pay-early-offer-phone");
+  }
+}
 await signIn("accountant");
 await go("/approvals"); await shot("12-approvals-accountant-view");
 await signIn("viewer");

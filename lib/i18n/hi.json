@@ -1927,5 +1927,20 @@
   "pages.quiet.to": "तक (वैकल्पिक)",
   "pages.quiet.label": "नाम",
   "pages.quiet.placeholder": "जैसे गुरपुरब, दुकान बंद",
-  "pages.quiet.add": "शांत दिन जोड़ें"
+  "pages.quiet.add": "शांत दिन जोड़ें",
+  "match.ref_offer": "; रकम बकाया में से आपकी दी हुई {amount} की जल्दी-भुगतान छूट घटाकर है, और समय पर आई है",
+  "match.name_offer": "; रकम {inv} के बकाया में से आपकी दी हुई {amount} की जल्दी-भुगतान छूट घटाकर है, और समय पर आई है",
+  "public.pay.offer": "{date} तक {full} की जगह {pay} चुकाएं और {save} बचाएं। उस तारीख के बाद पूरी रकम देनी होगी।",
+  "pages.offer.borrow_rate": "आपकी उधार की दर (% सालाना)",
+  "pages.offer.borrow_rate_hint": "आपका ओवरड्राफ्ट या लोन कितने का पड़ता है। जल्दी-भुगतान छूट इससे कम रखी जाती है।",
+  "pages.offer.max_discount": "सबसे बड़ी जल्दी-भुगतान छूट (बिल का %)",
+  "pages.offer.max_discount_hint": "FullPay इससे ज़्यादा कभी नहीं सुझाता।",
+  "pages.offer.suggest": "{date} तक भुगतान पर {amount} की छूट दें: पैसा {days} दिन पहले मिलने से {rate}% के उधार के {cost} बचते हैं।",
+  "pages.offer.make": "यह छूट दें",
+  "pages.offer.made": "छूट दी गई: अब यह ग्राहक के भुगतान लिंक पर दिखती है",
+  "pages.offer.open": "छूट खुली है: {date} तक भुगतान पर {amount} कम",
+  "pages.offer.withdraw": "वापस लें",
+  "pages.offer.withdrawn": "छूट वापस ली गई",
+  "collect.pay.flag.early_discount": "जल्दी भुगतान, आपकी छूट के साथ",
+  "pages.offer.title": "जल्दी-भुगतान छूट"
 }
