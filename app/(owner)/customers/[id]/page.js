@@ -11,7 +11,10 @@ import { Grade, gradeReason, habitText } from "@/components/pages/Grade";
 import { run } from "@/lib/services/context";
 import * as customers from "@/lib/services/customers";
 import * as invoices from "@/lib/services/invoices";
+import * as statement from "@/lib/services/statement";
 import { stateName } from "@/lib/gst";
+import CopyButton from "@/components/public/CopyButton";
+import { waDigits } from "@/components/collect/kit";
 
 export async function generateMetadata({ params }) {
   const T = await getT();
@@ -27,6 +30,8 @@ export default async function CustomerPage({ params }) {
     data = await run(async (c, ctx) => ({
       customer: await customers.get(c, ctx, Number(id)),
       rows: await invoices.list(c, ctx, { customer_id: Number(id) }),
+      stmtToken: await statement.ensureToken(c, Number(id)),
+      business: ctx.cfg.business.name,
       asOf: ctx.asOf,
     }));
   } catch (err) {
@@ -34,7 +39,9 @@ export default async function CustomerPage({ params }) {
     console.error("[customer]", err);
     return <ErrorState title={T("core.err.title")} message={T("core.err.load")} retryHref={`/customers/${id}`} retryLabel={T("btn.retry")} />;
   }
-  const { customer: c, rows, asOf } = data;
+  const { customer: c, rows, asOf, stmtToken, business } = data;
+  const stmtUrl = stmtToken ? `${(process.env.APP_URL || "").replace(/\/+$/, "")}/s/${stmtToken}` : null;
+  const wa = waDigits(c.phone);
   return (
     <>
       <PageHeader
@@ -80,6 +87,17 @@ export default async function CustomerPage({ params }) {
           </div>
         </Card>
       </div>
+      {stmtUrl && (
+        <Card title={T("pages.stmt.title")} className="mt-4">
+          <p className="text-ink-muted">{T("pages.stmt.body")}</p>
+          <p className="mt-2 break-all select-all rounded-lg bg-surface-2 px-3 py-2 font-mono text-sm" data-testid="statement-url">{stmtUrl}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <CopyButton text={stmtUrl} label={T("pages.stmt.copy")} done={T("pages.stmt.copied")} />
+            {wa && <Button variant="secondary" href={`https://wa.me/${wa}?text=${encodeURIComponent(T("pages.stmt.message", { name: c.name, business, url: stmtUrl }))}`} target="_blank" rel="noopener noreferrer">{T("pages.stmt.whatsapp")}</Button>}
+            <Button variant="ghost" href={`/s/${stmtToken}`} target="_blank">{T("pages.stmt.open")}</Button>
+          </div>
+        </Card>
+      )}
       <h2 className="mb-3 mt-6 text-lg font-semibold">{T("pages.cust.invoices")}</h2>
       {rows.length === 0 ? (
         <p className="text-ink-muted">{T("pages.cust.no_invoices")}</p>

@@ -6,6 +6,7 @@ import { getT } from "@/components/ui/server/lang";
 import { run } from "@/lib/services/context";
 import * as invoices from "@/lib/services/invoices";
 import NewInvoiceForm from "./NewInvoiceForm";
+import * as customers from "@/lib/services/customers";
 
 export async function generateMetadata() {
   const T = await getT();
@@ -20,7 +21,11 @@ export default async function NewInvoicePage({ searchParams }) {
   let data;
   try {
     data = await run(async (c, ctx) => {
-      const { rows } = await c.query("SELECT id, name, gstin, state_code, credit_days, preferred_lang, anonymized_at FROM customers ORDER BY name");
+      // With each customer's payment record, so the form can warn before billing a slow payer.
+      const rows = (await customers.listWithReliability(c, ctx)).sort((x, y) => x.name.localeCompare(y.name)).map((r) => ({
+        id: r.id, name: r.name, gstin: r.gstin, state_code: r.state_code, credit_days: r.credit_days, preferred_lang: r.preferred_lang, anonymized_at: r.anonymized_at,
+        grade: r.grade, avg_late_days: r.avg_late_days, pct_on_time: r.pct_on_time, total_owed_paise: r.total_owed_paise, history: r.reason !== "No payment history yet",
+      }));
       const draft = draftId ? await invoices.get(c, ctx, draftId).catch(() => null) : null;
       const b = ctx.cfg.business;
       return {

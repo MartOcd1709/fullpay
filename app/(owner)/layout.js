@@ -72,6 +72,13 @@ export default async function OwnerLayout({ children }) {
               <span className="text-accent lg:hidden">FullPay · </span>
               <span>{business ?? ""}</span>
             </p>
+            <form method="get" action="/search" role="search" className="hidden w-44 md:block lg:w-56">
+              <label htmlFor="global-q" className="sr-only">{T("pages.search.header")}</label>
+              <input id="global-q" name="q" type="search" placeholder={T("pages.search.title")} title={T("pages.search.header")} autoComplete="off" className="field" />
+            </form>
+            <a href="/search" className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-xl hover:bg-surface-2 md:hidden" aria-label={T("pages.search.header")}>
+              <Icon name="search" className="h-5 w-5" />
+            </a>
             <span className="hidden items-center gap-1.5 rounded-full bg-surface-2 px-3 py-1 text-sm sm:inline-flex" title={T("pages.role.signed_in")}>
               <Icon name="user" className="h-4 w-4" />
               {who ? `${who} · ` : ""}

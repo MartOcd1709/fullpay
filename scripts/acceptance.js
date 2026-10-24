@@ -13,12 +13,13 @@ await db.connect();
 const one = async (sql) => (await db.query(sql)).rows[0] ?? {};
 const inv = await one("SELECT id, pay_token FROM invoices WHERE number = 'INV/26-27/0042'");
 const cust = await one("SELECT customer_id AS id FROM invoices WHERE number = 'INV/26-27/0042'");
+const stmt = await one(`UPDATE customers SET statement_token = COALESCE(statement_token, md5(random()::text)) WHERE id = ${Number(cust.id)} RETURNING statement_token AS t`);
 const letter = await one("SELECT left(entry_hash, 16) AS p, entry_hash AS h FROM escalation_events WHERE type = 'letter_generated' ORDER BY id DESC LIMIT 1");
 await db.end();
 
 const OWNER = ["/dashboard", "/followups", "/invoices", `/invoices/${inv.id}`, "/invoices/new", "/customers", `/customers/${cust.id}`, "/inbox",
-  "/payments", "/forecast", "/chase-first", "/documents", "/approvals", "/analytics", "/team", "/activity", "/settings", "/runs"];
-const PUBLIC = ["/", "/login", `/pay/${inv.pay_token}`, "/verify", `/v/${letter.p}`, `/verify/${letter.h}`, "/status", "/proof"];
+  "/payments", "/forecast", "/chase-first", "/documents", "/approvals", "/analytics", "/team", "/activity", "/settings", "/runs", "/search?q=bhatia"];
+const PUBLIC = ["/", "/login", `/pay/${inv.pay_token}`, "/verify", `/v/${letter.p}`, `/verify/${letter.h}`, "/status", "/proof", "/calculator?amount=117186&due=2026-09-19&on=2026-10-24", `/s/${stmt.t}`];
 const PRINT = [`/print/invoice/${inv.id}`, `/print/letter/${inv.id}`, `/print/bundle/${inv.id}`];
 
 const PORT = 9334;

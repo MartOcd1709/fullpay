@@ -1,4 +1,4 @@
-**Updated:** Fri 23 Oct 2026, 22:30 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
+**Updated:** Sat 24 Oct 2026, 11:30 IST · **Build started:** Fri 11:15 AM IST by team decision (declared in the README) · **Official kickoff:** 9:30 PM IST · **Submit by:** Sun 25 Oct 8:30 PM IST (deadline 9:30 PM; confirm P0.1)
 
 This is the single tracking document. Every work item has an ID, an owner, a schedule slot, a status and a "done when" test. Statuses: **TODO** · **DOING** · **DONE** · **BLOCKED** · **CUT**. Owners: **A** = Dev A (engine track), **B** = Dev B (product track), **V** = Ved (accounts, DNS, decisions), **C** = Claude. Claude pairs on every A and B row. Source plan: `10_build_plan.md` (Rev F.1); specs: `lld.html`; research: `13_reference_library.md`.
 
@@ -208,6 +208,21 @@ This is the single tracking document. Every work item has an ID, an owner, a sch
 | K24 | [in slot] Print: `@page` page numbers (Chrome 131+), "Record #hash · verify URL" footer + 20 mm verify QR, UPI QR ≥ 30 mm, Discount column hidden when all zero; short verify route  | C | DONE | slot P5.5–P5.7; 30 min; Technical Execution — print footer + verify QR + /v |
 | K30 | [in slot (do first)] `lib/http.js` `route()` wrapper (AppError, frozen code table, `no-store`, `x-request-id`, 413 above 1 MB) + `lib/validate.js` (~60 lines, no dependency) + param regexes b | C | DONE | slot P2.1 first task; 45 (inside P2.1–P2.2) min; Technical Execution — route wrapper + validators |
 
+## N — New features chosen by the team (Sat 24 Oct)
+
+| ID | Item | Owner | Status | Done when |
+|---|---|---|---|---|
+| N1 | Diwali settlement drive + festival quiet days (no reminders 6–10 Nov; owner adds their own) | C | DONE | Live on main (e594744); tests/festival.test.js; daily run skips quiet days |
+| N2 | Pay-early offer sized below the owner's borrowing cost; matched payment becomes a credit note | C | DONE | Live on main (6e41a9e); tests/earlyPay + offers; GST already charged unchanged |
+| N3 | Payment habits + best day to remind; customer confirms the balance on `/pay` | C | DONE | Live on main (58a511c); tests/payDay; confirmation sealed into the record and the evidence pack |
+| N4 | TReDS cash-today check on the forecast | C | DONE | Live on main (6d87a01); tests/treds; card says whether the money lands before the short week |
+| N5 | Credit check on New invoice (grade, days late, % on time, already owed) | C | DOING | Built and tested on branch `feat/statement-search-setup`; live once its PR is merged to main |
+| N6 | Public MSMED interest calculator `/calculator` (no login) | C | DOING | Same branch; ₹1,901.89 on ₹1,17,186 due 19 Sep, paid 24 Oct; in the acceptance sweep |
+| N7 | Customer statement link `/s/…`: all open bills, one UPI QR, copy + WhatsApp share | C | DOING | Same branch; tests/statement.test.js; in the acceptance sweep |
+| N8 | Search box in the header: customers, bills (also by amount), payments (UTR) | C | DOING | Same branch; tests/search.test.js; in the acceptance sweep |
+| N9 | "Getting set up" checklist in Settings + on the dashboard until done | C | DOING | Same branch; tests/setup.test.js |
+| N10 | Invoice from a photo (OCR) | C | TODO | Optional; needs an AI key and a team decision |
+
 ## Acceptance suite (ticked during P7; every item on the deployed app)
 
 | ID | Test | Status |
@@ -247,3 +262,4 @@ n8n webhook → what-if #3 (big order) → Hindi depth (demo screens only) → f
 | 23 Oct | Product upgrades after "feels basic": roles + maker-checker approvals, analytics, Tally/Vyapar import, scale test (20k invoices), guided tour, /proof |
 | 23 Oct | Third-language add-on not built (user: "not needed"); photo-OCR add-on optional, pending an AI key |
 | 23 Oct | Live bug fixed: demo sign-in/sign-out redirected to Render's internal host; language switch opened to every role |
+| 24 Oct | Team picked seven feature ideas, built as N1–N9; N5–N9 go to main through a pull request instead of a direct push |

@@ -12,6 +12,9 @@ import { getT } from "@/components/ui/server/lang";
 import { interestTotal } from "@/components/ui/server/data";
 import { FestivalDrive, QuietBanner } from "@/components/collect/FestivalDrive";
 import * as festivalSvc from "@/lib/services/festival";
+import * as setup from "@/lib/services/setup";
+import SetupChecklist from "@/components/pages/SetupChecklist";
+import Card from "@/components/ui/Card";
 import { cookies } from "next/headers";
 import { getSessionFromCookies } from "@/lib/auth";
 
@@ -44,6 +47,7 @@ async function load() {
       fc: buildForecast(input),
       interest: await interestTotal(c, ctx),
       festival: await festivalSvc.driveView(c, ctx),
+      steps: await setup.steps(c, ctx),
     };
   });
 }
@@ -62,13 +66,20 @@ export default async function DashboardPage() {
       </>
     );
   }
-  const { asOf, input, d, fc, interest, festival } = data;
+  const { asOf, input, d, fc, interest, festival, steps } = data;
   const role = getSessionFromCookies(await cookies())?.role ?? "owner";
+  // Email is a server key the owner cannot set here, so it alone never puts this card on the dashboard (Settings still lists it).
+  const setupCard = role === "owner" && steps.some((s) => !s.done && s.href) && (
+    <Card title={T("pages.setup.dash_title")} className="mb-4">
+      <SetupChecklist steps={steps} T={T} compact />
+    </Card>
+  );
 
   if (!input.invoices.length) {
     return (
       <>
         <PageHeader title={T("nav.dashboard")} subtitle={T("core.dash.as_of", { date: T.date(asOf) })} />
+        {setupCard}
         <EmptyState title={T("core.dash.empty_title")} description={T("core.dash.empty_body")} action={<Button href="/invoices/new">{T("nav.new_invoice")}</Button>} />
       </>
     );
@@ -93,6 +104,7 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader title={T("nav.dashboard")} subtitle={T("core.dash.as_of", { date: T.date(asOf) })} actions={<Button href="/invoices/new"><Icon name="plus" />{T("nav.new_invoice")}</Button>} />
+      {setupCard}
       {festival.quiet && <QuietBanner lang={T.lang} quiet={festival.quiet} />}
       {festival.drive && <FestivalDrive lang={T.lang} view={festival} role={role} />}
 

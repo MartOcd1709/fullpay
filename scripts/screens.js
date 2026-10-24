@@ -106,6 +106,21 @@ await go("/forecast"); await js(`document.getElementById("treds-h")?.scrollIntoV
     await go(`/pay/${inv.pay_token}`, { w: 390, h: 844, mobile: true }); await shot("20-pay-early-offer-phone");
   }
 }
+// Statement link on the customer page, then what the customer sees on a phone; search; credit check; setup; calculator.
+{
+  const j = await fetch(`${base}/api/customers`, { headers: { cookie: ownerCookie } }).then((r) => r.json());
+  const list = Array.isArray(j) ? j : j.data ?? j.customers ?? [];
+  const c = [...list].sort((a, b) => (b.total_owed_paise ?? 0) - (a.total_owed_paise ?? 0))[0];
+  const slow = list.find((x) => x.grade === "C") ?? [...list].sort((a, b) => (b.avg_late_days ?? 0) - (a.avg_late_days ?? 0))[0];
+  await go(`/customers/${c.id}`); await js(`document.querySelector("[data-testid=statement-url]")?.scrollIntoView({block:"center"})`); await wait(300); await shot("22-statement-link");
+  const html = await fetch(`${base}/customers/${c.id}`, { headers: { cookie: ownerCookie } }).then((r) => r.text());
+  const token = (html.match(/\/s\/([A-Za-z0-9_-]{16,})/) ?? [])[1];
+  if (token) { await go(`/s/${token}`, { w: 390, h: 844, mobile: true }); await shot("23-statement-phone", { full: true }); }
+  await go(`/invoices/new?customer=${slow.id}`); await shot("25-credit-check");
+}
+await go("/search?q=bhatia"); await shot("24-search", { full: true });
+await go("/settings"); await shot("26-setup-checklist");
+await go("/calculator?amount=117186&due=2026-09-19&on=2026-10-24", { w: 390, h: 844, mobile: true }); await shot("27-interest-calculator-phone", { full: true });
 await signIn("accountant");
 await go("/approvals"); await shot("12-approvals-accountant-view");
 await signIn("viewer");

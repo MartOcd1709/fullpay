@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth";
 
 // Exact paths, then prefixes (ending in "/"). "/" is exact only, so it never opens everything. /print/ is owner-only.
-const PUBLIC_EXACT = new Set(["/", "/login", "/status", "/proof", "/verify", "/api/health", "/api/tick", "/api/reseed", "/api/status"]);
-const PUBLIC_PREFIX = ["/api/auth/", "/api/demo/", "/api/pay/", "/api/verify/", "/pay/", "/verify/", "/v/"];
+const PUBLIC_EXACT = new Set(["/", "/login", "/status", "/proof", "/calculator", "/verify", "/api/health", "/api/tick", "/api/reseed", "/api/status"]);
+const PUBLIC_PREFIX = ["/api/auth/", "/api/demo/", "/api/pay/", "/api/verify/", "/pay/", "/s/", "/verify/", "/v/"];
 const isPublic = (pathname) => PUBLIC_EXACT.has(pathname) || PUBLIC_PREFIX.some((rule) => pathname.startsWith(rule));
 
 export function proxy(request) {

@@ -55,6 +55,7 @@ export default async function Landing() {
           )}
           <Link href="/status" className={`${BTN} text-accent hover:bg-accent-soft`}>{t("public.landing.status")}</Link>
           <Link href="/proof" className={`${BTN} text-accent hover:bg-accent-soft`}>{t("public.landing.proof")}</Link>
+          <Link href="/calculator" className={`${BTN} text-accent hover:bg-accent-soft`}>{t("public.landing.calculator")}</Link>
         </div>
         {demo && <p className="mt-3 text-ink-muted">{t("public.landing.demo_note")}</p>}
       </section>

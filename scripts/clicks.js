@@ -12,7 +12,7 @@ const only = process.argv[3] ?? "";
 const origin = new URL(base).origin;
 const PAGES = ["/", "/login", "/dashboard", "/followups", "/invoices", "/invoices/new", "/customers", "/inbox", "/payments", "/forecast",
   "/chase-first", "/documents", "/approvals", "/analytics", "/team", "/activity", "/settings", "/runs", "/status", "/proof",
-  "/pay/whoZYlu9YOc2d-scWQ-yx1mX1ukgynkn", "/verify", "/invoices/42", "/customers/3"].filter((p) => p.includes(only));
+  "/pay/whoZYlu9YOc2d-scWQ-yx1mX1ukgynkn", "/verify", "/invoices/42", "/customers/3", "/search?q=bhatia", "/calculator"].filter((p) => p.includes(only));
 // Role switches are tested once, separately; clicking them mid-run would change who is signed in for the rest.
 const ROLE = /^(Owner|Accountant|View only \(CA\)|मालिक|अकाउंटेंट|सिर्फ़ देखें \(CA\)|Switch to the owner|मालिक के रूप में जाएं)$/;
 const SKIP = /sign out|log ?out|reset|remove access|deactivat|delete|anonymi|reject|not for us|start over|साइन आउट|रीसेट|हटाएं|नामंज़ूर|^×$|close|cancel|रद्द/i;

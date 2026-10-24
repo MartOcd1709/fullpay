@@ -306,3 +306,6 @@ ALTER TABLE approvals ADD CONSTRAINT approvals_kind_check CHECK (kind IN ('payme
 
 -- A large company, PSU or government buyer registered on TReDS (its invoices can be discounted there before the due date).
 ALTER TABLE customers ADD COLUMN IF NOT EXISTS treds_buyer BOOLEAN NOT NULL DEFAULT false;
+
+-- One link per customer listing all their open bills ("statement of account"), created when first needed.
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS statement_token TEXT UNIQUE;
