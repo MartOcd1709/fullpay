@@ -298,6 +298,15 @@ test("remaining paths: claim mark-paid, dispute reject/edit, promises, customers
     const s = await settings.save(c, ctx, { forecast: { buffer_paise: 20_000_000 }, ui: { lang: "hi" } });
     assert.deepEqual([s.forecast.buffer_paise, s.ui.lang, s.demo.clock_date, s.demo.t0], [20_000_000, "hi", null, seedMod.SEED_ANCHOR]);
     assert.equal(ctx.asOf, seedMod.SEED_ANCHOR);
+    // What the Settings form and the quiet-days box send must pass the API's own check (it once refused both with a 400).
+    settings.check({ business: { name: "x" }, ladder: { offsets: {} }, forecast: {}, finance: { borrow_rate_bps: 1400, max_discount_bps: 200 } });
+    settings.check({ calendar: { quiet_days: [{ from: "2026-11-20", to: "2026-11-21", label: "Gurpurab" }] } });
+    const f = await settings.save(c, ctx, { finance: { borrow_rate_bps: 1800, max_discount_bps: 300 } });
+    assert.deepEqual([f.finance.borrow_rate_bps, f.finance.max_discount_bps, f.finance.treds_rate_low_bps], [1800, 300, 700]);
+    for (const bad of [{ msmed: { s16_multiplier: 1 } }, { finance: { borrow_rate_bps: 7000 } }, { finance: { treds_rate_low_bps: 1 } }, { finance: { max_discount_bps: 2.5 } },
+      { calendar: { festivals: [] } }, {}]) {
+      assert.throws(() => settings.check(bad), { status: 400 }, JSON.stringify(bad));
+    }
 
     // Evidence bundle and chase list.
     const letter = await byNumber(c, "INV/26-27/0042");

@@ -222,6 +222,8 @@ This is the single tracking document. Every work item has an ID, an owner, a sch
 | N8 | Search box in the header: customers, bills (also by amount), payments (UTR) | C | DOING | Same branch; tests/search.test.js; in the acceptance sweep |
 | N9 | "Getting set up" checklist in Settings + on the dashboard until done | C | DOING | Same branch; tests/setup.test.js |
 | N10 | Invoice from a photo (OCR) | C | TODO | Optional; needs an AI key and a team decision |
+| N11 | Fix: Settings "Save changes" and quiet days were refused (HTTP 400) on the live site since N1/N2 | C | DOING | Same branch; one shared check for the API and the save; services test sends the form's own payloads |
+| N12 | Fix: an icon given only a colour class drew page-wide (New invoice "Due on" line, also live) | C | DOING | Same branch; icons stay 20 px unless the caller sets a size |
 
 ## Acceptance suite (ticked during P7; every item on the deployed app)
 
@@ -263,3 +265,4 @@ n8n webhook → what-if #3 (big order) → Hindi depth (demo screens only) → f
 | 23 Oct | Third-language add-on not built (user: "not needed"); photo-OCR add-on optional, pending an AI key |
 | 23 Oct | Live bug fixed: demo sign-in/sign-out redirected to Render's internal host; language switch opened to every role |
 | 24 Oct | Team picked seven feature ideas, built as N1–N9; N5–N9 go to main through a pull request instead of a direct push |
+| 24 Oct | No more Artifact pages for this project (user); the checklist lives in the repo at `docs/planning/14_build_checklist.md` |

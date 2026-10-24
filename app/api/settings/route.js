@@ -1,15 +1,9 @@
 import { route } from "@/lib/http";
 import * as settings from "@/lib/services/settings";
 import { guard } from "@/lib/services/approvals";
-import { badRequest } from "@/lib/services/errors";
-
-// Owner-editable sections only; the RBI series, GST rates and legal text stay in code-reviewed config.
-const EDITABLE = ["business", "ladder", "forecast", "ui", "demo"];
 
 export const GET = route(({ client, ctx }) => settings.get(client, ctx));
 export const PATCH = route(({ client, ctx, body }) => {
-  const keys = Object.keys(body ?? {});
-  const bad = keys.filter((k) => !EDITABLE.includes(k));
-  if (!keys.length || bad.length) throw badRequest("invalid_settings", `Editable sections: ${EDITABLE.join(", ")}`);
-  return guard(client, ctx, { kind: "settings_save", target_id: null, payload: body, summary: `Change settings: ${keys.join(", ")}` });
+  settings.check(body); // the same rule as the save itself, so an accountant's change is checked before it waits for approval
+  return guard(client, ctx, { kind: "settings_save", target_id: null, payload: body, summary: `Change settings: ${Object.keys(body).join(", ")}` });
 });

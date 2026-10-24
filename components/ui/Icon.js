@@ -42,9 +42,11 @@ const PATHS = {
   sparkle: "M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8",
 };
 
-export function Icon({ name, className = "h-5 w-5", strokeWidth = 2 }) {
+// 20 px unless the caller sets a size: a class like "mt-0.5 text-accent" alone used to drop the size and draw the icon page-wide.
+export function Icon({ name, className = "", strokeWidth = 2 }) {
+  const size = /(^|\s)(h|w|size)-/.test(className) ? "" : "h-5 w-5 ";
   return (
-    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" className={`${className} shrink-0`} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" className={`${size}${className} shrink-0`} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       <path d={PATHS[name] ?? PATHS.info} />
     </svg>
   );
