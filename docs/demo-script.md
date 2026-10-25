@@ -16,7 +16,7 @@ version is at the end) · Language of the voice-over: English, with one Hindi mo
      (DevTools → Toggle device toolbar → iPhone 12 Pro), or on a real phone mirrored to the laptop
    - Tab 3: `/followups` · Tab 4: `/payments` · Tab 5: `/invoices/new`
 4. If n8n is set up: open Telegram on the phone next to the laptop and the Google Sheet in Tab 6.
-5. Sound on for the call beat (2:05). Use a quiet room and a headset mic.
+5. Sound on for the call beat (0:58). Use a quiet room and a headset mic.
 6. Do one silent rehearsal with a stopwatch; then press **Reset demo** again before the real take.
 
 Words never to use on screen or in the voice-over: "legal notice", "penalty", "default". Say "pay-by date",
