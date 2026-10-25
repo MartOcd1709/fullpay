@@ -1,38 +1,74 @@
-# The 3-minute demo
+# The 3-minute video
 
-For judges scoring practical usefulness, invoice management, follow-up automation, accuracy of the money, cash-flow
-forecasting, document generation, ease of use, technical execution and real-world impact.
-Open https://fullpay-web.onrender.com two minutes early (the free plan wakes in about 50 s), press **Reset demo**, then
-**Open the live demo**. Keep a phone with WhatsApp next to the laptop.
+One story, told on the live site: **Harpreet Arora makes auto parts in Ludhiana. He is owed lakhs, he has no accounts
+team, and his salaries are due on the 1st.** Every beat shows a real problem and the screen that solves it.
 
-| Time | Screen and what to do | What to say (the problem it solves) |
-|---|---|---|
-| 0:00 | Landing page → **Open the live demo** | "Harpreet makes brake parts in Ludhiana. ₹8.1 lakh crore is stuck in late payments to firms like his, and he has no accounts team." |
-| 0:10 | **Dashboard**: money to collect, overdue, the ageing bar, top 5 to chase | "He sees in one screen who owes what and what is already late, instead of a notebook and memory." |
-| 0:20 | Dashboard card **Diwali is in 15 days → Review and send** | "Before Diwali, traders settle their khata. FullPay sends each customer a warm request with festival wishes, in their language, and goes quiet on the festival days." |
-| 0:25 | Dashboard warning → **See the 3 invoices that would cover it** → Cash forecast | "Salaries are due on the 1st. FullPay shows the week cash drops below his safety buffer, weeks ahead, and the three invoices that would close the gap." |
-| 0:45 | **Today's follow-ups** → a 7-days-overdue card → **WhatsApp** (opens with the message filled in, pay link included) → **Mark as sent** | "He forgets to follow up and doesn't know how to escalate politely. Every reminder is drafted at the right step, in the customer's language; one tap sends it." |
-| 1:05 | Phone: the customer's link `/pay/whoZYlu9YOc2d-scWQ-yx1mX1ukgynkn` → **Something's wrong with this invoice** → "Quantity short" → laptop: **Inbox**, "Reminders paused" | "A disputed bill should not keep getting reminders. The customer tells him from the link, the chasing pauses, and the problem lands in his Inbox." |
-| 1:25 | **Payments → Load sample statement** → the card "Short by exactly 2 %, possibly TDS" → **Confirm, and record as TDS** | "Matching bank credits by hand takes hours. FullPay matches every line with a reason, spots that a 2 % shortfall is TDS rather than a short payment, and marks nothing paid until he confirms." |
-| 1:45 | **New invoice**: ₹10,000 at 18 % for a Punjab customer (CGST ₹900 + SGST ₹900 = ₹11,800), then switch the place of supply to Haryana (IGST ₹1,800 = ₹11,800) | "GST must be right to the paisa. Same state splits CGST and SGST, another state is IGST, and the total is in words the Indian way." |
-| 2:00 | **Invoices → INV/26-27/0042 → Payment Demand Letter** | "At 30 days he needs a firm letter that is clearly not a legal notice. It lists what is owed, the pay-by date, how to pay, and the MSMED Act interest, worked out across the RBI rate change on 7 Oct." |
-| 2:20 | Banner **+1 day** (the demo date) → Today's follow-ups and the forecast change | "Time moves and FullPay acts: the next day's reminders are due, and the forecast moves with them." |
-| 2:35 | **View as → Accountant**, confirm a payment ("Sent to the owner for approval") → **View as → Owner → Approvals → Approve** | "With staff, nothing that moves money happens without the owner, and the record keeps who prepared and who approved." |
-| 2:45 | **Invoices → Import from Tally → Try the Tally sample** | "On day one he brings his existing Tally book in, checked line by line before anything is saved." |
-| 2:52 | `/proof` | "And every rule the organisers listed is checked live: 34 of 34 pass, right now." |
+Live site: https://fullpay-web.onrender.com · Length: **3:00** (confirm the limit with the organisers; a 5-minute
+version is at the end) · Language of the voice-over: English, with one Hindi moment.
 
-Words to avoid on screen and in the voice-over: "legal notice", "penalty", "default". Say "pay-by date" and "interest".
+## Before you record (10 minutes)
 
-## What could go wrong in a live demo, and how we avoid it
+1. Open the site **3 minutes early**: the free server takes about 50 seconds to wake.
+2. Press **Open the live demo**, then **Reset demo** in the orange banner, so the data is fresh.
+3. Chrome, **1920 × 1080**, zoom **110 %**, bookmarks bar hidden, one tab per screen you will show:
+   - Tab 1: `/dashboard`
+   - Tab 2: the customer link (landing page → **See what a customer sees**), opened in **phone view**
+     (DevTools → Toggle device toolbar → iPhone 12 Pro), or on a real phone mirrored to the laptop
+   - Tab 3: `/followups` · Tab 4: `/payments` · Tab 5: `/invoices/new`
+4. If n8n is set up: open Telegram on the phone next to the laptop and the Google Sheet in Tab 6.
+5. Sound on for the call beat (2:05). Use a quiet room and a headset mic.
+6. Do one silent rehearsal with a stopwatch; then press **Reset demo** again before the real take.
 
-| Risk | How we avoid it |
+Words never to use on screen or in the voice-over: "legal notice", "penalty", "default". Say "pay-by date",
+"interest" and "Payment Demand Letter".
+
+## The shot list
+
+| Time | Screen and exactly what to click | Voice-over | Caption on screen |
+|---|---|---|---|
+| **0:00** | Landing page (light theme). Hold for 2 s, then click **Open the live demo** | "Small suppliers in India are owed over eight lakh crore rupees in late payments. Harpreet is one of them: he makes auto parts in Ludhiana, and he has no accounts team." | ₹8.1 lakh crore stuck in late payments to MSMEs |
+| **0:12** | **Dashboard**: point at *Money to collect*, *Overdue*, then the red/orange **Cash drops below your safety buffer in week 4** strip | "FullPay shows him, on one screen, what he is owed, what is late, and the week his cash will run short, weeks before it happens." | Sees the cash shortage coming |
+| **0:25** | Click the cash strip → **Cash forecast**; scroll to the bars and the invoices that would close the gap; on one, read the suggestion "Offer ₹… off if paid by …" and click **Make this offer** | "It names the invoices that would close the gap, and suggests a small pay-early discount that costs him less than borrowing." | Pay-early offer, cheaper than a loan |
+| **0:40** | **Today's follow-ups**: a "Gentle reminder (7 days late)" card. Point at *Usually pays on Mondays*. Click **WhatsApp**, show the filled message, then **Mark as sent** | "Every morning at ten, FullPay prepares each reminder at the right step, in the customer's own language. It even knows this customer usually pays on Mondays. One tap sends it from his own WhatsApp." | Reminders in the customer's language, one tap |
+| **0:58** | Same page, **+1 day** in the banner → scroll to **Automatic reminder calls today** → **Play the call** on a Hindi customer (let it play 4–5 s) | "Seven days before and after the due date, FullPay places a reminder call, in Hindi or English." *(let the call speak)* | Automatic reminder calls (simulated in the demo) |
+| **1:10** | **Phone view**, Tab 2 (bill INV/26-27/0042): scroll past the bill → **Pay in parts** → keep 2 parts → **Submit** | "On the other side, the customer gets a link: pay by UPI, say it's already paid, raise a problem, or, like here, offer to pay in two parts." | The customer can answer, not just be chased |
+| **1:22** | *(If n8n is set up)* Phone: the **Telegram** alert arrives; laptop: the new row in the **Google Sheet** | "Harpreet gets the alert on his phone through n8n, and his CA sees it in a shared sheet." | n8n: instant alert + CA's register |
+| **1:30** | Laptop: **Inbox** → *Offers to pay in parts* → **Approve the plan** → back to the phone: **Pay part 1 of 2** with its QR | "He approves it in one tap. Reminders pause while each part arrives on time, and the forecast now expects each part on its date." | Instalment plan: approve, then pay part by part |
+| **1:45** | **Payments** → **Load sample statement** → the card *Short by exactly 2 % … Possibly TDS* → **Confirm, and record … as TDS**. Then **Today's follow-ups** → the **Payment receipt** card | "Matching bank credits by hand takes hours. FullPay matches each one with a reason, spots that a two percent shortfall is TDS, and nothing is marked paid until he confirms. The customer gets a receipt with a number for both their books." | Bank matching with reasons · TDS spotted · receipt |
+| **2:05** | **New invoice** → customer *Garewal Motors*: the red **Credit check** note appears → **Load a sample line** (₹10,000 at 18 %, CGST ₹900 + SGST ₹900) → change *Where the goods go* to **Haryana** (IGST ₹1,800) | "Before he gives more credit, FullPay warns him this customer already owes a lot and pays late. And the GST is right to the paisa: same state splits CGST and SGST, another state is IGST." | Credit check · GST right to the paisa |
+| **2:20** | **Invoices → INV/26-27/0042 → Payment Demand Letter**; point at the interest line and the QR | "At thirty days late, he gets a firm Payment Demand Letter with the interest the MSMED Act already gives him, three times the RBI bank rate, worked out across the rate change. The QR lets anyone check it is genuine." | MSMED Act interest, worked out for him |
+| **2:35** | Header **हिं** (Hindi) for 3 s, then back to **EN**; then **View as → Accountant**, confirm a payment ("Sent to the owner for approval") | "All of it works in Hindi. And with staff, nothing that moves money happens without the owner's approval, recorded in a tamper-proof log." *(Hindi moment: "पूरा FullPay हिंदी में भी।")* | Full Hindi · owner approves · tamper-proof record |
+| **2:48** | Landing page → **Proof: the checks, run now** (34 of 34 pass) | "Every rule the organisers set is checked live, right now: thirty-four of thirty-four pass." | 34 / 34 checks pass, live |
+| **2:55** | End card: FullPay logo + live link | "FullPay. Get paid in full, on time, with the interest the law already owes you." | fullpay-web.onrender.com · github.com/MartOcd1709/fullpay |
+
+**If n8n is not set up**, skip the 1:22 beat and give its 8 seconds to the call (0:58) or the forecast (0:25).
+
+## Recording tips
+
+- Record the screen at 1080p (OBS: Display Capture, 30 fps). Record the voice separately if you can, then lay it over.
+- Move the mouse slowly and pause one second on every number you mention.
+- Add captions (the right-hand column) as burned-in text; judges often watch muted.
+- If a step goes wrong, do not restart the take: cut it in the edit. Press **Reset demo** before each new take.
+- Keep the final file under the organisers' size limit; export H.264 MP4.
+
+## The 5-minute version (if allowed)
+
+Add, in this order:
+1. **Customers → Rana Transport → Statement link**: one link with every open bill and one UPI QR (20 s).
+2. **Search** in the header: type "1,17,186" to find a bill by amount (10 s).
+3. **Settings → Getting set up** checklist, and **Integrations: n8n → Send a test event** (20 s).
+4. **Dashboard → Diwali drive → Review and send**: festival wishes plus settlement, quiet days respected (20 s).
+5. **Forecast → Cash today (TReDS)** for big buyers (15 s).
+6. Dark mode: the sun/moon switch in the header (5 s).
+
+## What could go wrong while recording, and how to avoid it
+
+| Risk | How to avoid it |
 |---|---|
-| The free server is asleep, and the first page takes about 50 s | Open the site two minutes before; optional keep-alive ping (`docs/deploy.md`) |
-| Another visitor has changed the shared demo | **Reset demo** in the banner; it also resets every night after 01:00 IST |
-| The demo date was moved forward | Reset demo restores the seeded day |
-| WhatsApp doesn't open on the laptop | Use the phone, or show the filled `wa.me` link; Mark as sent works either way |
-| A real customer gets an email during the demo | Email runs in test mode (`MAIL_TEST_MODE=1`): every email goes to the owner's own address |
-| The venue network fails | Run locally (`npm run dev` with the seeded database) and keep the recorded video ready |
-| The print preview looks different | Use Chrome's Print → Save as PDF; pages are A4, and the ₹ and Hindi fonts load from the site itself |
-| Hindi text appears in boxes | The fonts are self-hosted, not fetched from Google at view time; still, test once on the demo laptop |
-| A number looks wrong | `/proof` shows the same calculation, expected against actual, run live |
+| The free server is asleep (first page takes ~50 s) | Open the site 3 minutes early |
+| Someone else changed the shared demo | **Reset demo** in the banner before each take; it also resets nightly after 01:00 IST |
+| The plan option is missing on the customer link | The bill already has a plan or a dispute from an earlier take: **Reset demo** |
+| WhatsApp does not open on the laptop | Show the filled `wa.me` page or use the phone; **Mark as sent** works either way |
+| The call is silent | The browser needs a voice: Chrome on Windows/Mac has Hindi and English voices; on Linux, show the written call |
+| "Not sent" cards from before today | **Reset demo** clears them |
+| A number on screen differs from the script | Amounts move with the demo date; read what the screen shows, never the script |
